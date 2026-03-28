@@ -1572,6 +1572,11 @@ const Engine = {
         UI.init(); 
         this.loop();
         
+        // FORCE LIGHTING ON (Fixes pitch black bug)
+        EnvSys.update(0, this.scene); 
+        if(EnvSys.sunLight) EnvSys.sunLight.intensity = 1.2;
+        if(EnvSys.ambLight) EnvSys.ambLight.intensity = 0.5;
+        
         
     },
 
