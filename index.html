@@ -1232,8 +1232,6 @@ const State = {
     isSprinting: false, 
     inventory: {}
 };
-      const bgMusic = new Audio('relax.mp3'); bgMusic.loop = true; bgMusic.volume = 0.4;
-
 
 [...DB.upgrades, ...DB.mutations, ...DB.prestige].forEach(item => { 
     State.inventory[item.id] = { count: 0, currentCost: item.cost }; 
@@ -1318,6 +1316,9 @@ const WeatherSys = {
     geo: null, 
     mat: null, 
     speeds: [],
+    wMode: 0,
+    wTypes: ['☀️','🌧️','❄️','🌫️','☣️'],
+
     init(scene) {
         this.geo = new THREE.BufferGeometry();
         const pos = new Float32Array(this.count * 3);
@@ -1328,14 +1329,40 @@ const WeatherSys = {
             this.speeds.push(Math.random() * 100 + 100);
         }
         this.geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-        this.mat = new THREE.PointsMaterial({ color: 0x6688aa, size: 1.5, transparent: true, opacity: 0.6 });
+        // Start invisible (opacity: 0)
+        this.mat = new THREE.PointsMaterial({ color: 0xffffff, size: 1.5, transparent: true, opacity: 0 });
         this.particles = new THREE.Points(this.geo, this.mat);
         scene.add(this.particles);
     },
+
+    cycle() {
+        this.wMode = (this.wMode + 1) % 5;
+        document.getElementById('btn-weather').innerText = this.wTypes[this.wMode];
+        
+        // Colors: [Sun, Rain, Snow, Fog, Acid]
+        const colors = [0, 0x6688aa, 0xffffff, 0, 0x39ff14];
+        this.mat.color.setHex(colors[this.wMode]);
+        
+        // Only show particles for Rain(1), Snow(2), and Acid(4)
+        this.mat.opacity = (this.wMode === 1 || this.wMode === 2 || this.wMode === 4) ? 0.6 : 0;
+        
+        // Environmental Changes
+        Engine.scene.fog.density = this.wMode === 3 ? 0.01 : 0.0015; // Thick Fog mode
+        Engine.matGround.color.setHex(this.wMode === 2 ? 0xeeeeee : 0x88aa77); // Snow turns ground white
+        
+        if(this.wMode === 4) UI.spawnToast("ACID STORM DETECTED", "#39ff14");
+    },
+
     update(dt) {
+        // Don't waste power calculating movement if weather is Sun or Fog
+        if(this.mat.opacity === 0) return;
+
         const pos = this.geo.attributes.position.array;
         for(let i=0; i<this.count; i++) {
-            pos[i*3+1] -= this.speeds[i] * dt;
+            // Snow (mode 2) falls slower than Rain/Acid
+            let speedMult = (this.wMode === 2) ? 0.3 : 1.0;
+            pos[i*3+1] -= this.speeds[i] * dt * speedMult;
+
             if(pos[i*3+1] < 0) {
                 pos[i*3+1] = 500;
                 pos[i*3] = State.pos.x + (Math.random()-0.5) * 600;
@@ -1343,12 +1370,6 @@ const WeatherSys = {
             }
         }
         this.geo.attributes.position.needsUpdate = true;
-        
-        if(Math.random() < 0.001) { // Lightning strike logic
-            document.getElementById('fx-overlay').style.boxShadow = "inset 0 0 500px rgba(255, 255, 255, 0.8)";
-            setTimeout(()=> document.getElementById('fx-overlay').style.boxShadow = "none", 100);
-            setTimeout(()=> AudioSys.playTone(50, 'sawtooth', 2.0, 0.5, -200), 500);
-        }
     }
 };
 
@@ -1536,8 +1557,7 @@ const Engine = {
         document.getElementById('webgl-container').addEventListener('click', () => { 
             if(!UI.isShopOpen) { 
                 document.body.requestPointerLock(); 
-                if(!AudioSys.enabled) AudioSys.init(); 
-               if(bgMusic.paused) bgMusic.play();
+               if(!AudioSys.enabled) { AudioSys.init(); new Audio("relax.mp3").play().then(a => a.loop = true); }
             }
         });
         
@@ -1864,15 +1884,6 @@ const Engine = {
         }
         
         const time = this.clock.getElapsedTime();
-        document.getElementById('txt-farts').style.color = `hsl(${(time * 100) % 360}, 100%, 50%)`;
-        if(bgMusic) bgMusic.playbackRate = State.isSprinting ? 1.25 : 1.0;
-
-       // Rainbow Home Base Pulse
-         const rainbow = new THREE.Color(`hsl(${(time * 50) % 360}, 80%, 50%)`);
-         if(this.scene.children.find(c => c.geometry?.type === 'SphereGeometry')) {
-             this.scene.children.find(c => c.geometry.type === 'SphereGeometry').material.color.copy(rainbow);
-             pointLight.color.copy(rainbow);
-         }
         
         // Update Beans
         this.beans.forEach(b => {
@@ -2486,5 +2497,7 @@ const Game = {
 window.onload = () => Engine.init();
 
 </script>
+
+   <button class="tab-btn" id="btn-weather" onclick="WeatherSys.cycle()" style="position:absolute; bottom:20px; right:20px; z-index:100; font-size:24px;">☀️</button>
 </body>
 </html>
