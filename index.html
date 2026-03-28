@@ -531,9 +531,10 @@ const AudioSys = {
             window.AudioContext = window.AudioContext || window.webkitAudioContext; 
             this.ctx = new AudioContext(); 
             this.enabled = true; 
+            
             this.bgMusic = new Audio();
-            this.bgMusic.loop = true;
-            this.bgMusic.volume = 0.3;
+            this.bgMusic = new Audio('sunny.mp3'); this.bgMusic.loop = true; this.bgMusic.play();
+            this.bgMusic.volume = 0.6
         } catch(e) {} 
     },
     playTone(freq, type, duration, vol, detune=0) {
