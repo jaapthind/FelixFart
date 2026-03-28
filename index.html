@@ -347,61 +347,29 @@ body, html { width: 100%; height: 100%; overflow: hidden; background-color: #000
 // ==========================================
 // DATABASE GENERATION (MASSIVE EXPANSION)
 // ==========================================
-const DB = { upgrades: [], mutations: [], prestige: [], achievements: [] };
 
-const uPfx = ["Basic", "Reinforced", "Tuned", "Super", "Hyper", "Mega", "Ultra", "Quantum", "Atomic", "Nuclear", "Cosmic", "Galactic", "Universal", "Dimensional", "Ethereal", "Astral", "Void", "Abyssal", "Infinite", "Omni", "Celestial", "Divine", "Eldritch", "Transcendent", "Absolute"];
-const uRoot = ["Valve", "Piston", "Compressor", "Chamber", "Turbine", "Reactor", "Core", "Matrix", "Nexus", "Engine"];
-const uSfx = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta", "Omega", "Prime", "Apex", "Zenith"];
-
-let uId = 0;
-// Generate 500 Upgrades (10 per tier, 50 tiers)
-for(let tier=0; tier<50; tier++) {
-    const types = ['cap', 'fart', 'stam', 'speed', 'rad', 'digest', 'auto', 'fart', 'cap', 'rad'];
-    for(let j=0; j<10; j++) {
-        let type = types[j];
-        let pfx = uPfx[Math.min(tier, uPfx.length-1)];
-        let root = uRoot[j];
-        let sfx = uSfx[tier % uSfx.length];
-        
-        let baseCost = 10 * Math.pow(3.1, tier) * (j + 1);
-        let maxLvl = 15 + (tier * 2);
-        let mult = 1.15 + (tier * 0.02);
-        
-        let val, desc, effectDesc;
-        switch(type) {
-            case 'cap': val = 10 * Math.pow(2.8, tier); desc = `Expands physical stomach dimensions.`; effectDesc = `Capacity: +${val.toLocaleString()}`; break;
-            case 'fart': val = 1.3 + (tier * 0.4); desc = `Increases mass generated per unit.`; effectDesc = `Output: x${val.toFixed(2)}`; break;
-            case 'stam': val = 30 * (tier + 1); desc = `Cardiovascular nano-enhancement.`; effectDesc = `Max Stamina: +${val.toLocaleString()}`; break;
-            case 'speed': val = 0.05 + (tier * 0.03); desc = `Optimizes bipedal locomotion.`; effectDesc = `Speed: +${(val*100).toFixed(0)}%`; break;
-            case 'rad': val = 8 + (tier * 5); desc = `Extends biological magnetic pull.`; effectDesc = `Radius: +${val.toLocaleString()}m`; break;
-            case 'digest': val = 1.8 + (tier * 0.8); desc = `Accelerates breakdown via heat.`; effectDesc = `Digestion: x${val.toFixed(2)}`; break;
-            case 'auto': val = 5 * Math.pow(8, tier); desc = `Passive internal generation protocols.`; effectDesc = `Passive Gen: +${val.toLocaleString()}/s`; break;
-        }
-
-        DB.upgrades.push({
-            id: `u_${uId++}`, name: `${pfx} ${root} ${sfx}`, desc: desc, effectDesc: effectDesc,
-            cost: Math.floor(baseCost), mult: mult, max: maxLvl, type: type, val: val
-        });
-    }
-}
-
-// Generate 200 Mutations
-const mPfx = ["Toxic", "Feral", "Mutated", "Sentient", "Parasitic", "Symbiotic", "Necrotic", "Psionic", "Cybernetic", "Demonic", "Angelic", "Crystalline", "Plasma", "Shadow", "Light"];
-let mId = 0;
-for(let tier=0; tier<20; tier++) {
-    for(let j=0; j<10; j++) {
-        let type = j % 2 === 0 ? 'auto' : 'fart';
-        let baseCost = 5000 * Math.pow(5.5, tier) * (j+1);
-        let val = type === 'auto' ? Math.pow(15, tier+1) : Math.pow(3.0, tier+1);
-        let effectDesc = type === 'auto' ? `Passive Gen: +${val.toLocaleString()}/s` : `Output Multiplier: x${val.toLocaleString()}`;
-        
-        DB.mutations.push({
-            id: `m_${mId++}`, name: `${mPfx[tier % mPfx.length]} Strain ${j+1}`, desc: `Radically alters DNA structure.`,
-            effectDesc: effectDesc, cost: Math.floor(baseCost), mult: 2.5, max: 10, type: type, val: val
-        });
-    }
-}
-
+    // ==========================================
+// DATABASE: CLEAN & SIMPLE
+// ==========================================
+                const DB = { upgrades: [], mutations: [], prestige: [], achievements: [] };
+                
+                // --- 6 HIGH-QUALITY CORE UPGRADES ---
+                const manualUpgrades = [
+                    { id: 'u_1', name: "Industrial Tank", type: 'cap', cost: 50, mult: 1.5, max: 25, desc: "Massively increases your bean storage.", val: 20 },
+                    { id: 'u_2', name: "Turbo Glutes", type: 'speed', cost: 150, mult: 1.6, max: 15, desc: "Increases movement speed by 15% per level.", val: 0.15 },
+                    { id: 'u_3', name: "Bio-Magnet", type: 'rad', cost: 300, mult: 1.4, max: 20, desc: "Sucks up beans from much further away.", val: 6 },
+                    { id: 'u_4', name: "Pressure Valve", type: 'fart', cost: 600, mult: 1.8, max: 50, desc: "Multiplies Mass output significantly.", val: 2.0 },
+                    { id: 'u_5', name: "Nano-Digestor", type: 'digest', cost: 2000, mult: 2.0, max: 10, desc: "Purge biomass at 3x speed per level.", val: 3.0 },
+                    { id: 'u_6', name: "Auto-Venter", type: 'auto', cost: 10000, mult: 3.0, max: 50, desc: "Passively vents gas to generate Mass.", val: 250 }
+                ];
+                
+                manualUpgrades.forEach(u => {
+                    DB.upgrades.push({
+                        id: u.id, name: u.name, desc: u.desc, type: u.type, cost: u.cost, 
+                        mult: u.mult, max: u.max, val: u.val,
+                        effectDesc: `${u.type.toUpperCase()}: +${u.val}`
+                    });
+                });
 // Generate 40 Prestige Items
 const pNames = ["Golden Wind", "Astral Lungs", "Divine Digestion", "Omni Radius", "Temporal Stride", "Void Capacity", "Creator Core", "Singularity", "Nebula Aura", "Galactic Breath"];
 for(let i=0; i<40; i++) {
@@ -675,6 +643,7 @@ const EnvSys = {
         scene.background = this.skyColor; scene.fog.color = this.fogColor;
         
         if(this.sunLight) {
+            this.skyColor.setHex(0x00BFFF); scene.background = this.skyColor; scene.fog.color.copy(this.skyColor); this.sunLight.intensity = 2.5;
             this.sunLight.color.copy(cLight1).lerp(cLight2, blend); 
             if(WeatherSys.wMode === 0) this.sunLight.intensity = lerp(int1, int2, blend);
             let angle = (this.time / 24) * Math.PI * 2 - Math.PI/2;
@@ -913,8 +882,7 @@ const Engine = {
         if(rand < 0.02) { tier = 3; mat = this.matBeanLeg; val = 150; size = 3.5; } 
         else if(rand < 0.12) { tier = 2; mat = this.matBeanEpic; val = 25; size = 2.2; }
         
-        const geo = new THREE.IcosahedronGeometry(size, 0); 
-        const mesh = new THREE.Mesh(geo, mat); mesh.position.set(x, y, z); mesh.castShadow = true;
+        const mesh = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture((()=>{const c=document.createElement('canvas');c.width=64;c.height=64;const x=c.getContext('2d');x.font='48px serif';x.textAlign='center';x.textBaseline='middle';x.fillText('🫘',32,32);return c})()) })); mesh.position.set(x, y, z); mesh.scale.set(size*3, size*3, 1);
         mesh.userData = { tier, val, rotSpeed: new THREE.Vector3(Math.random()*0.05, Math.random()*0.05, Math.random()*0.05), baseY: y, phase: Math.random()*Math.PI*2 };
         
         this.beansGroup.add(mesh); this.beans.push(mesh);
@@ -949,6 +917,7 @@ const Engine = {
     },
 
     loop() {
+        if(Engine.scene.children.find(c => c.geometry?.type === "SphereBufferGeometry" && c.material?.transparent)) Engine.scene.children.find(c => c.geometry?.type === "SphereBufferGeometry" && c.material?.transparent).material.color.setHSL(Date.now() * 0.0002 % 1, 0.8, 0.5);
         requestAnimationFrame(() => this.loop());
         const dt = Math.min(this.clock.getDelta(), 0.1);
         const time = this.clock.getElapsedTime();
