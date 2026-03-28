@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>FelixFart </title>
+<title>FelixFart 3D: Ascended Tycoon</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script>
 <style>
 /* ==========================================================================
-   ADVANCED UI STYLES - FULL HUD & SHOP SYSTEM
+   ADVANCED UI STYLES - FULL HUD, SHOP SYSTEM, & NEW MODULES
    ========================================================================== */
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap');
 
@@ -38,7 +38,7 @@ body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
 #webgl-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
 
 /* HUD Base */
-.hud-element { position: absolute; z-index: 10; background: var(--bg-panel); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--border-radius); backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+.hud-element { position: absolute; z-index: 10; background: var(--bg-panel); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--border-radius); backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: var(--transition); }
 .glitch-text { font-family: 'Orbitron', sans-serif; position: relative; display: inline-block; }
 .glitch-text::before, .glitch-text::after { content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.8; }
 .glitch-text::before { left: 2px; text-shadow: -1px 0 var(--danger); animation: glitch-anim-1 2s infinite linear alternate-reverse; }
@@ -47,38 +47,44 @@ body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
 @keyframes glitch-anim-2 { 0% { clip-path: inset(10% 0 60% 0); } 20% { clip-path: inset(30% 0 20% 0); } 40% { clip-path: inset(70% 0 10% 0); } 60% { clip-path: inset(20% 0 50% 0); } 80% { clip-path: inset(50% 0 30% 0); } 100% { clip-path: inset(5% 0 80% 0); } }
 
 /* Top Left Stats */
-#stats-panel { top: 20px; left: 20px; width: 350px; padding: 20px; border-top: 4px solid var(--primary); }
-#stats-panel h1 { margin: 0 0 20px 0; font-family: 'Orbitron', sans-serif; font-size: 28px; color: var(--primary); text-shadow: 0 0 15px var(--primary-glow); text-transform: uppercase; letter-spacing: 2px; }
-.stat-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 18px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; }
-.stat-label { color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; font-size: 14px; }
-.stat-val { font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 20px; }
+#stats-panel { top: 20px; left: 20px; width: 350px; padding: 20px; border-top: 4px solid var(--primary); display: flex; flex-direction: column; gap: 5px; }
+#stats-panel h1 { margin: 0 0 15px 0; font-family: 'Orbitron', sans-serif; font-size: 26px; color: var(--primary); text-shadow: 0 0 15px var(--primary-glow); text-transform: uppercase; letter-spacing: 2px; }
+.stat-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 6px; }
+.stat-label { color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; font-size: 13px; font-weight: bold; }
+.stat-val { font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 18px; }
 .val-fart { color: var(--primary); text-shadow: 0 0 10px var(--primary-glow); }
 .val-bean { color: var(--bean-color); text-shadow: 0 0 10px var(--bean-glow); }
 .val-mult { color: var(--secondary); text-shadow: 0 0 10px var(--secondary-glow); }
 
 /* Progress Bars */
-.bar-container { width: 100%; height: 24px; background: rgba(0,0,0,0.5); border-radius: 12px; margin-top: 8px; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); box-shadow: inset 0 2px 5px rgba(0,0,0,0.8); }
+.bar-container { width: 100%; height: 20px; background: rgba(0,0,0,0.5); border-radius: 10px; margin-top: 5px; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); box-shadow: inset 0 2px 5px rgba(0,0,0,0.8); }
 .bar-fill { height: 100%; width: 0%; transition: width 0.1s linear; position: relative; }
 .bar-fill::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); animation: shimmer 2s infinite; }
 @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 #stomach-fill { background: linear-gradient(90deg, #8a5a2b, var(--bean-color)); box-shadow: 0 0 10px var(--bean-glow); }
 #stamina-fill { background: linear-gradient(90deg, #0055ff, var(--tertiary)); box-shadow: 0 0 10px var(--tertiary-glow); }
-.bar-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; text-shadow: 1px 1px 2px #000, -1px -1px 2px #000; letter-spacing: 1px; font-family: 'Orbitron', sans-serif; }
+.bar-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px #000, -1px -1px 2px #000; letter-spacing: 1px; font-family: 'Orbitron', sans-serif; }
+
+/* Minimap */
+#minimap-container { position: absolute; bottom: 20px; left: 20px; width: 200px; height: 200px; background: rgba(0,0,0,0.8); border: 2px solid var(--tertiary); border-radius: 50%; overflow: hidden; z-index: 10; box-shadow: 0 0 20px rgba(0,255,255,0.2); }
+#minimap-canvas { width: 100%; height: 100%; }
+.minimap-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%; box-shadow: inset 0 0 20px rgba(0,0,0,1); pointer-events: none; }
+.minimap-overlay::after { content: ''; position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; background: var(--primary); border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 8px var(--primary); }
 
 /* Right Shop Panel */
 #shop-panel { top: 20px; right: 20px; width: 400px; bottom: 20px; display: flex; flex-direction: column; padding: 15px; border-right: 4px solid var(--secondary); }
-.shop-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-.tab-btn { flex: 1; padding: 12px 0; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text-dim); font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: var(--transition); letter-spacing: 1px; }
+.shop-tabs { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+.tab-btn { flex: 1; padding: 10px 0; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text-dim); font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: var(--transition); letter-spacing: 1px; min-width: 80px; }
 .tab-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
 .tab-btn.active { background: var(--secondary); color: #000; border-color: var(--secondary); box-shadow: 0 0 15px var(--secondary-glow); }
 .tab-btn[data-target="prestige"].active { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 15px var(--gold-glow); }
 
-.shop-content { flex: 1; overflow-y: auto; padding-right: 10px; display: flex; flex-direction: column; gap: 12px; }
+.shop-content { flex: 1; overflow-y: auto; padding-right: 10px; display: flex; flex-direction: column; gap: 10px; }
 .shop-content::-webkit-scrollbar { width: 6px; }
 .shop-content::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); border-radius: 3px; }
 .shop-content::-webkit-scrollbar-thumb { background: var(--secondary); border-radius: 3px; }
 
-.upgrade-card { background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(0,0,0,0.5)); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 15px; cursor: pointer; transition: var(--transition); position: relative; overflow: hidden; }
+.upgrade-card { background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(0,0,0,0.5)); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 12px; cursor: pointer; transition: var(--transition); position: relative; overflow: hidden; }
 .upgrade-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--primary); transition: var(--transition); }
 .upgrade-card:hover { transform: translateX(-5px); border-color: var(--primary); box-shadow: 0 5px 20px rgba(0,0,0,0.6), inset 0 0 15px rgba(57, 255, 20, 0.1); }
 .upgrade-card:hover::before { width: 100%; opacity: 0.1; }
@@ -88,25 +94,35 @@ body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
 .upgrade-card.maxed { border-color: var(--gold); }
 .upgrade-card.maxed::before { background: var(--gold); }
 
-.uc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; position: relative; z-index: 2; }
-.uc-name { font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: bold; color: #fff; text-transform: uppercase; }
-.uc-level { background: rgba(0,0,0,0.8); padding: 3px 8px; border-radius: 12px; font-size: 12px; color: var(--tertiary); font-family: 'Orbitron', sans-serif; border: 1px solid var(--tertiary); }
-.uc-desc { font-size: 13px; color: var(--text-dim); margin-bottom: 12px; line-height: 1.4; position: relative; z-index: 2; font-style: italic; }
+.uc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; position: relative; z-index: 2; }
+.uc-name { font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: bold; color: #fff; text-transform: uppercase; }
+.uc-level { background: rgba(0,0,0,0.8); padding: 2px 6px; border-radius: 10px; font-size: 11px; color: var(--tertiary); font-family: 'Orbitron', sans-serif; border: 1px solid var(--tertiary); }
+.uc-desc { font-size: 12px; color: var(--text-dim); margin-bottom: 10px; line-height: 1.4; position: relative; z-index: 2; font-style: italic; }
 .uc-footer { display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2; }
-.uc-cost { font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: bold; color: var(--primary); text-shadow: 0 0 5px var(--primary-glow); }
+.uc-cost { font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: bold; color: var(--primary); text-shadow: 0 0 5px var(--primary-glow); }
 .uc-cost.prestige-cost { color: var(--gold); text-shadow: 0 0 5px var(--gold-glow); }
 
-/* Center Alerts */
+/* Center Alerts & Achievements */
 #alert-container { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); z-index: 100; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .alert-toast { background: rgba(0,0,0,0.9); border: 2px solid var(--primary); padding: 15px 30px; border-radius: 8px; color: #fff; font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; box-shadow: 0 0 20px var(--primary-glow); animation: slideInFade 2s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.achievement-toast { background: linear-gradient(45deg, #000, #1a1a00); border: 2px solid var(--gold); padding: 15px 25px; border-radius: 8px; color: var(--gold); font-family: 'Orbitron', sans-serif; box-shadow: 0 0 30px var(--gold-glow); animation: dropInFade 4s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; align-items: center; gap: 15px; }
+.achievement-toast .icon { font-size: 30px; }
+.achievement-toast .details h4 { margin: 0 0 5px 0; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; color: #fff; }
+.achievement-toast .details p { margin: 0; font-size: 12px; color: #aaa; font-family: 'Rajdhani', sans-serif; }
+
 @keyframes slideInFade { 0% { opacity: 0; transform: translateY(50px) scale(0.5); } 15% { opacity: 1; transform: translateY(0) scale(1.1); } 30% { transform: scale(1); } 80% { opacity: 1; transform: translateY(-20px); } 100% { opacity: 0; transform: translateY(-100px); } }
+@keyframes dropInFade { 0% { opacity: 0; transform: translateY(-50px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-50px); } }
+
+/* Environment Time UI */
+#time-panel { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); border: 1px solid var(--tertiary); padding: 10px 20px; border-radius: 20px; font-family: 'Orbitron', sans-serif; color: var(--tertiary); z-index: 10; font-size: 16px; box-shadow: 0 0 15px rgba(0,255,255,0.3); backdrop-filter: blur(5px); display: flex; align-items: center; gap: 10px; }
+#time-icon { font-size: 20px; }
 
 /* Crosshair & Interaction */
 #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; pointer-events: none; z-index: 50; }
-#crosshair::before, #crosshair::after { content: ''; position: absolute; background: rgba(255,255,255,0.5); }
+#crosshair::before, #crosshair::after { content: ''; position: absolute; background: rgba(255,255,255,0.8); box-shadow: 0 0 5px #000; }
 #crosshair::before { top: 9px; left: 0; width: 20px; height: 2px; }
 #crosshair::after { top: 0; left: 9px; width: 2px; height: 20px; }
-.interact-prompt { position: absolute; top: 55%; left: 50%; transform: translateX(-50%); font-size: 18px; font-family: 'Orbitron', sans-serif; color: var(--gold); text-shadow: 0 0 10px var(--gold-glow); display: none; z-index: 50; pointer-events: none; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px; border: 1px solid var(--gold); }
+.interact-prompt { position: absolute; top: 55%; left: 50%; transform: translateX(-50%); font-size: 18px; font-family: 'Orbitron', sans-serif; color: var(--gold); text-shadow: 0 0 10px var(--gold-glow); display: none; z-index: 50; pointer-events: none; background: rgba(0,0,0,0.6); padding: 8px 20px; border-radius: 20px; border: 1px solid var(--gold); }
 
 /* Rebirth Screen */
 #rebirth-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(20px); }
@@ -136,7 +152,8 @@ body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
 
 <div id="loading-screen">
     <div class="spinner"></div>
-    <h2 class="glitch-text" data-text="GENERATING WORLD...">GENERATING WORLD...</h2>
+    <h2 class="glitch-text" data-text="GENERATING UNIVERSE...">GENERATING UNIVERSE...</h2>
+    <p style="margin-top: 20px; color: #666; font-family: 'Rajdhani', sans-serif;">Synthesizing Flora & Audio Frameworks...</p>
 </div>
 
 <div id="webgl-container"></div>
@@ -144,10 +161,21 @@ body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
 <div id="crosshair"></div>
 <div id="interact-prompt" class="interact-prompt">[SPACE] TO DIGEST BEANS</div>
 
+<div id="time-panel">
+    <span id="time-icon">☀️</span>
+    <span id="time-text">12:00</span>
+    <span style="font-size: 12px; margin-left: 10px; color: #aaa;">DAY <span id="time-day">1</span></span>
+</div>
+
+<div id="minimap-container">
+    <canvas id="minimap-canvas" width="200" height="200"></canvas>
+    <div class="minimap-overlay"></div>
+</div>
+
 <div id="stats-panel" class="hud-element">
     <h1 class="glitch-text" data-text="FELIXFART 3D">FELIXFART 3D</h1>
     <div class="stat-row">
-        <span class="stat-label">Total Farts Generated</span>
+        <span class="stat-label">Total Farts</span>
         <span id="txt-farts" class="stat-val val-fart">0</span>
     </div>
     <div class="stat-row">
@@ -163,23 +191,23 @@ body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
         <span id="txt-tokens" class="stat-val" style="color:var(--gold); text-shadow:0 0 10px var(--gold-glow)">0</span>
     </div>
     
-    <div style="margin-top: 25px;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+    <div style="margin-top: 15px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
             <span class="stat-label" style="color:#fff;">Stomach Capacity</span>
-            <span id="txt-stom" style="font-family:'Orbitron',sans-serif; font-size:14px; font-weight:bold;">0 / 10</span>
+            <span id="txt-stom" style="font-family:'Orbitron',sans-serif; font-size:12px; font-weight:bold;">0 / 10</span>
         </div>
         <div class="bar-container"><div id="stomach-fill" class="bar-fill"></div><div id="stomach-pct" class="bar-text">0%</div></div>
     </div>
 
-    <div style="margin-top: 15px;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-            <span class="stat-label" style="color:#fff;">Stamina (SHIFT to Sprint)</span>
+    <div style="margin-top: 10px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+            <span class="stat-label" style="color:#fff;">Stamina (SHIFT)</span>
         </div>
         <div class="bar-container"><div id="stamina-fill" class="bar-fill" style="width:100%;"></div><div class="bar-text">READY</div></div>
     </div>
 
-    <div style="margin-top: 20px; font-size: 12px; color: #666; text-align: center; font-family: 'Rajdhani', sans-serif; letter-spacing: 1px;">
-        WASD: Move | MOUSE: Look | SHIFT: Sprint<br>Collect Beans -> Return to Base -> SPACE to Fart
+    <div style="margin-top: 15px; font-size: 11px; color: #777; text-align: center; font-family: 'Rajdhani', sans-serif; letter-spacing: 1px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+        WASD / ARROWS: Move | MOUSE: Look | SHIFT: Sprint<br>Collect Beans -> Return to Base -> SPACE to Fart
     </div>
 </div>
 
@@ -188,15 +216,17 @@ body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
         <button class="tab-btn active" data-target="upgrades" onclick="UI.switchTab('upgrades')">Upgrades</button>
         <button class="tab-btn" data-target="mutations" onclick="UI.switchTab('mutations')">Mutations</button>
         <button class="tab-btn" data-target="prestige" onclick="UI.switchTab('prestige')">Astral</button>
+        <button class="tab-btn" data-target="achievements" onclick="UI.switchTab('achievements')">Trophies</button>
     </div>
     
     <div id="list-upgrades" class="shop-content"></div>
     <div id="list-mutations" class="shop-content" style="display:none;"></div>
+    <div id="list-achievements" class="shop-content" style="display:none;"></div>
     <div id="list-prestige" class="shop-content" style="display:none;">
         <div class="upgrade-card" style="border-color:var(--gold); margin-bottom:20px;" onclick="Game.showRebirthModal()">
             <div style="text-align:center;">
-                <h3 style="color:var(--gold); font-family:'Orbitron',sans-serif; margin:0 0 10px 0; font-size:20px; text-shadow:0 0 10px var(--gold-glow);">PERFORM REBIRTH</h3>
-                <p style="font-size:13px; color:#ccc; margin:0;">Sacrifice all mortal possessions to ascend. Gain Astral Tokens for permanent god-tier multipliers.</p>
+                <h3 style="color:var(--gold); font-family:'Orbitron',sans-serif; margin:0 0 10px 0; font-size:18px; text-shadow:0 0 10px var(--gold-glow);">PERFORM REBIRTH</h3>
+                <p style="font-size:12px; color:#ccc; margin:0;">Sacrifice all mortal possessions to ascend. Gain Astral Tokens for permanent god-tier multipliers.</p>
             </div>
         </div>
         <div id="prestige-items"></div>
@@ -218,8 +248,8 @@ body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
 
 <script>
 /**
- * FELIXFART 3D: ULTIMATE TYCOON ENGINE
- * Advanced Three.js implementation with procedural chunking, physics, particle systems, and massive data trees.
+ * FELIXFART 3D: ULTIMATE TYCOON ENGINE (ASCENDED EDITION)
+ * Advanced Three.js implementation with procedural chunking, physics, particle systems, massive data trees, instanced rendering, dynamic environments, and audio synthesis.
  */
 
 // ==========================================
@@ -228,10 +258,11 @@ body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
 const DB = {
     upgrades: [],
     mutations: [],
-    prestige: []
+    prestige: [],
+    achievements: []
 };
 
-// Procedurally generate 100 upgrades to ensure massive scale
+// Procedurally generate 100 upgrades
 const upgradeAdjectives = ["Elastic", "Reinforced", "Titanium", "Quantum", "Nuclear", "Cosmic", "Galactic", "Divine", "Abyssal", "Infinite"];
 const upgradeNouns = ["Stomach", "Intestines", "Lungs", "Shoes", "Tractor Beam", "Digester", "Valve", "Compressor", "Sphincter", "Aura"];
 
@@ -256,16 +287,7 @@ for(let i=0; i<100; i++) {
         case 'auto': val = 1 * Math.pow(5, tier); desc = `Automatically generates ${val} farts per second without digesting.`; break;
     }
 
-    DB.upgrades.push({
-        id: `u_${i}`,
-        name: name,
-        desc: desc,
-        cost: Math.floor(baseCost),
-        mult: 1.15 + (tier * 0.05),
-        max: 10 + (tier * 5),
-        type: type,
-        val: val
-    });
+    DB.upgrades.push({ id: `u_${i}`, name: name, desc: desc, cost: Math.floor(baseCost), mult: 1.15 + (tier * 0.05), max: 10 + (tier * 5), type: type, val: val });
 }
 
 // Procedurally generate 50 mutations
@@ -275,69 +297,27 @@ for(let i=0; i<50; i++) {
     let type = i % 2 === 0 ? 'auto' : 'fart';
     let baseCost = 5000 * Math.pow(4, tier);
     
-    DB.mutations.push({
-        id: `m_${i}`,
-        name: `${mutAdj[tier]} Anomaly ${i+1}`,
-        desc: type === 'auto' ? `Triggers an insane passive auto-fart reaction giving +${Math.pow(10, tier+1)}/s.` : `Radically mutates your core for a massive x${Math.pow(2, tier+1)} fart multiplier.`,
-        cost: Math.floor(baseCost),
-        mult: 2.0,
-        max: 5,
-        type: type,
-        val: type === 'auto' ? Math.pow(10, tier+1) : Math.pow(2, tier+1)
-    });
+    DB.mutations.push({ id: `m_${i}`, name: `${mutAdj[tier]} Anomaly ${i+1}`, desc: type === 'auto' ? `Triggers an insane passive auto-fart reaction giving +${Math.pow(10, tier+1)}/s.` : `Radically mutates your core for a massive x${Math.pow(2, tier+1)} fart multiplier.`, cost: Math.floor(baseCost), mult: 2.0, max: 5, type: type, val: type === 'auto' ? Math.pow(10, tier+1) : Math.pow(2, tier+1) });
 }
 
 // Prestige Upgrades
 const presNames = ["Golden Bean", "God Speed", "Astral Capacity", "Divine Digestion", "Omnipotent Radius", "Ethereal Lungs", "Creator's Valve", "Void Compression", "Celestial Aura", "The Ultimate Fart"];
 const presTypes = ['pfart', 'pspeed', 'pcap', 'pdigest', 'prad', 'pstam', 'pauto', 'pfart', 'prad', 'pfart'];
 for(let i=0; i<10; i++) {
-    DB.prestige.push({
-        id: `p_${i}`,
-        name: presNames[i],
-        desc: `Permenantly alters reality. Base stat is massively multiplied based on its astral level.`,
-        cost: 1 * Math.pow(3, i),
-        mult: 2.5,
-        max: 99,
-        type: presTypes[i],
-        val: i === 9 ? 100 : (2 + i*0.5)
-    });
+    DB.prestige.push({ id: `p_${i}`, name: presNames[i], desc: `Permanently alters reality. Base stat is massively multiplied based on its astral level.`, cost: 1 * Math.pow(3, i), mult: 2.5, max: 99, type: presTypes[i], val: i === 9 ? 100 : (2 + i*0.5) });
 }
 
-// ==========================================
-// GAME STATE
-// ==========================================
-const C = {
-    WORLD_SIZE: 5000,
-    CHUNK_SIZE: 200,
-    HOME_RADIUS: 100,
-    MAX_BEANS: 1000,
-    MAX_PARTICLES: 5000
-};
+// Achievements DB
+const achievementData = [
+    { id: 'a_1', name: "First Wind", desc: "Generate your first 100 farts.", req: { type: 'farts', val: 100 } },
+    { id: 'a_2', name: "Bean Eater", desc: "Devour 50 beans.", req: { type: 'beans', val: 50 } },
+    { id: 'a_3', name: "Hurricane Warning", desc: "Reach 1,000,000 total farts.", req: { type: 'farts', val: 1000000 } },
+    { id: 'a_4', name: "Marathon Runner", desc: "Travel 10,000 units.", req: { type: 'dist', val: 10000 } },
+    { id: 'a_5', name: "Ascended Being", desc: "Perform your first Rebirth.", req: { type: 'rebirth', val: 1 } },
+    { id: 'a_6', name: "Insatiable Hunger", desc: "Reach 10,000 Stomach Capacity.", req: { type: 'cap', val: 10000 } }
+];
+DB.achievements = achievementData.map(a => ({ ...a, unlocked: false }));
 
-const State = {
-    // Currencies
-    farts: 0, beansEaten: 0, beansInStomach: 0, prestigeTokens: 0, rebirths: 0,
-    
-    // Stats (Calculated)
-    stomachCap: 10, maxStamina: 100, stamina: 100,
-    multFart: 1, multSpeed: 1, multRadius: 1, multDigest: 1, autoFart: 0,
-    
-    // Player Physics
-    pos: new THREE.Vector3(0, 5, 0),
-    vel: new THREE.Vector3(0, 0, 0),
-    baseSpeed: 40, sprintMult: 2.0,
-    yaw: 0, pitch: 0,
-    
-    // State Flags
-    inSafeZone: true,
-    isSprinting: false,
-    inventory: {}
-};
-
-// Initialize Inventory
-[...DB.upgrades, ...DB.mutations, ...DB.prestige].forEach(item => {
-    State.inventory[item.id] = { count: 0, currentCost: item.cost };
-});
 
 // ==========================================
 // MATH & PROCEDURAL GEN UTILS
@@ -381,85 +361,231 @@ function fbm(x, y, octaves = 4) {
 }
 
 // ==========================================
-// ENGINE: THREE.JS SETUP
+// GAME STATE
+// ==========================================
+const C = {
+    WORLD_SIZE: 5000,
+    CHUNK_SIZE: 200,
+    HOME_RADIUS: 100,
+    MAX_BEANS: 1500, // Increased for denser world
+    MAX_PARTICLES: 5000,
+    GRASS_COUNT: 40000,
+    TREE_COUNT: 2000
+};
+
+const State = {
+    farts: 0, beansEaten: 0, beansInStomach: 0, prestigeTokens: 0, rebirths: 0, distanceTraveled: 0,
+    stomachCap: 10, maxStamina: 100, stamina: 100,
+    multFart: 1, multSpeed: 1, multRadius: 1, multDigest: 1, autoFart: 0,
+    pos: new THREE.Vector3(0, 5, 0), vel: new THREE.Vector3(0, 0, 0),
+    baseSpeed: 40, sprintMult: 2.0, yaw: 0, pitch: 0,
+    inSafeZone: true, isSprinting: false, inventory: {}
+};
+
+// Initialize Inventory
+[...DB.upgrades, ...DB.mutations, ...DB.prestige].forEach(item => {
+    State.inventory[item.id] = { count: 0, currentCost: item.cost };
+});
+
+
+// ==========================================
+// AUDIO ENGINE (Web Audio API)
+// ==========================================
+const AudioSys = {
+    ctx: null,
+    enabled: false,
+
+    init() {
+        try {
+            window.AudioContext = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioContext();
+            this.enabled = true;
+        } catch(e) { console.warn("Audio Context not supported."); }
+    },
+
+    playTone(freq, type, duration, vol, detune=0) {
+        if(!this.enabled || this.ctx.state === 'suspended') return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        osc.detune.setValueAtTime(detune, this.ctx.currentTime);
+        
+        gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+        
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + duration);
+    },
+
+    playCollect(tier) {
+        if(tier === 1) this.playTone(600, 'sine', 0.1, 0.1);
+        if(tier === 2) { this.playTone(600, 'sine', 0.1, 0.1); setTimeout(()=>this.playTone(800, 'sine', 0.15, 0.1), 50); }
+        if(tier === 3) { this.playTone(800, 'square', 0.1, 0.1); setTimeout(()=>this.playTone(1200, 'square', 0.3, 0.1), 50); }
+    },
+
+    playFart() {
+        if(!this.enabled) return;
+        const dur = Math.random() * 0.3 + 0.2;
+        this.playTone(Math.random() * 50 + 40, 'sawtooth', dur, 0.3, Math.random()*200 - 100);
+        this.playTone(Math.random() * 30 + 30, 'square', dur*1.2, 0.2);
+    },
+    
+    playAscend() {
+        this.playTone(200, 'sine', 2.0, 0.3);
+        setTimeout(()=>this.playTone(400, 'sine', 1.8, 0.3), 200);
+        setTimeout(()=>this.playTone(800, 'sine', 1.5, 0.3), 400);
+        setTimeout(()=>this.playTone(1600, 'triangle', 1.0, 0.3), 600);
+    }
+};
+
+// ==========================================
+// ENVIRONMENT & TIME CYCLE
+// ==========================================
+const EnvSys = {
+    time: 12.0, // Start at noon
+    day: 1,
+    timeSpeed: 0.5, // Game hours per real second
+    sunLight: null,
+    ambLight: null,
+    skyColor: new THREE.Color(),
+    fogColor: new THREE.Color(),
+    
+    colors: {
+        daySky: new THREE.Color(0x87CEEB), dayFog: new THREE.Color(0x87CEEB), dayLight: new THREE.Color(0xffffff),
+        duskSky: new THREE.Color(0xff7f50), duskFog: new THREE.Color(0xcc5533), duskLight: new THREE.Color(0xffaa55),
+        nightSky: new THREE.Color(0x050510), nightFog: new THREE.Color(0x020205), nightLight: new THREE.Color(0x4444aa),
+        dawnSky: new THREE.Color(0xffb6c1), dawnFog: new THREE.Color(0xaa6677), dawnLight: new THREE.Color(0xffccaa)
+    },
+
+    update(dt, scene) {
+        this.time += this.timeSpeed * dt;
+        if(this.time >= 24.0) {
+            this.time -= 24.0;
+            this.day++;
+            document.getElementById('time-day').innerText = this.day;
+        }
+
+        // Update UI
+        let h = Math.floor(this.time);
+        let m = Math.floor((this.time - h) * 60);
+        document.getElementById('time-text').innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+
+        // Calculate blended colors based on time
+        let blend = 0;
+        let cSky1, cSky2, cFog1, cFog2, cLight1, cLight2, int1, int2;
+
+        if(this.time >= 6 && this.time < 17) { // Day
+            blend = (this.time - 6) / 11;
+            cSky1 = this.colors.dawnSky; cSky2 = this.colors.daySky;
+            cFog1 = this.colors.dawnFog; cFog2 = this.colors.dayFog;
+            cLight1 = this.colors.dawnLight; cLight2 = this.colors.dayLight;
+            int1 = 0.5; int2 = 1.0;
+            document.getElementById('time-icon').innerText = '☀️';
+        } else if(this.time >= 17 && this.time < 20) { // Dusk
+            blend = (this.time - 17) / 3;
+            cSky1 = this.colors.daySky; cSky2 = this.colors.duskSky;
+            cFog1 = this.colors.dayFog; cFog2 = this.colors.duskFog;
+            cLight1 = this.colors.dayLight; cLight2 = this.colors.duskLight;
+            int1 = 1.0; int2 = 0.6;
+            document.getElementById('time-icon').innerText = '🌇';
+        } else if(this.time >= 20 || this.time < 5) { // Night
+            let t = this.time >= 20 ? (this.time - 20) : (this.time + 4);
+            blend = t / 9;
+            cSky1 = this.colors.duskSky; cSky2 = this.colors.nightSky;
+            cFog1 = this.colors.duskFog; cFog2 = this.colors.nightFog;
+            cLight1 = this.colors.duskLight; cLight2 = this.colors.nightLight;
+            int1 = 0.6; int2 = 0.1;
+            document.getElementById('time-icon').innerText = '🌙';
+        } else { // Dawn
+            blend = (this.time - 5) / 1;
+            cSky1 = this.colors.nightSky; cSky2 = this.colors.dawnSky;
+            cFog1 = this.colors.nightFog; cFog2 = this.colors.dawnFog;
+            cLight1 = this.colors.nightLight; cLight2 = this.colors.dawnLight;
+            int1 = 0.1; int2 = 0.5;
+            document.getElementById('time-icon').innerText = '🌅';
+        }
+
+        this.skyColor.copy(cSky1).lerp(cSky2, blend);
+        this.fogColor.copy(cFog1).lerp(cFog2, blend);
+        
+        scene.background = this.skyColor;
+        scene.fog.color = this.fogColor;
+        
+        if(this.sunLight) {
+            this.sunLight.color.copy(cLight1).lerp(cLight2, blend);
+            this.sunLight.intensity = lerp(int1, int2, blend);
+            
+            // Move sun position
+            let angle = (this.time / 24) * Math.PI * 2 - Math.PI/2;
+            this.sunLight.position.set(Math.cos(angle)*500, Math.sin(angle)*500, 100);
+        }
+    }
+};
+
+// ==========================================
+// ENGINE: THREE.JS SETUP & PROCEDURAL NATURE
 // ==========================================
 const Engine = {
-    scene: null, camera: null, renderer: null,
-    clock: new THREE.Clock(),
-    raycaster: new THREE.Raycaster(),
-    
-    // Entity Groups
+    scene: null, camera: null, renderer: null, clock: new THREE.Clock(),
     beansGroup: null, chunkGroup: null, particlesGroup: null,
-    
-    // Arrays
-    beans: [], chunks: new Map(), particles: [],
-    
-    // Materials
-    matBeanNorm: null, matBeanEpic: null, matBeanLeg: null,
-    matGround: null, matSafeZone: null,
-    
+    beans: [], particles: [],
+    matBeanNorm: null, matBeanEpic: null, matBeanLeg: null, matGround: null,
+    grassMesh: null, treeTrunkMesh: null, treeLeavesMesh: null, rockMesh: null,
+
     init() {
         const container = document.getElementById('webgl-container');
         
-        // Scene & Fog
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x050508);
-        this.scene.fog = new THREE.FogExp2(0x050508, 0.003);
+        this.scene.fog = new THREE.FogExp2(0x87CEEB, 0.002);
 
-        // Camera
-        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 2000);
+        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 3000);
         this.scene.add(this.camera);
 
-        // Renderer
-        this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        this.renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         container.appendChild(this.renderer.domElement);
 
-        // Lights
-        const ambLight = new THREE.AmbientLight(0xffffff, 0.2);
-        this.scene.add(ambLight);
+        EnvSys.ambLight = new THREE.AmbientLight(0xffffff, 0.3);
+        this.scene.add(EnvSys.ambLight);
         
-        const dirLight = new THREE.DirectionalLight(0xffaa55, 0.8);
-        dirLight.position.set(100, 200, 50);
-        dirLight.castShadow = true;
-        dirLight.shadow.camera.top = 200;
-        dirLight.shadow.camera.bottom = -200;
-        dirLight.shadow.camera.left = -200;
-        dirLight.shadow.camera.right = 200;
-        this.scene.add(dirLight);
+        EnvSys.sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
+        EnvSys.sunLight.castShadow = true;
+        EnvSys.sunLight.shadow.camera.top = 300;
+        EnvSys.sunLight.shadow.camera.bottom = -300;
+        EnvSys.sunLight.shadow.camera.left = -300;
+        EnvSys.sunLight.shadow.camera.right = 300;
+        EnvSys.sunLight.shadow.mapSize.width = 2048;
+        EnvSys.sunLight.shadow.mapSize.height = 2048;
+        this.scene.add(EnvSys.sunLight);
         
-        // Home Base Light
         const pointLight = new THREE.PointLight(0x00ffcc, 2.0, C.HOME_RADIUS * 2);
         pointLight.position.set(0, 20, 0);
         this.scene.add(pointLight);
 
-        // Groups
-        this.beansGroup = new THREE.Group();
-        this.scene.add(this.beansGroup);
+        this.beansGroup = new THREE.Group(); this.scene.add(this.beansGroup);
+        this.chunkGroup = new THREE.Group(); this.scene.add(this.chunkGroup);
         
-        this.chunkGroup = new THREE.Group();
-        this.scene.add(this.chunkGroup);
-        
-        // Materials Init
         this.initMaterials();
-        
-        // Build Home Base
         this.buildHomeBase();
+        this.buildNature(); // Instanced Grass, Trees, Rocks
 
-        // Initial Beans
         for(let i=0; i<C.MAX_BEANS; i++) this.spawnBean();
 
-        // Event Listeners
         window.addEventListener('resize', () => this.onResize());
         document.addEventListener('keydown', Input.onKeyDown);
         document.addEventListener('keyup', Input.onKeyUp);
         
-        // Pointer Lock for FPS controls
         document.body.addEventListener('click', () => {
-            if(!UI.isShopOpen) document.body.requestPointerLock();
+            if(!UI.isShopOpen) {
+                document.body.requestPointerLock();
+                if(!AudioSys.enabled) AudioSys.init();
+            }
         });
         document.addEventListener('mousemove', Input.onMouseMove);
         document.addEventListener('pointerlockchange', () => {
@@ -468,6 +594,7 @@ const Engine = {
         });
 
         UI.init();
+        Minimap.init();
         this.loop();
         
         setTimeout(() => {
@@ -478,64 +605,152 @@ const Engine = {
 
     initMaterials() {
         const groundVert = `
-            varying vec2 vUv;
-            varying vec3 vPos;
+            varying vec2 vUv; varying vec3 vPos;
             void main() {
-                vUv = uv;
-                vPos = (modelMatrix * vec4(position, 1.0)).xyz;
+                vUv = uv; vPos = (modelMatrix * vec4(position, 1.0)).xyz;
                 gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            }
-        `;
+            }`;
         const groundFrag = `
-            varying vec2 vUv;
-            varying vec3 vPos;
-            uniform vec3 color;
+            varying vec2 vUv; varying vec3 vPos; uniform vec3 color;
             void main() {
                 float grid1 = abs(fract(vPos.x * 0.05) - 0.5) * 2.0;
                 float grid2 = abs(fract(vPos.z * 0.05) - 0.5) * 2.0;
                 float line = min(grid1, grid2);
                 float glow = 1.0 - smoothstep(0.0, 0.05, line);
                 
-                vec3 baseColor = vec3(0.05, 0.05, 0.08);
-                vec3 gridColor = vec3(0.2, 0.8, 0.2) * glow * 0.5;
+                vec3 baseColor = vec3(0.1, 0.3, 0.1); // Greenish base for grass
+                vec3 gridColor = vec3(0.2, 0.8, 0.2) * glow * 0.2;
                 
                 float dist = length(vPos.xz);
                 float safeZone = 1.0 - smoothstep(${C.HOME_RADIUS - 10.0}, ${C.HOME_RADIUS}, dist);
-                vec3 finalColor = mix(baseColor + gridColor, vec3(0.0, 0.2, 0.2), safeZone * 0.5);
+                vec3 finalColor = mix(baseColor + gridColor, vec3(0.0, 0.4, 0.4), safeZone * 0.8);
                 
                 gl_FragColor = vec4(finalColor, 1.0);
-            }
-        `;
+            }`;
         
-        this.matGround = new THREE.ShaderMaterial({
-            vertexShader: groundVert,
-            fragmentShader: groundFrag,
-            uniforms: { color: { value: new THREE.Color(0x111111) } }
-        });
-
+        this.matGround = new THREE.ShaderMaterial({ vertexShader: groundVert, fragmentShader: groundFrag, uniforms: { color: { value: new THREE.Color(0x111111) } } });
         this.matBeanNorm = new THREE.MeshStandardMaterial({ color: 0xd2691e, roughness: 0.7, metalness: 0.2 });
         this.matBeanEpic = new THREE.MeshStandardMaterial({ color: 0x8a2be2, roughness: 0.3, metalness: 0.8, emissive: 0x4a0082 });
         this.matBeanLeg = new THREE.MeshStandardMaterial({ color: 0xffd700, roughness: 0.1, metalness: 1.0, emissive: 0x886600 });
     },
 
     buildHomeBase() {
-        const geoPlane = new THREE.PlaneGeometry(C.WORLD_SIZE, C.WORLD_SIZE, 10, 10);
+        const geoPlane = new THREE.PlaneGeometry(C.WORLD_SIZE, C.WORLD_SIZE, 50, 50);
         geoPlane.rotateX(-Math.PI / 2);
+        
+        // Displace ground vertices based on noise
+        const posAttr = geoPlane.attributes.position;
+        for(let i=0; i<posAttr.count; i++) {
+            let x = posAttr.getX(i);
+            let z = posAttr.getZ(i);
+            let y = fbm(x*0.01, z*0.01) * 30; // 30 height magnitude
+            // Flatten home base
+            let dist = Math.hypot(x, z);
+            if(dist < C.HOME_RADIUS) y = lerp(0, y, dist/C.HOME_RADIUS);
+            posAttr.setY(i, y);
+        }
+        geoPlane.computeVertexNormals();
+
         const meshPlane = new THREE.Mesh(geoPlane, this.matGround);
         meshPlane.receiveShadow = true;
         this.scene.add(meshPlane);
 
         const geoDome = new THREE.SphereGeometry(C.HOME_RADIUS, 32, 16, 0, Math.PI*2, 0, Math.PI/2);
-        const matDome = new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.1, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
+        const matDome = new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.15, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
         const meshDome = new THREE.Mesh(geoDome, matDome);
         this.scene.add(meshDome);
 
-        const geoAltar = new THREE.CylinderGeometry(5, 5, 10, 16);
-        const matAltar = new THREE.MeshStandardMaterial({ color: 0x333333, emissive: 0x00ffcc, emissiveIntensity: 0.2 });
+        const geoAltar = new THREE.CylinderGeometry(5, 8, 10, 16);
+        const matAltar = new THREE.MeshStandardMaterial({ color: 0x222222, emissive: 0x00ffcc, emissiveIntensity: 0.3, metalness: 0.8, roughness: 0.2 });
         const meshAltar = new THREE.Mesh(geoAltar, matAltar);
         meshAltar.position.y = 5;
         meshAltar.castShadow = true;
         this.scene.add(meshAltar);
+    },
+
+    buildNature() {
+        // Instanced Grass
+        const grassGeo = new THREE.ConeGeometry(0.3, 1.5, 3);
+        grassGeo.translate(0, 0.75, 0); // Origin at bottom
+        const grassMat = new THREE.MeshStandardMaterial({ color: 0x2d8a2d, roughness: 0.9, side: THREE.DoubleSide });
+        this.grassMesh = new THREE.InstancedMesh(grassGeo, grassMat, C.GRASS_COUNT);
+        this.grassMesh.receiveShadow = true;
+
+        // Instanced Trees
+        const trunkGeo = new THREE.CylinderGeometry(0.5, 0.8, 5, 5);
+        trunkGeo.translate(0, 2.5, 0);
+        const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4a3b22, roughness: 1.0 });
+        this.treeTrunkMesh = new THREE.InstancedMesh(trunkGeo, trunkMat, C.TREE_COUNT);
+        this.treeTrunkMesh.castShadow = true;
+
+        const leavesGeo = new THREE.IcosahedronGeometry(2.5, 1);
+        leavesGeo.translate(0, 5, 0);
+        const leavesMat = new THREE.MeshStandardMaterial({ color: 0x1e6b21, roughness: 0.8 });
+        this.treeLeavesMesh = new THREE.InstancedMesh(leavesGeo, leavesMat, C.TREE_COUNT);
+        this.treeLeavesMesh.castShadow = true;
+        this.treeLeavesMesh.receiveShadow = true;
+
+        // Instanced Rocks
+        const rockGeo = new THREE.DodecahedronGeometry(2, 0);
+        rockGeo.translate(0, 1, 0);
+        const rockMat = new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.9, metalness: 0.1 });
+        this.rockMesh = new THREE.InstancedMesh(rockGeo, rockMat, C.TREE_COUNT / 2);
+        this.rockMesh.castShadow = true;
+
+        const dummy = new THREE.Object3D();
+        
+        // Populate Grass
+        for(let i=0; i<C.GRASS_COUNT; i++) {
+            let x = (Math.random() - 0.5) * C.WORLD_SIZE;
+            let z = (Math.random() - 0.5) * C.WORLD_SIZE;
+            let dist = Math.hypot(x,z);
+            if(dist < C.HOME_RADIUS) continue; // No grass in base
+            
+            let y = fbm(x*0.01, z*0.01) * 30;
+            dummy.position.set(x, y, z);
+            dummy.rotation.y = Math.random() * Math.PI;
+            dummy.rotation.x = (Math.random()-0.5)*0.2;
+            dummy.rotation.z = (Math.random()-0.5)*0.2;
+            dummy.scale.setScalar(Math.random() * 0.5 + 0.5);
+            dummy.updateMatrix();
+            this.grassMesh.setMatrixAt(i, dummy.matrix);
+        }
+
+        // Populate Trees & Rocks
+        for(let i=0; i<C.TREE_COUNT; i++) {
+            let x = (Math.random() - 0.5) * C.WORLD_SIZE;
+            let z = (Math.random() - 0.5) * C.WORLD_SIZE;
+            let dist = Math.hypot(x,z);
+            if(dist < C.HOME_RADIUS + 20) continue;
+            
+            let y = fbm(x*0.01, z*0.01) * 30;
+            let scale = Math.random() * 1.5 + 0.8;
+            
+            dummy.position.set(x, y, z);
+            dummy.rotation.y = Math.random() * Math.PI;
+            dummy.scale.setScalar(scale);
+            dummy.updateMatrix();
+            
+            this.treeTrunkMesh.setMatrixAt(i, dummy.matrix);
+            this.treeLeavesMesh.setMatrixAt(i, dummy.matrix);
+
+            // Rocks
+            if(i < C.TREE_COUNT/2) {
+                let rx = x + (Math.random()-0.5)*10;
+                let rz = z + (Math.random()-0.5)*10;
+                let ry = fbm(rx*0.01, rz*0.01) * 30;
+                dummy.position.set(rx, ry, rz);
+                dummy.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI);
+                dummy.scale.setScalar(Math.random() * 0.8 + 0.2);
+                dummy.updateMatrix();
+                this.rockMesh.setMatrixAt(i, dummy.matrix);
+            }
+        }
+
+        this.scene.add(this.grassMesh);
+        this.scene.add(this.treeTrunkMesh);
+        this.scene.add(this.treeLeavesMesh);
+        this.scene.add(this.rockMesh);
     },
 
     spawnBean() {
@@ -546,7 +761,7 @@ const Engine = {
             if (Math.hypot(x, z) > C.HOME_RADIUS + 20) break;
         }
         
-        let y = fbm(x*0.01, z*0.01) * 20 + 2;
+        let y = fbm(x*0.01, z*0.01) * 30 + 2;
         
         let rand = Math.random();
         let tier = 1, mat = this.matBeanNorm, val = 1, size = 1;
@@ -565,6 +780,7 @@ const Engine = {
     },
 
     spawnParticle(pos, color, scale, speed, life) {
+        if(this.particles.length > C.MAX_PARTICLES) return;
         const geo = new THREE.BoxGeometry(scale, scale, scale);
         const mat = new THREE.MeshBasicMaterial({ color: color, transparent: true });
         const mesh = new THREE.Mesh(geo, mat);
@@ -596,9 +812,12 @@ const Engine = {
         requestAnimationFrame(() => this.loop());
         const dt = Math.min(this.clock.getDelta(), 0.1);
         
+        EnvSys.update(dt, this.scene);
+
         if(!UI.isShopOpen) {
             Input.update(dt);
             Logic.update(dt);
+            Minimap.update();
         }
         
         const time = this.clock.getElapsedTime();
@@ -612,7 +831,7 @@ const Engine = {
         for(let i=this.particles.length-1; i>=0; i--) {
             let p = this.particles[i];
             p.position.addScaledVector(p.userData.vel, dt);
-            p.userData.vel.y -= 30 * dt;
+            p.userData.vel.y -= 30 * dt; // Gravity
             p.userData.life -= dt;
             p.material.opacity = p.userData.life / p.userData.maxLife;
             p.scale.setScalar(p.userData.life / p.userData.maxLife);
@@ -629,28 +848,28 @@ const Engine = {
 };
 
 // ==========================================
-// INPUT SYSTEM
+// INPUT SYSTEM (WASD + ARROWS)
 // ==========================================
 const Input = {
     keys: { w:false, a:false, s:false, d:false, shift:false, space:false },
     
     onKeyDown(e) {
-        if(e.code === 'KeyW') Input.keys.w = true;
-        if(e.code === 'KeyA') Input.keys.a = true;
-        if(e.code === 'KeyS') Input.keys.s = true;
-        if(e.code === 'KeyD') Input.keys.d = true;
-        if(e.code === 'ShiftLeft') Input.keys.shift = true;
+        if(e.code === 'KeyW' || e.code === 'ArrowUp') Input.keys.w = true;
+        if(e.code === 'KeyA' || e.code === 'ArrowLeft') Input.keys.a = true;
+        if(e.code === 'KeyS' || e.code === 'ArrowDown') Input.keys.s = true;
+        if(e.code === 'KeyD' || e.code === 'ArrowRight') Input.keys.d = true;
+        if(e.code === 'ShiftLeft' || e.code === 'ShiftRight') Input.keys.shift = true;
         if(e.code === 'Space') Input.keys.space = true;
         
         if(e.code === 'Tab') { e.preventDefault(); UI.toggleShop(); }
     },
     
     onKeyUp(e) {
-        if(e.code === 'KeyW') Input.keys.w = false;
-        if(e.code === 'KeyA') Input.keys.a = false;
-        if(e.code === 'KeyS') Input.keys.s = false;
-        if(e.code === 'KeyD') Input.keys.d = false;
-        if(e.code === 'ShiftLeft') Input.keys.shift = false;
+        if(e.code === 'KeyW' || e.code === 'ArrowUp') Input.keys.w = false;
+        if(e.code === 'KeyA' || e.code === 'ArrowLeft') Input.keys.a = false;
+        if(e.code === 'KeyS' || e.code === 'ArrowDown') Input.keys.s = false;
+        if(e.code === 'KeyD' || e.code === 'ArrowRight') Input.keys.d = false;
+        if(e.code === 'ShiftLeft' || e.code === 'ShiftRight') Input.keys.shift = false;
         if(e.code === 'Space') Input.keys.space = false;
     },
     
@@ -673,11 +892,11 @@ const Input = {
         if(Input.keys.s) dir.z += 1;
         if(Input.keys.a) dir.x -= 1;
         if(Input.keys.d) dir.x += 1;
-        dir.normalize();
+        if(dir.lengthSq() > 0) dir.normalize();
         
         dir.applyAxisAngle(new THREE.Vector3(0,1,0), State.yaw);
 
-        State.isSprinting = Input.keys.shift && State.stamina > 0 && dir.length() > 0;
+        State.isSprinting = Input.keys.shift && State.stamina > 0 && dir.lengthSq() > 0;
         let speed = State.baseSpeed * State.multSpeed;
         if(State.isSprinting) {
             speed *= State.sprintMult;
@@ -689,20 +908,87 @@ const Input = {
 
         const targetVel = dir.multiplyScalar(speed);
         State.vel.lerp(targetVel, 10 * dt);
+        
+        let moveDist = State.vel.length() * dt;
+        State.distanceTraveled += moveDist;
         State.pos.addScaledVector(State.vel, dt);
         
         const halfSize = C.WORLD_SIZE/2;
         State.pos.x = Math.max(-halfSize, Math.min(halfSize, State.pos.x));
         State.pos.z = Math.max(-halfSize, Math.min(halfSize, State.pos.z));
         
-        let terrainY = fbm(State.pos.x*0.01, State.pos.z*0.01) * 20;
-        State.pos.y = terrainY + 5; 
+        // Accurate terrain height tracking
+        let distToBase = Math.hypot(State.pos.x, State.pos.z);
+        let rawY = fbm(State.pos.x*0.01, State.pos.z*0.01) * 30;
+        let terrainY = distToBase < C.HOME_RADIUS ? lerp(0, rawY, distToBase/C.HOME_RADIUS) : rawY;
+        
+        State.pos.y = terrainY + 5; // Eye level
         
         Engine.camera.position.copy(State.pos);
 
         if(State.vel.length() > 1 && !State.inSafeZone) {
-            Engine.camera.position.y += Math.sin(Engine.clock.getElapsedTime() * 10) * 0.5;
+            Engine.camera.position.y += Math.sin(Engine.clock.getElapsedTime() * 12) * (State.isSprinting ? 0.6 : 0.3); // Head bob
+            if(Math.random() < 0.1 && State.isSprinting) Engine.spawnParticle(State.pos.clone().add(new THREE.Vector3(0,-4,0)), 0x555555, 1, 5, 0.5); // Dust
         }
+    }
+};
+
+// ==========================================
+// MINIMAP SYSTEM
+// ==========================================
+const Minimap = {
+    canvas: null, ctx: null, width: 200, height: 200, scale: 0.05,
+
+    init() {
+        this.canvas = document.getElementById('minimap-canvas');
+        this.ctx = this.canvas.getContext('2d');
+    },
+
+    update() {
+        if(!this.ctx) return;
+        this.ctx.clearRect(0, 0, this.width, this.height);
+        
+        const cx = this.width / 2;
+        const cy = this.height / 2;
+
+        // Draw Radar Grid
+        this.ctx.strokeStyle = 'rgba(0, 255, 255, 0.2)';
+        this.ctx.lineWidth = 1;
+        this.ctx.beginPath();
+        this.ctx.arc(cx, cy, 50, 0, Math.PI*2);
+        this.ctx.arc(cx, cy, 100, 0, Math.PI*2);
+        this.ctx.stroke();
+
+        // Draw Home Base
+        let homeX = cx - (State.pos.x * this.scale);
+        let homeY = cy - (State.pos.z * this.scale);
+        if(Math.hypot(homeX-cx, homeY-cy) < 120) {
+            this.ctx.fillStyle = 'rgba(0, 255, 204, 0.3)';
+            this.ctx.beginPath();
+            this.ctx.arc(homeX, homeY, C.HOME_RADIUS * this.scale, 0, Math.PI*2);
+            this.ctx.fill();
+        }
+
+        // Draw Beans
+        const beanRad = 5 + (State.multRadius * 2);
+        Engine.beans.forEach(b => {
+            let bx = cx + ((b.position.x - State.pos.x) * this.scale);
+            let by = cy + ((b.position.z - State.pos.z) * this.scale);
+            
+            if(Math.hypot(bx-cx, by-cy) < 100) {
+                this.ctx.fillStyle = b.userData.tier === 3 ? '#ffd700' : (b.userData.tier === 2 ? '#8a2be2' : '#d2691e');
+                this.ctx.beginPath();
+                this.ctx.arc(bx, by, b.userData.tier === 3 ? 4 : 2, 0, Math.PI*2);
+                this.ctx.fill();
+            }
+        });
+
+        // Draw View Cone
+        this.ctx.fillStyle = 'rgba(255,255,255,0.1)';
+        this.ctx.beginPath();
+        this.ctx.moveTo(cx, cy);
+        this.ctx.arc(cx, cy, 80, -State.yaw - 0.5 - Math.PI/2, -State.yaw + 0.5 - Math.PI/2);
+        this.ctx.fill();
     }
 };
 
@@ -714,6 +1000,7 @@ const Logic = {
         this.checkZones();
         this.processCollection();
         this.processFarts(dt);
+        this.checkAchievements();
         
         if(Engine.clock.getElapsedTime() % 0.5 < dt) UI.updateStats();
     },
@@ -749,10 +1036,11 @@ const Logic = {
                 if(State.beansInStomach > State.stomachCap) State.beansInStomach = State.stomachCap;
                 
                 UI.spawnToast(`+${b.userData.val} BEAN`, b.userData.tier === 3 ? 'var(--gold)' : 'var(--bean-color)');
+                AudioSys.playCollect(b.userData.tier);
                 
                 Engine.beansGroup.remove(b);
                 Engine.beans.splice(i, 1);
-                Engine.spawnBean();
+                Engine.spawnBean(); // Infinite world
                 
                 if(State.beansInStomach >= State.stomachCap) break;
             }
@@ -765,7 +1053,7 @@ const Logic = {
         }
         
         if(State.inSafeZone && State.beansInStomach > 0 && Input.keys.space) {
-            let amount = 10 * State.multDigest * dt;
+            let amount = 20 * State.multDigest * dt; // Base digest speed
             amount = Math.min(amount, State.beansInStomach);
             
             if(amount > 0) {
@@ -773,12 +1061,32 @@ const Logic = {
                 let generated = amount * State.multFart;
                 State.farts += generated;
                 
-                if(Math.random() < 0.2) {
-                    Engine.createExplosion(State.pos.clone().add(new THREE.Vector3(0,-2,0)), 0x39ff14, 5);
-                    Engine.camera.position.y += Math.random() * 2; 
+                if(Math.random() < 0.3) { // 30% chance per frame to explode visually
+                    Engine.createExplosion(State.pos.clone().add(new THREE.Vector3(0,-2,0)), 0x39ff14, 8);
+                    Engine.camera.position.y += Math.random() * 2.5; 
+                    AudioSys.playFart();
                 }
             }
         }
+    },
+
+    checkAchievements() {
+        DB.achievements.forEach(a => {
+            if(a.unlocked) return;
+            let achieved = false;
+            if(a.req.type === 'farts' && State.farts >= a.req.val) achieved = true;
+            if(a.req.type === 'beans' && State.beansEaten >= a.req.val) achieved = true;
+            if(a.req.type === 'dist' && State.distanceTraveled >= a.req.val) achieved = true;
+            if(a.req.type === 'rebirth' && State.rebirths >= a.req.val) achieved = true;
+            if(a.req.type === 'cap' && State.stomachCap >= a.req.val) achieved = true;
+
+            if(achieved) {
+                a.unlocked = true;
+                UI.spawnAchievement(a.name, a.desc);
+                UI.renderShopList('achievements');
+                AudioSys.playTone(880, 'sine', 0.5, 0.3); // Achievement ping
+            }
+        });
     },
 
     recalculateStats() {
@@ -836,6 +1144,7 @@ const UI = {
         this.renderShopList('upgrades');
         this.renderShopList('mutations');
         this.renderShopList('prestige');
+        this.renderShopList('achievements');
     },
     
     formatNum(n) {
@@ -879,6 +1188,7 @@ const UI = {
         document.getElementById('list-upgrades').style.display = tab === 'upgrades' ? 'flex' : 'none';
         document.getElementById('list-mutations').style.display = tab === 'mutations' ? 'flex' : 'none';
         document.getElementById('list-prestige').style.display = tab === 'prestige' ? 'flex' : 'none';
+        document.getElementById('list-achievements').style.display = tab === 'achievements' ? 'flex' : 'none';
         
         this.renderShopList(tab);
     },
@@ -887,6 +1197,20 @@ const UI = {
         const container = cat === 'prestige' ? document.getElementById('prestige-items') : document.getElementById(`list-${cat}`);
         container.innerHTML = '';
         
+        if(cat === 'achievements') {
+            DB.achievements.forEach(a => {
+                const div = document.createElement('div');
+                div.className = `upgrade-card ${a.unlocked ? 'maxed' : 'locked'}`;
+                div.innerHTML = `
+                    <div class="uc-header"><span class="uc-name" style="color:${a.unlocked?'var(--gold)':'#555'}">${a.name}</span></div>
+                    <div class="uc-desc">${a.desc}</div>
+                    <div class="uc-footer"><span class="uc-cost" style="color:${a.unlocked?'var(--primary)':'#555'}">${a.unlocked ? 'UNLOCKED' : 'LOCKED'}</span></div>
+                `;
+                container.appendChild(div);
+            });
+            return;
+        }
+
         const currencyStr = cat === 'prestige' ? 'Tokens' : 'Farts';
         const currAmount = cat === 'prestige' ? State.prestigeTokens : State.farts;
         
@@ -922,6 +1246,21 @@ const UI = {
         el.innerText = msg;
         container.appendChild(el);
         setTimeout(() => el.remove(), 2000);
+    },
+
+    spawnAchievement(title, desc) {
+        const container = document.getElementById('alert-container');
+        const el = document.createElement('div');
+        el.className = 'achievement-toast';
+        el.innerHTML = `
+            <div class="icon">🏆</div>
+            <div class="details">
+                <h4>ACHIEVEMENT UNLOCKED: ${title}</h4>
+                <p>${desc}</p>
+            </div>
+        `;
+        container.appendChild(el);
+        setTimeout(() => el.remove(), 4000);
     }
 };
 
@@ -987,6 +1326,7 @@ const Game = {
         UI.switchTab('upgrades');
         
         Engine.createExplosion(new THREE.Vector3(0,5,0), 0xffd700, 500);
+        AudioSys.playAscend();
         document.getElementById('fx-overlay').style.boxShadow = "inset 0 0 500px rgba(255, 215, 0, 1)";
         setTimeout(()=> document.getElementById('fx-overlay').style.boxShadow = "none", 2000);
         
