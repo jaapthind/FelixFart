@@ -427,18 +427,20 @@ body, html {
 
 /* Bigger Upgrade Cards */
 .upgrade-card { 
-    background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(0,0,0,0.6)); 
-    border: 2px solid rgba(255,255,255,0.15); 
-    border-radius: 12px; 
-    padding: 25px; 
-    cursor: pointer; 
-    transition: var(--transition); 
-    position: relative; 
-    overflow: hidden; 
-    min-height: 150px; 
-    display: flex; 
-    flex-direction: column; 
-    justify-content: center; 
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 15px;
+    cursor: pointer;
+    position: relative;
+    z-index: 50; /* Higher z-index to ensure it is clickable */
+    pointer-events: auto; /* Force pointer events to work */
+    transition: var(--transition);
+}
+
+.upgrade-card:hover:not(.locked) {
+    background: rgba(57, 255, 20, 0.1);
+    border-color: var(--primary);
 }
 
 .upgrade-card::before { 
@@ -2365,8 +2367,10 @@ const UI = {
                 
                 const div = document.createElement('div'); 
                 div.className = `upgrade-card ${isMax ? 'maxed' : (!canAfford ? 'locked' : '')}`;
-                div.onclick = () => Game.buyItem(item.id, cat);
-                
+                  div.onclick = (e) => { 
+                      e.stopPropagation(); // Stops the click from being ignored by the shop panel
+                      Game.buyItem(item.id, cat); 
+                  };                
                                   div.innerHTML = `
                       <div class="uc-header" style="margin-bottom: 5px;">
                           <span class="uc-name" style="font-size: 18px; color:${cat==='prestige'?'var(--gold)':(cat==='mutations'?'var(--secondary)':'#fff')}">${item.name}</span>
@@ -2426,6 +2430,7 @@ const UI = {
 // ==========================================
 const Game = {
     buyItem(id, cat) {
+        if (!cat) return; // Failsafe
         const itemData = DB[cat].find(i => i.id === id); 
         const inv = State.inventory[id];
         let currency = cat === 'prestige' ? State.prestigeTokens : State.farts;
