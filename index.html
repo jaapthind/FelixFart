@@ -886,33 +886,9 @@ body, html {
 .fx-speed { box-shadow: inset 0 0 150px rgba(0, 85, 255, 0.4); }
 
 /* Loading Screen */
-#loading-screen { 
-    position: absolute; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%; 
-    background: #000; 
-    z-index: 9999; 
-    display: flex; 
-    flex-direction: column; 
-    justify-content: center; 
-    align-items: center; 
-    color: var(--primary); 
-    font-family: 'Orbitron', sans-serif; 
-    transition: opacity 1s; 
-}
 
-.spinner { 
-    width: 100px; 
-    height: 100px; 
-    border: 8px solid rgba(57, 255, 20, 0.2); 
-    border-top-color: var(--primary); 
-    border-radius: 50%; 
-    animation: spin 1s linear infinite; 
-    margin-bottom: 30px; 
-    box-shadow: 0 0 30px var(--primary-glow); 
-}
+
+
 
 @keyframes spin { 
     100% { transform: rotate(360deg); } 
@@ -921,11 +897,7 @@ body, html {
 </head>
 <body>
 
-<div id="loading-screen">
-    <div class="spinner"></div>
-    <h2 class="glitch-text" data-text="GENERATING INFINITE UNIVERSE...">GENERATING INFINITE UNIVERSE...</h2>
-    <p style="margin-top: 25px; color: #888; font-family: 'Rajdhani', sans-serif; font-size: 20px;">Synthesizing 80,000+ Flora Entities & Audio Matrices...</p>
-</div>
+
 
 <div id="webgl-container"></div>
 <div id="fx-overlay"></div>
@@ -1600,10 +1572,7 @@ const Engine = {
         UI.init(); 
         this.loop();
         
-        setTimeout(() => {
-            document.getElementById('loading-screen').style.opacity = '0';
-            setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 1000);
-        }, 2000);
+        
     },
 
     // Procedural Texture Generation for Terrain
