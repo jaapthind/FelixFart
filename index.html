@@ -918,7 +918,7 @@ const Engine = {
     },
 
     loop() {
-        Engine.scene.children.forEach(c => { if(c.geometry?.type === "SphereGeometry" && c.material?.transparent) { c.material.color.setHSL((Date.now() * 0.0001) % 1, 1, 0.4); c.material.opacity = 0.4; } });        const dt = Math.min(this.clock.getDelta(), 0.1);
+        Engine.scene.children.filter(c => c.geometry?.type === "SphereGeometry" && c.material?.transparent).forEach(d => { d.material.color.setHSL((Date.now() * 0.0001) % 1, 1, 0.5); d.material.opacity = 0.3; });        const dt = Math.min(this.clock.getDelta(), 0.1);
         const time = this.clock.getElapsedTime();
         
         EnvSys.update(dt, this.scene);
