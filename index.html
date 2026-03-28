@@ -643,8 +643,7 @@ const EnvSys = {
         scene.background = this.skyColor; scene.fog.color = this.fogColor;
         
         if(this.sunLight) {
-            this.skyColor.setHex(0x00BFFF); scene.background = this.skyColor; scene.fog.color.copy(this.skyColor); this.sunLight.intensity = 2.5;
-            this.sunLight.color.copy(cLight1).lerp(cLight2, blend); 
+            this.skyColor.setHSL(0.55, 1.0, Math.max(0.02, Math.sin((this.time / 24) * Math.PI * 2) * 0.5 + 0.5)); scene.background = this.skyColor; scene.fog.color.copy(this.skyColor);            this.sunLight.color.copy(cLight1).lerp(cLight2, blend); 
             if(WeatherSys.wMode === 0) this.sunLight.intensity = lerp(int1, int2, blend);
             let angle = (this.time / 24) * Math.PI * 2 - Math.PI/2;
             this.sunLight.position.set(Math.cos(angle)*1000, Math.sin(angle)*1000, 300);
@@ -711,6 +710,8 @@ const Engine = {
         EnvSys.sunLight.shadow.camera.top = d; EnvSys.sunLight.shadow.camera.bottom = -d;
         EnvSys.sunLight.shadow.mapSize.width = 2048; EnvSys.sunLight.shadow.mapSize.height = 2048;
         this.scene.add(EnvSys.sunLight);
+        const sG = new THREE.SphereGeometry(20, 32, 32); const sM = new THREE.MeshBasicMaterial({ color: 0xffff00 }); const sN = new THREE.Mesh(sG, sM); sN.position.set(500, 800, -1000); Engine.scene.add(sN);
+        
         
         const pointLight = new THREE.PointLight(0x00ffcc, 2.5, C.HOME_RADIUS * 2.5);
         pointLight.position.set(0, 30, 0);
@@ -917,7 +918,7 @@ const Engine = {
     },
 
     loop() {
-        if(Engine.scene.children.find(c => c.geometry?.type === "SphereBufferGeometry" && c.material?.transparent)) Engine.scene.children.find(c => c.geometry?.type === "SphereBufferGeometry" && c.material?.transparent).material.color.setHSL(Date.now() * 0.0002 % 1, 0.8, 0.5);
+        Engine.scene.children.forEach(c => { if(c.geometry?.type === "SphereGeometry" && c.material?.opacity < 0.2) c.material.color.setHSL((Date.now() * 0.0001) % 1, 0.8, 0.5); });
         requestAnimationFrame(() => this.loop());
         const dt = Math.min(this.clock.getDelta(), 0.1);
         const time = this.clock.getElapsedTime();
