@@ -1332,7 +1332,8 @@ const WeatherSys = {
     cycle() {
         this.wMode = (this.wMode + 1) % 5;
         document.getElementById('btn-weather').innerText = this.wTypes[this.wMode];
-        
+
+       if(AudioSys.bgMusic) AudioSys.bgMusic.pause();
         // 1. SAFE Music Switcher (Creates the audio player if it's missing)
         if (!AudioSys.bgMusic) AudioSys.bgMusic = new Audio();
         const songs = ['sunny.mp3', 'relax.mp3', 'snow.mp3', 'relax.mp3', 'chase.mp3'];
@@ -1561,12 +1562,17 @@ const Engine = {
         document.addEventListener('keyup', Input.onKeyUp);
         
         // Critical Fix: Explicit target binding for pointer lock to avoid Shop UI conflicts
-        document.getElementById('webgl-container').addEventListener('click', () => { 
-            if(!UI.isShopOpen) { 
-                document.body.requestPointerLock(); 
-               if(!AudioSys.enabled) { AudioSys.init(); new Audio("relax.mp3").play().then(a => a.loop = true); }
-            }
-        });
+                 document.getElementById('webgl-container').addEventListener('click', () => { 
+             if(!UI.isShopOpen) { 
+                 document.body.requestPointerLock(); 
+                 if(!AudioSys.enabled) { 
+                     AudioSys.init(); 
+                     // This one-liner picks the song based on the starting weather (0)
+                     AudioSys.bgMusic.src = ['sunny.mp3', 'relax.mp3', 'snow.mp3', 'relax.mp3', 'chase.mp3'][WeatherSys.wMode];
+                     AudioSys.bgMusic.play(); 
+                 }
+             }
+         });
         
         document.addEventListener('mousemove', Input.onMouseMove);
         
