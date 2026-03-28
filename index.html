@@ -1335,22 +1335,25 @@ const WeatherSys = {
     },
 
     cycle() {
-        this.wMode = (this.wMode + 1) % 5;
-        document.getElementById('btn-weather').innerText = this.wTypes[this.wMode];
-        
-        // Colors: [Sun, Rain, Snow, Fog, Acid]
-        const colors = [0, 0x6688aa, 0xffffff, 0, 0x39ff14];
-        this.mat.color.setHex(colors[this.wMode]);
-        
-        // Only show particles for Rain(1), Snow(2), and Acid(4)
-        this.mat.opacity = (this.wMode === 1 || this.wMode === 2 || this.wMode === 4) ? 0.6 : 0;
-        
-        // Environmental Changes
-        Engine.scene.fog.density = this.wMode === 3 ? 0.01 : 0.0015; // Thick Fog mode
-        Engine.matGround.color.setHex(this.wMode === 2 ? 0xeeeeee : 0x88aa77); // Snow turns ground white
-        
-        if(this.wMode === 4) UI.spawnToast("ACID STORM DETECTED", "#39ff14");
-    },
+    this.wMode = (this.wMode + 1) % 5;
+    document.getElementById('btn-weather').innerText = this.wTypes[this.wMode];
+    
+    // Music Switcher: [Sun, Rain, Snow, Fog, Acid]
+    const songs = ['sunny.mp3', 'relax.mp3', 'snow.mp3', 'relax.mp3', 'chase.mp3'];
+    AudioSys.bgMusic.src = songs[this.wMode];
+    AudioSys.bgMusic.play();
+
+    // Weather Effects
+    this.mat.color.setHex([0, 0x6688aa, 0xffffff, 0, 0x39ff14][this.wMode]);
+    this.mat.opacity = [0, 0.6, 0.6, 0, 0.6][this.wMode];
+    Engine.scene.fog.density = this.wMode === 3 ? 0.01 : 0.0015;
+    Engine.matGround.color.setHex(this.wMode === 2 ? 0xeeeeee : 0x88aa77);
+    
+    // Sun Visuals
+    const isSun = this.wMode === 0;
+    Engine.scene.fog.color.setHex(isSun ? 0x5ca2cf : 0x222222);
+    EnvSys.sunLight.intensity = isSun ? 1.8 : 0.6;
+},
 
     update(dt) {
         // Don't waste power calculating movement if weather is Sun or Fog
