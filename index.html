@@ -944,8 +944,7 @@ body, html {
     <span class="val"><span id="txt-dist">0</span>m</span>
 </div>
 
-<div id="minimap-container">
-    <canvas id="minimap-canvas" width="250" height="250"></canvas>
+
     <div class="minimap-overlay"></div>
 </div>
 
@@ -1583,7 +1582,6 @@ const Engine = {
         });
 
         UI.init(); 
-        Minimap.init(); 
         this.loop();
         
         setTimeout(() => {
@@ -1930,6 +1928,7 @@ const Input = {
     lastStep: 0,
     
     onKeyDown(e) {
+        if(e.code === 'KeyT') WeatherSys.cycle();
         if(e.code === 'KeyW' || e.code === 'ArrowUp') Input.keys.w = true; 
         if(e.code === 'KeyA' || e.code === 'ArrowLeft') Input.keys.a = true;
         if(e.code === 'KeyS' || e.code === 'ArrowDown') Input.keys.s = true; 
