@@ -60,7 +60,7 @@ body, html { width: 100%; height: 100%; overflow: hidden; background-color: #000
 .val-bean { color: var(--bean-color); text-shadow: 0 0 10px var(--bean-glow); }
 .val-mult { color: var(--secondary); text-shadow: 0 0 10px var(--secondary-glow); }
 
-#distance-ticker { top: 20px; left: 460px; padding: 15px 30px; border: 1px solid var(--tertiary); border-bottom: 4px solid var(--tertiary); display: flex; align-items: center; gap: 15px; }
+#distance-ticker { bottom: 20px; right: 80px; padding: 15px 30px; border: 1px solid var(--tertiary); display: flex; align-items: center; gap: 15px; }
 #distance-ticker .label { font-size: 14px; color: var(--text-dim); text-transform: uppercase; font-weight: bold; letter-spacing: 2px; }
 #distance-ticker .val { font-family: 'Orbitron', sans-serif; font-size: 26px; color: var(--tertiary); text-shadow: 0 0 15px var(--tertiary-glow); font-weight: bold; }
 
@@ -74,9 +74,6 @@ body, html { width: 100%; height: 100%; overflow: hidden; background-color: #000
 .bar-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900; text-shadow: 1px 1px 2px #000, -1px -1px 2px #000; letter-spacing: 2px; font-family: 'Orbitron', sans-serif; color: #fff; z-index: 2; }
 
 /* Minimap */
-#minimap-container { position: absolute; bottom: 30px; left: 30px; width: 280px; height: 280px; background: rgba(0,0,0,0.9); border: 4px solid var(--tertiary); border-radius: 50%; overflow: hidden; z-index: 10; box-shadow: 0 0 40px rgba(0,255,255,0.3), inset 0 0 50px rgba(0,0,0,1); }
-#minimap-canvas { width: 100%; height: 100%; }
-.minimap-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%; box-shadow: inset 0 0 40px rgba(0,0,0,1); pointer-events: none; background: radial-gradient(circle at center, transparent 40%, rgba(0,255,255,0.1) 100%); }
 .minimap-overlay::after { content: ''; position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; background: var(--primary); border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 15px var(--primary); border: 1px solid #fff; }
 
 /* Mega Shop Panel */
@@ -238,10 +235,6 @@ body, html { width: 100%; height: 100%; overflow: hidden; background-color: #000
     <span class="val"><span id="txt-dist">0</span>m</span>
 </div>
 
-<div id="minimap-container">
-    <canvas id="minimap-canvas"></canvas>
-    <div class="minimap-overlay"></div>
-</div>
 
 <div id="stats-panel" class="hud-element">
     <h1 class="glitch-text" data-text="FELIXFART V4">FELIXFART V4</h1>
@@ -722,6 +715,14 @@ const Engine = {
 
         this.camera = new THREE.PerspectiveCamera(85, window.innerWidth/window.innerHeight, 0.1, 5000);
         this.scene.add(this.camera);
+        // --- NAVIGATION ARROW ---
+        const arrowGeo = new THREE.ConeGeometry(0.5, 2, 8);
+        arrowGeo.rotateX(Math.PI / 2); // Point the tip forward
+        const arrowMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, depthTest: false, transparent: true, opacity: 0.8 });
+        this.navArrow = new THREE.Mesh(arrowGeo, arrowMat);
+        this.navArrow.renderOrder = 999; // Ensures it draws on top of trees/grass
+        this.scene.add(this.navArrow);
+        
 
         this.renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -789,7 +790,7 @@ const Engine = {
         // Initialize Game Systems
         SaveSys.load();
         UI.init(); 
-        Minimap.init();
+       // Minimap.init();
         
         this.loop();
         
@@ -987,7 +988,7 @@ const Engine = {
             if(p.userData.life <= 0) { this.scene.remove(p); p.geometry.dispose(); p.material.dispose(); this.particles.splice(i, 1); }
         }
 
-        Minimap.update();
+       // Minimap.update();
         this.renderer.render(this.scene, this.camera);
     }
 };
@@ -1058,6 +1059,14 @@ const Input = {
         let terrainY = distToBase < C.HOME_RADIUS ? lerp(0, rawY, distToBase/C.HOME_RADIUS) : rawY;
         State.pos.y = terrainY + 7; 
         Engine.camera.position.copy(State.pos);
+
+        if (Engine.navArrow) {
+            const arrowOffset = new THREE.Vector3(0, -1.5, -5);
+            arrowOffset.applyQuaternion(Engine.camera.quaternion);
+            Engine.navArrow.position.copy(Engine.camera.position).add(arrowOffset);
+            Engine.navArrow.lookAt(0, 0, 0);
+            Engine.navArrow.visible = !State.inSafeZone;
+        }
 
         if(State.vel.length() > 2) {
             Engine.camera.position.y += Math.sin(Engine.clock.getElapsedTime() * (State.isSprinting ? 15 : 10)) * (State.isSprinting ? 0.9 : 0.5);
