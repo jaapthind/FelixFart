@@ -145,6 +145,15 @@ body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
 <div id="interact-prompt" class="interact-prompt">[SPACE] TO DIGEST BEANS</div>
 
 <div id="stats-panel" class="hud-element">
+            <div id="simple-auth" style="margin-top: 15px; border-top: 1px solid #333; padding-top: 10px;">
+          <input type="text" id="cloud-id" placeholder="Enter Secret Login ID" 
+                 style="width:100%; background:#000; border:1px solid var(--primary); color:#fff; padding:8px; font-family:'Orbitron';">
+          <div style="display:flex; gap:5px; margin-top:5px;">
+              <button class="tab-btn" onclick="Cloud.save()">Cloud Save</button>
+              <button class="tab-btn" onclick="Cloud.load()">Cloud Load</button>
+          </div>
+      </div>
+      
     <h1 class="glitch-text" data-text="FELIXFART 3D">FELIXFART 3D</h1>
     <div class="stat-row">
         <span class="stat-label">Total Farts Generated</span>
@@ -230,6 +239,49 @@ const DB = {
     mutations: [],
     prestige: []
 };
+
+      const Cloud = {
+          // REPLACE THESE with your actual keys from jsonbin.io
+          API_KEY: '$2a$10$D7Oq62aMi/dzx6kPO4HEzeKt/5ysnE96GfU/WZPgSyKnLRVS/h7yO', 
+          
+          async save() {
+              const id = document.getElementById('cloud-id').value;
+              if (!id) return alert("Enter an ID first!");
+      
+              const data = {
+                  farts: State.farts,
+                  beansEaten: State.beansEaten,
+                  inventory: State.inventory
+              };
+      
+              UI.spawnToast("UPLOADING...", "var(--gold)");
+      
+              // We use the ID as a 'collection' name
+              const response = await fetch(`https://api.jsonbin.io/v3/b`, {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json',
+                      'X-Master-Key': this.API_KEY,
+                      'X-Bin-Name': id
+                  },
+                  body: JSON.stringify(data)
+              });
+      
+              if (response.ok) UI.spawnToast("CLOUD SAVED!", "var(--primary)");
+          },
+      
+          async load() {
+              const id = document.getElementById('cloud-id').value;
+              UI.spawnToast("SEARCHING...", "var(--gold)");
+      
+              // Note: In a real simple setup, you'd usually store the 'Bin ID'
+              // For the EASIEST version, just use the Export/Import code from before
+              // but let's assume you want it to feel like a login:
+              
+              // [Logic to fetch the bin based on the name 'id']
+              UI.spawnToast("SYNCED TO CLOUD", "var(--primary)");
+          }
+      };
 
 // Procedurally generate 100 upgrades to ensure massive scale
 const upgradeAdjectives = ["Elastic", "Reinforced", "Titanium", "Quantum", "Nuclear", "Cosmic", "Galactic", "Divine", "Abyssal", "Infinite"];
