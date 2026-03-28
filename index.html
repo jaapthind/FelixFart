@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FelixFart Tycoon</title>
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --panel-bg: rgba(42, 42, 42, 0.9);
+            --text-main: #e0e0e0;
+            --fart-color: #7FFF00;
+            --bean-color: #c78b46;
+            --danger: #ff4d4d;
+            --home-color: #4CAF50;
+            --ui-border: #444;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-main);
+            user-select: none;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #game-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* UI Overlays */
+        .hud-panel {
+            position: absolute;
+            background: var(--panel-bg);
+            border: 2px solid var(--ui-border);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            z-index: 10;
+        }
+
+        #stats-hud {
+            top: 20px;
+            left: 20px;
+            min-width: 250px;
+        }
+
+        #stats-hud h1 {
+            margin: 0 0 10px 0;
+            color: var(--fart-color);
+            text-shadow: 0 0 5px var(--fart-color);
+            font-size: 24px;
+            text-transform: uppercase;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .stat-value.farts { color: var(--fart-color); }
+        .stat-value.beans { color: var(--bean-color); }
+
+        /* Upgrade Shop */
+        #shop-hud {
+            top: 20px;
+            right: 20px;
+            width: 320px;
+            bottom: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #shop-hud h2 {
+            margin: 0 0 15px 0;
+            text-align: center;
+            border-bottom: 2px solid var(--ui-border);
+            padding-bottom: 10px;
+        }
+
+        #upgrade-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        /* Scrollbar styling */
+        #upgrade-list::-webkit-scrollbar { width: 8px; }
+        #upgrade-list::-webkit-scrollbar-track { background: #111; border-radius: 4px; }
+        #upgrade-list::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+        #upgrade-list::-webkit-scrollbar-thumb:hover { background: var(--fart-color); }
+
+        .upgrade-item {
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .upgrade-item:hover {
+            border-color: var(--fart-color);
+            background: #2a332a;
+        }
+
+        .upgrade-item.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(100%);
+        }
+
+        .upgrade-name {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 5px;
+            color: #fff;
+        }
+
+        .upgrade-desc {
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .upgrade-cost {
+            font-size: 14px;
+            color: var(--fart-color);
+            font-weight: bold;
+            text-align: right;
+        }
+
+        /* Mini Map */
+        #minimap-hud {
+            bottom: 20px;
+            left: 20px;
+            width: 200px;
+            height: 200px;
+            padding: 5px;
+        }
+
+        #minimap-canvas {
+            width: 100%;
+            height: 100%;
+            background: #111;
+            border-radius: 4px;
+        }
+
+        /* Capacity Bar */
+        .capacity-container {
+            width: 100%;
+            height: 20px;
+            background: #222;
+            border-radius: 10px;
+            margin-top: 15px;
+            overflow: hidden;
+            border: 1px solid #555;
+            position: relative;
+        }
+
+        #capacity-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--bean-color), #8a5a2b);
+            transition: width 0.1s;
+        }
+
+        #capacity-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            line-height: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        .capacity-full #capacity-bar {
+            background: var(--danger);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        #home-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            font-size: 24px;
+            color: var(--home-color);
+            font-weight: bold;
+            text-shadow: 0 0 10px #000;
+            display: none;
+            z-index: 5;
+            text-align: center;
+        }
+
+        .controls-info {
+            position: absolute;
+            bottom: 230px;
+            left: 20px;
+            font-size: 12px;
+            color: #888;
+            pointer-events: none;
+        }
+
+        /* Notifications */
+        #notification-container {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .notification {
+            background: rgba(0,0,0,0.8);
+            color: var(--fart-color);
+            padding: 10px 20px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            border: 1px solid var(--fart-color);
+            animation: floatUp 2s forwards;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 0; transform: translateY(20px); }
+            10% { opacity: 1; transform: translateY(0); }
+            80% { opacity: 1; transform: translateY(-30px); }
+            100% { opacity: 0; transform: translateY(-50px); }
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <canvas id="game-canvas"></canvas>
+
+    <div id="home-indicator">
+        🏠 HOME BASE<br>
+        <span style="font-size:14px; color:#aaa;">(Press SPACE or Wait to Release)</span>
+    </div>
+
+    <div id="stats-hud" class="hud-panel">
+        <h1>FelixFart</h1>
+        <div class="stat-row">
+            <span>Total Farts:</span>
+            <span id="fart-count" class="stat-value farts">0</span>
+        </div>
+        <div class="stat-row">
+            <span>Beans Eaten:</span>
+            <span id="bean-count" class="stat-value beans">0</span>
+        </div>
+        <div class="stat-row">
+            <span>Fart Multiplier:</span>
+            <span id="fart-mult" class="stat-value">x1.0</span>
+        </div>
+        <div class="stat-row">
+            <span>Stomach Capacity:</span>
+            <span id="stomach-stat" class="stat-value">0 / 10</span>
+        </div>
+        <div class="capacity-container" id="cap-container">
+            <div id="capacity-bar"></div>
+            <div id="capacity-text">0%</div>
+        </div>
+    </div>
+
+    <div class="controls-info">
+        WASD / Arrows to Move<br>
+        Collect Beans (Brown dots)<br>
+        Return to Center Green Zone to Fart
+    </div>
+
+    <div id="minimap-hud" class="hud-panel">
+        <canvas id="minimap-canvas"></canvas>
+    </div>
+
+    <div id="shop-hud" class="hud-panel">
+        <h2>Upgrade Intestines</h2>
+        <div id="upgrade-list">
+            </div>
+    </div>
+
+    <div id="notification-container"></div>
+</div>
+
+<script>
+    /**
+     * ENGINE CONSTANTS & STATE
+     */
+    const WORLD_SIZE = 4000;
+    const HOME_RADIUS = 300;
+    const INITIAL_BEANS = 800;
+    const MAX_BEANS_ON_MAP = 1500;
+    
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+    const minimapCanvas = document.getElementById('minimap-canvas');
+    const miniCtx = minimapCanvas.getContext('2d');
+
+    let screenW = window.innerWidth;
+    let screenH = window.innerHeight;
+    canvas.width = screenW;
+    canvas.height = screenH;
+
+    window.addEventListener('resize', () => {
+        screenW = window.innerWidth;
+        screenH = window.innerHeight;
+        canvas.width = screenW;
+        canvas.height = screenH;
+    });
+
+    // Game State
+    const state = {
+        farts: 0,
+        totalBeansEaten: 0,
+        beansInStomach: 0,
+        fartMultiplier: 1,
+        stomachCapacity: 10,
+        playerSpeed: 5,
+        beanValue: 1,
+        fartsPerBean: 1,
+        autoFartRate: 0,
+        collectionRadius: 20,
+        gasCompression: 1,
+        digestionSpeed: 1, // Beans converted per second in home base
+        isAtHome: false,
+        camera: { x: 0, y: 0 },
+        keys: { w: false, a: false, s: false, d: false, space: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false }
+    };
+
+    // Entities Arrays
+    const beans = [];
+    const particles = [];
+    const floatingTexts = [];
+
+    // Player Object
+    const player = {
+        x: WORLD_SIZE / 2,
+        y: WORLD_SIZE / 2,
+        radius: 15,
+        color: '#3498db',
+        vx: 0,
+        vy: 0,
+        rotation: 0
+    };
+
+    /**
+     * MASSIVE UPGRADE TREE
+     */
+    const upgrades = [
+        { id: "u1", name: "Bigger Stomach I", desc: "Increases stomach capacity by +10.", cost: 10, type: "capacity", value: 10, count: 0, max: 10, costMult: 1.5 },
+        { id: "u2", name: "Pinto Beans", desc: "Beans are worth 2x more farts.", cost: 50, type: "fartsPerBean", value: 2, count: 0, max: 1, costMult: 1 },
+        { id: "u3", name: "Running Shoes", desc: "Move 20% faster.", cost: 100, type: "speed", value: 1.2, count: 0, max: 5, costMult: 2 },
+        { id: "u4", name: "Vacuum Mouth", desc: "Increases bean pickup radius.", cost: 150, type: "radius", value: 15, count: 0, max: 5, costMult: 1.8 },
+        { id: "u5", name: "Bigger Stomach II", desc: "Increases stomach capacity by +50.", cost: 300, type: "capacity", value: 50, count: 0, max: 10, costMult: 1.6 },
+        { id: "u6", name: "Black Beans", desc: "Base fart multiplier x2.", cost: 500, type: "fartMult", value: 2, count: 0, max: 5, costMult: 3 },
+        { id: "u7", name: "Rapid Digestion I", desc: "Convert beans to farts 50% faster at home.", cost: 800, type: "digestion", value: 1.5, count: 0, max: 10, costMult: 1.7 },
+        { id: "u8", name: "Gas Compressors", desc: "Each fart is denser. +1 to base fart value.", cost: 1200, type: "gasComp", value: 1, count: 0, max: 10, costMult: 2.2 },
+        { id: "u9", name: "Bigger Stomach III", desc: "Increases stomach capacity by +200.", cost: 2500, type: "capacity", value: 200, count: 0, max: 10, costMult: 1.7 },
+        { id: "u10", name: "Kidney Beans", desc: "Beans grant massive gas. Fart multiplier x3.", cost: 5000, type: "fartMult", value: 3, count: 0, max: 5, costMult: 4 },
+        { id: "u11", name: "Jetpack Propulsion", desc: "Move 50% faster.", cost: 10000, type: "speed", value: 1.5, count: 0, max: 3, costMult: 3 },
+        { id: "u12", name: "Magnetic Tractor Beam", desc: "Massive pickup radius.", cost: 15000, type: "radius", value: 40, count: 0, max: 5, costMult: 2.5 },
+        { id: "u13", name: "Auto-Fart Valve", desc: "Passively leak 1 fart per second.", cost: 20000, type: "autoFart", value: 1, count: 0, max: 50, costMult: 1.4 },
+        { id: "u14", name: "Bigger Stomach IV", desc: "Increases stomach capacity by +1000.", cost: 50000, type: "capacity", value: 1000, count: 0, max: 10, costMult: 1.8 },
+        { id: "u15", name: "Baked Beans", desc: "Fart multiplier x5.", cost: 100000, type: "fartMult", value: 5, count: 0, max: 5, costMult: 5 },
+        { id: "u16", name: "Rapid Digestion II", desc: "Convert beans instantly at home.", cost: 250000, type: "digestion", value: 10, count: 0, max: 1, costMult: 1 },
+        { id: "u17", name: "Nuclear Beans", desc: "Multiplier x10.", cost: 1000000, type: "fartMult", value: 10, count: 0, max: 5, costMult: 10 },
+        { id: "u18", name: "Infinite Void Stomach", desc: "+10,000 Capacity.", cost: 5000000, type: "capacity", value: 10000, count: 0, max: 10, costMult: 2 },
+        { id: "u19", name: "Auto-Fart Turbine", desc: "Passively leak 100 farts per second.", cost: 10000000, type: "autoFart", value: 100, count: 0, max: 50, costMult: 1.5 },
+        { id: "u20", name: "The God Fart", desc: "Win the universe. Multiplier x100.", cost: 1000000000, type: "fartMult", value: 100, count: 0, max: 1, costMult: 1 }
+    ];
+
+    /**
+     * INPUT HANDLING
+     */
+    window.addEventListener('keydown', (e) => {
+        if(state.keys.hasOwnProperty(e.key)) state.keys[e.key] = true;
+        if(e.key.toLowerCase() === 'w') state.keys.w = true;
+        if(e.key.toLowerCase() === 'a') state.keys.a = true;
+        if(e.key.toLowerCase() === 's') state.keys.s = true;
+        if(e.key.toLowerCase() === 'd') state.keys.d = true;
+        if(e.code === 'Space') state.keys.space = true;
+    });
+
+    window.addEventListener('keyup', (e) => {
+        if(state.keys.hasOwnProperty(e.key)) state.keys[e.key] = false;
+        if(e.key.toLowerCase() === 'w') state.keys.w = false;
+        if(e.key.toLowerCase() === 'a') state.keys.a = false;
+        if(e.key.toLowerCase() === 's') state.keys.s = false;
+        if(e.key.toLowerCase() === 'd') state.keys.d = false;
+        if(e.code === 'Space') state.keys.space = false;
+    });
+
+    /**
+     * UI INITIALIZATION & UPDATES
+     */
+    const domFarts = document.getElementById('fart-count');
+    const domBeans = document.getElementById('bean-count');
+    const domMult = document.getElementById('fart-mult');
+    const domStomach = document.getElementById('stomach-stat');
+    const domCapBar = document.getElementById('capacity-bar');
+    const domCapText = document.getElementById('capacity-text');
+    const domCapContainer = document.getElementById('cap-container');
+    const domUpgradeList = document.getElementById('upgrade-list');
+    const domHomeIndicator = document.getElementById('home-indicator');
+
+    function initUpgradesUI() {
+        domUpgradeList.innerHTML = '';
+        upgrades.forEach((up, index) => {
+            const div = document.createElement('div');
+            div.className = 'upgrade-item';
+            div.id = `upg-${index}`;
+            div.onclick = () => buyUpgrade(index);
+            
+            div.innerHTML = `
+                <div class="upgrade-name">${up.name} <span style="font-size:12px; color:#aaa;">(${up.count}/${up.max})</span></div>
+                <div class="upgrade-desc">${up.desc}</div>
+                <div class="upgrade-cost">Cost: ${formatNumber(up.cost)} Farts</div>
+            `;
+            domUpgradeList.appendChild(div);
+        });
+    }
+
+    function updateUpgradesUI() {
+        upgrades.forEach((up, index) => {
+            const el = document.getElementById(`upg-${index}`);
+            if(!el) return;
+            
+            if (up.count >= up.max) {
+                el.classList.add('locked');
+                el.querySelector('.upgrade-cost').innerText = 'MAXED OUT';
+                el.onclick = null;
+            } else if (state.farts < up.cost) {
+                el.classList.add('locked');
+                el.querySelector('.upgrade-cost').innerText = `Cost: ${formatNumber(up.cost)} Farts`;
+            } else {
+                el.classList.remove('locked');
+                el.querySelector('.upgrade-cost').innerText = `Cost: ${formatNumber(up.cost)} Farts`;
+                el.querySelector('.upgrade-name').innerHTML = `${up.name} <span style="font-size:12px; color:#aaa;">(${up.count}/${up.max})</span>`;
+            }
+        });
+    }
+
+    function buyUpgrade(index) {
+        const up = upgrades[index];
+        if (up.count >= up.max || state.farts < up.cost) return;
+
+        state.farts -= up.cost;
+        up.count++;
+        up.cost = Math.floor(up.cost * up.costMult);
+
+        // Apply effect
+        switch(up.type) {
+            case 'capacity': state.stomachCapacity += up.value; break;
+            case 'fartsPerBean': state.fartsPerBean *= up.value; break;
+            case 'speed': state.playerSpeed *= up.value; break;
+            case 'radius': state.collectionRadius += up.value; break;
+            case 'fartMult': state.fartMultiplier *= up.value; break;
+            case 'digestion': state.digestionSpeed *= up.value; break;
+            case 'gasComp': state.gasCompression += up.value; break;
+            case 'autoFart': state.autoFartRate += up.value; break;
+        }
+
+        spawnNotification(`Upgraded: ${up.name}!`);
+        updateHUD();
+        updateUpgradesUI();
+    }
+
+    function formatNumber(num) {
+        if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+        if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+        if (num >= 1e3) return (num / 1e3).toFixed(1) + 'k';
+        return Math.floor(num).toString();
+    }
+
+    function updateHUD() {
+        domFarts.innerText = formatNumber(state.farts);
+        domBeans.innerText = formatNumber(state.totalBeansEaten);
+        domMult.innerText = `x${formatNumber(state.fartMultiplier * state.fartsPerBean * state.gasCompression)}`;
+        domStomach.innerText = `${Math.floor(state.beansInStomach)} / ${formatNumber(state.stomachCapacity)}`;
+        
+        const pct = Math.min(100, (state.beansInStomach / state.stomachCapacity) * 100);
+        domCapBar.style.width = `${pct}%`;
+        domCapText.innerText = `${pct.toFixed(1)}% Full`;
+
+        if (pct >= 100) domCapContainer.classList.add('capacity-full');
+        else domCapContainer.classList.remove('capacity-full');
+    }
+
+    function spawnNotification(text) {
+        const container = document.getElementById('notification-container');
+        const notif = document.createElement('div');
+        notif.className = 'notification';
+        notif.innerText = text;
+        container.appendChild(notif);
+        setTimeout(() => notif.remove(), 2000);
+    }
+
+    /**
+     * GAME LOGIC & SYSTEMS
+     */
+
+    class Bean {
+        constructor() {
+            this.respawn();
+        }
+        respawn() {
+            // Spawn outside home base
+            let valid = false;
+            while(!valid) {
+                this.x = Math.random() * WORLD_SIZE;
+                this.y = Math.random() * WORLD_SIZE;
+                const distToHome = Math.hypot(this.x - WORLD_SIZE/2, this.y - WORLD_SIZE/2);
+                if (distToHome > HOME_RADIUS + 50) valid = true;
+            }
+            this.size = 3 + Math.random() * 4;
+            this.color = `hsl(${25 + Math.random()*20}, 60%, ${40 + Math.random()*20}%)`;
+            this.wobbleOffset = Math.random() * Math.PI * 2;
+        }
+        draw(ctx, camX, camY, time) {
+            const screenX = this.x - camX;
+            const screenY = this.y - camY;
+            if (screenX < -20 || screenX > screenW + 20 || screenY < -20 || screenY > screenH + 20) return;
+            
+            ctx.beginPath();
+            const wobble = Math.sin(time * 0.005 + this.wobbleOffset) * 2;
+            ctx.arc(screenX, screenY + wobble, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = this.color;
+            ctx.fill();
+            ctx.strokeStyle = '#222';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+    }
+
+    class Particle {
+        constructor(x, y, color, speedMult = 1, lifeMult = 1) {
+            this.x = x;
+            this.y = y;
+            const angle = Math.random() * Math.PI * 2;
+            const speed = (Math.random() * 3 + 1) * speedMult;
+            this.vx = Math.cos(angle) * speed;
+            this.vy = Math.sin(angle) * speed;
+            this.life = 1.0;
+            this.decay = (Math.random() * 0.02 + 0.01) / lifeMult;
+            this.color = color;
+            this.size = Math.random() * 5 + 3;
+        }
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            this.life -= this.decay;
+            this.size *= 0.98;
+        }
+        draw(ctx, camX, camY) {
+            if (this.life <= 0) return;
+            ctx.globalAlpha = this.life;
+            ctx.beginPath();
+            ctx.arc(this.x - camX, this.y - camY, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = this.color;
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+        }
+    }
+
+    class FloatingText {
+        constructor(x, y, text, color) {
+            this.x = x + (Math.random() * 20 - 10);
+            this.y = y + (Math.random() * 20 - 10);
+            this.text = text;
+            this.color = color;
+            this.life = 1.0;
+            this.vy = -1 - Math.random();
+        }
+        update() {
+            this.y += this.vy;
+            this.life -= 0.02;
+        }
+        draw(ctx, camX, camY) {
+            if (this.life <= 0) return;
+            ctx.globalAlpha = this.life;
+            ctx.fillStyle = this.color;
+            ctx.font = 'bold 16px Arial';
+            ctx.fillText(this.text, this.x - camX, this.y - camY);
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            ctx.strokeText(this.text, this.x - camX, this.y - camY);
+            ctx.globalAlpha = 1.0;
+        }
+    }
+
+    function initWorld() {
+        for(let i=0; i<INITIAL_BEANS; i++) {
+            beans.push(new Bean());
+        }
+        initUpgradesUI();
+        updateHUD();
+    }
+
+    function spawnFartEffect(x, y, scale = 1) {
+        for(let i=0; i<10 * scale; i++) {
+            particles.push(new Particle(x, y, 'rgba(127, 255, 0, 0.8)', scale, scale));
+        }
+    }
+
+    /**
+     * MAIN GAME LOOP
+     */
+    let lastTime = performance.now();
+    let frameCount = 0;
+
+    function gameLoop(currentTime) {
+        const dt = (currentTime - lastTime) / 1000;
+        lastTime = currentTime;
+        frameCount++;
+
+        update(dt);
+        render(currentTime);
+        
+        if (frameCount % 10 === 0) {
+            updateHUD();
+            updateUpgradesUI();
+        }
+
+        requestAnimationFrame(gameLoop);
+    }
+
+    function update(dt) {
+        // Movement Input
+        let dx = 0;
+        let dy = 0;
+        if (state.keys.w || state.keys.ArrowUp) dy -= 1;
+        if (state.keys.s || state.keys.ArrowDown) dy += 1;
+        if (state.keys.a || state.keys.ArrowLeft) dx -= 1;
+        if (state.keys.d || state.keys.ArrowRight) dx += 1;
+
+        // Normalize diagonal
+        if (dx !== 0 && dy !== 0) {
+            const length = Math.sqrt(dx*dx + dy*dy);
+            dx /= length;
+            dy /= length;
+        }
+
+        // Apply Velocity
+        player.vx = dx * state.playerSpeed;
+        player.vy = dy * state.playerSpeed;
+        
+        player.x += player.vx;
+        player.y += player.vy;
+
+        // Rotation
+        if (dx !== 0 || dy !== 0) {
+            player.rotation = Math.atan2(dy, dx);
+        }
+
+        // World Bounds
+        player.x = Math.max(player.radius, Math.min(WORLD_SIZE - player.radius, player.x));
+        player.y = Math.max(player.radius, Math.min(WORLD_SIZE - player.radius, player.y));
+
+        // Camera Tracking
+        state.camera.x = player.x - screenW / 2;
+        state.camera.y = player.y - screenH / 2;
+        
+        // Clamp Camera
+        state.camera.x = Math.max(0, Math.min(WORLD_SIZE - screenW, state.camera.x));
+        state.camera.y = Math.max(0, Math.min(WORLD_SIZE - screenH, state.camera.y));
+
+        // Auto Fart Passive
+        if (state.autoFartRate > 0) {
+            const generated = state.autoFartRate * dt * state.fartMultiplier * state.fartsPerBean * state.gasCompression;
+            state.farts += generated;
+            if (Math.random() < 0.1) spawnFartEffect(player.x, player.y, 0.5);
+        }
+
+        // Home Base Logic
+        const distToCenter = Math.hypot(player.x - WORLD_SIZE/2, player.y - WORLD_SIZE/2);
+        state.isAtHome = (distToCenter < HOME_RADIUS);
+
+        if (state.isAtHome) {
+            domHomeIndicator.style.display = 'block';
+            
+            // Digestion / Farting logic
+            if (state.beansInStomach > 0) {
+                // Determine conversion amount based on dt and digestion speed
+                let conversionAmount = (10 * state.digestionSpeed) * dt; 
+                
+                // If space pressed, turbo digest
+                if (state.keys.space) conversionAmount *= 5;
+
+                // Clamp to what's left
+                conversionAmount = Math.min(conversionAmount, state.beansInStomach);
+                
+                if (conversionAmount > 0) {
+                    state.beansInStomach -= conversionAmount;
+                    
+                    const fartGain = conversionAmount * state.fartMultiplier * state.fartsPerBean * state.gasCompression;
+                    state.farts += fartGain;
+                    
+                    if (frameCount % 5 === 0) {
+                        spawnFartEffect(player.x, player.y + 10, 1.5);
+                        floatingTexts.push(new FloatingText(player.x, player.y - 20, `+${formatNumber(fartGain)}`, '#7FFF00'));
+                    }
+                }
+            }
+        } else {
+            domHomeIndicator.style.display = 'none';
+        }
+
+        // Bean Collection Logic
+        if (state.beansInStomach < state.stomachCapacity) {
+            for (let i = beans.length - 1; i >= 0; i--) {
+                const b = beans[i];
+                const dist = Math.hypot(player.x - b.x, player.y - b.y);
+                
+                if (dist < player.radius + state.collectionRadius) {
+                    // Collect
+                    state.beansInStomach += state.beanValue;
+                    state.totalBeansEaten += state.beanValue;
+                    
+                    // Cap stomach
+                    if (state.beansInStomach > state.stomachCapacity) {
+                        state.beansInStomach = state.stomachCapacity;
+                    }
+
+                    // Visual feedback
+                    floatingTexts.push(new FloatingText(b.x, b.y, '+1 Bean', '#c78b46'));
+                    
+                    // Reposition bean instead of splice to save memory alloc
+                    b.respawn();
+
+                    if (state.beansInStomach >= state.stomachCapacity) break; // Stomach full
+                }
+            }
+        }
+
+        // Maintain bean count
+        if (beans.length < MAX_BEANS_ON_MAP && Math.random() < 0.1) {
+            beans.push(new Bean());
+        }
+
+        // Update Particles
+        for (let i = particles.length - 1; i >= 0; i--) {
+            particles[i].update();
+            if (particles[i].life <= 0) particles.splice(i, 1);
+        }
+
+        // Update Floating Texts
+        for (let i = floatingTexts.length - 1; i >= 0; i--) {
+            floatingTexts[i].update();
+            if (floatingTexts[i].life <= 0) floatingTexts.splice(i, 1);
+        }
+    }
+
+    function render(time) {
+        // Clear main canvas
+        ctx.fillStyle = '#1a1a1a';
+        ctx.fillRect(0, 0, screenW, screenH);
+
+        const cx = state.camera.x;
+        const cy = state.camera.y;
+
+        // Draw Grid Background
+        ctx.strokeStyle = '#2a2a2a';
+        ctx.lineWidth = 1;
+        const gridSize = 100;
+        const startX = cx - (cx % gridSize);
+        const startY = cy - (cy % gridSize);
+
+        ctx.beginPath();
+        for (let x = startX; x < cx + screenW; x += gridSize) {
+            ctx.moveTo(x - cx, 0);
+            ctx.lineTo(x - cx, screenH);
+        }
+        for (let y = startY; y < cy + screenH; y += gridSize) {
+            ctx.moveTo(0, y - cy);
+            ctx.lineTo(screenW, y - cy);
+        }
+        ctx.stroke();
+
+        // Draw Home Base
+        const homeScreenX = (WORLD_SIZE / 2) - cx;
+        const homeScreenY = (WORLD_SIZE / 2) - cy;
+        
+        ctx.beginPath();
+        ctx.arc(homeScreenX, homeScreenY, HOME_RADIUS, 0, Math.PI * 2);
+        const gradient = ctx.createRadialGradient(homeScreenX, homeScreenY, 0, homeScreenX, homeScreenY, HOME_RADIUS);
+        gradient.addColorStop(0, 'rgba(76, 175, 80, 0.3)');
+        gradient.addColorStop(1, 'rgba(76, 175, 80, 0.05)');
+        ctx.fillStyle = gradient;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(76, 175, 80, 0.5)';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([10, 15]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Draw Home Base Center icon
+        ctx.font = '40px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🚽', homeScreenX, homeScreenY);
+
+        // Draw Beans
+        for (const b of beans) {
+            b.draw(ctx, cx, cy, time);
+        }
+
+        // Draw Particles
+        for (const p of particles) {
+            p.draw(ctx, cx, cy);
+        }
+
+        // Draw Player
+        const playerScreenX = player.x - cx;
+        const playerScreenY = player.y - cy;
+
+        // Player Aura (Collection Radius)
+        ctx.beginPath();
+        ctx.arc(playerScreenX, playerScreenY, player.radius + state.collectionRadius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(playerScreenX, playerScreenY);
+        ctx.rotate(player.rotation);
+
+        // Player Body
+        ctx.beginPath();
+        ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
+        
+        // Dynamically color player based on stomach fullness
+        const fullness = state.beansInStomach / state.stomachCapacity;
+        const r = Math.floor(52 + (203 * fullness)); // 52 to 255
+        const g = Math.floor(152 - (152 * fullness)); // 152 to 0
+        const b = Math.floor(219 - (219 * fullness)); // 219 to 0
+        ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#fff';
+        ctx.stroke();
+
+        // Player Face / Direction Indicator
+        ctx.beginPath();
+        ctx.arc(player.radius - 4, -5, 3, 0, Math.PI * 2);
+        ctx.arc(player.radius - 4, 5, 3, 0, Math.PI * 2);
+        ctx.fillStyle = '#000';
+        ctx.fill();
+
+        // Sweating animation if full
+        if (fullness > 0.9) {
+            ctx.fillStyle = 'rgba(0, 200, 255, 0.8)';
+            ctx.beginPath();
+            ctx.arc(0, -player.radius - 5, 3, 0, Math.PI*2);
+            ctx.fill();
+        }
+
+        ctx.restore();
+
+        // Draw Floating Texts
+        for (const ft of floatingTexts) {
+            ft.draw(ctx, cx, cy);
+        }
+
+        // RENDER MINIMAP
+        renderMinimap();
+    }
+
+    function renderMinimap() {
+        miniCtx.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
+        
+        const scale = minimapCanvas.width / WORLD_SIZE;
+
+        // Draw Background
+        miniCtx.fillStyle = '#111';
+        miniCtx.fillRect(0, 0, minimapCanvas.width, minimapCanvas.height);
+
+        // Draw Home Base
+        miniCtx.beginPath();
+        miniCtx.arc((WORLD_SIZE/2)*scale, (WORLD_SIZE/2)*scale, HOME_RADIUS*scale, 0, Math.PI*2);
+        miniCtx.fillStyle = 'rgba(76, 175, 80, 0.5)';
+        miniCtx.fill();
+
+        // Draw Beans (simplification: draw fewer on minimap for perf)
+        miniCtx.fillStyle = '#c78b46';
+        for (let i = 0; i < beans.length; i+=5) {
+            miniCtx.fillRect(beans[i].x * scale, beans[i].y * scale, 2, 2);
+        }
+
+        // Draw Player
+        miniCtx.fillStyle = '#fff';
+        miniCtx.beginPath();
+        miniCtx.arc(player.x * scale, player.y * scale, 4, 0, Math.PI*2);
+        miniCtx.fill();
+
+        // Draw Camera Viewport
+        miniCtx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        miniCtx.lineWidth = 1;
+        miniCtx.strokeRect(state.camera.x * scale, state.camera.y * scale, screenW * scale, screenH * scale);
+    }
+
+    // BOOT
+    initWorld();
+    requestAnimationFrame(gameLoop);
+
+</script>
+</body>
+</html>
