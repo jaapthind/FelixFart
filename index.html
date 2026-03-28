@@ -1681,8 +1681,13 @@ const Game = {
 };
 
 window.onload = () => {
-    Engine.init();
-    document.addEventListener('click', () => { 
+    Engine.init(); 
+    Engine.onResize(); // Fixes the black screen scale
+    Engine.cam.position.set(0, 50, 50); // Moves camera out of the floor
+    
+    // Audio Wakeup
+    document.addEventListener('mousedown', () => { 
+        AudioSys.init(); 
         if(AudioSys.ctx && AudioSys.ctx.state === 'suspended') AudioSys.ctx.resume(); 
     }, {once: true});
 };
