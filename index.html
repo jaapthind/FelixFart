@@ -1333,10 +1333,11 @@ const WeatherSys = {
         this.wMode = (this.wMode + 1) % 5;
         document.getElementById('btn-weather').innerText = this.wTypes[this.wMode];
         
-        // 1. Update Music
+        // 1. SAFE Music Switcher (Creates the audio player if it's missing)
+        if (!AudioSys.bgMusic) AudioSys.bgMusic = new Audio();
         const songs = ['sunny.mp3', 'relax.mp3', 'snow.mp3', 'relax.mp3', 'chase.mp3'];
         AudioSys.bgMusic.src = songs[this.wMode];
-        AudioSys.bgMusic.play().catch(e => console.log("Music lead-in required"));
+        AudioSys.bgMusic.play().catch(e => console.log("Click screen first to allow audio"));
 
         // 2. Update Particles
         const colors = [0, 0x6688aa, 0xffffff, 0, 0x39ff14];
