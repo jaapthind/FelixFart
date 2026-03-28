@@ -345,9 +345,7 @@ body, html {
 /* Massive Shop Panel */
 #shop-panel { 
     top: 20px; 
-    right: 20px;
-    z-index: 2000 !important; /* Make sure the whole shop is on top */
-    pointer-events: auto;
+    right: 20px; 
     width: 550px; 
     bottom: 20px; 
     display: flex; 
@@ -434,8 +432,9 @@ body, html {
     border-radius: 12px;
     padding: 15px;
     cursor: pointer;
-   pointer-events: auto !important;
-   z-index: 2100 !important;/* Higher z-index to ensure it is clickable */
+    position: relative;
+    z-index: 50; /* Higher z-index to ensure it is clickable */
+    pointer-events: auto; /* Force pointer events to work */
     transition: var(--transition);
 }
 
@@ -886,9 +885,33 @@ body, html {
 .fx-speed { box-shadow: inset 0 0 150px rgba(0, 85, 255, 0.4); }
 
 /* Loading Screen */
+#loading-screen { 
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: #000; 
+    z-index: 9999; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: center; 
+    color: var(--primary); 
+    font-family: 'Orbitron', sans-serif; 
+    transition: opacity 1s; 
+}
 
-
-
+.spinner { 
+    width: 100px; 
+    height: 100px; 
+    border: 8px solid rgba(57, 255, 20, 0.2); 
+    border-top-color: var(--primary); 
+    border-radius: 50%; 
+    animation: spin 1s linear infinite; 
+    margin-bottom: 30px; 
+    box-shadow: 0 0 30px var(--primary-glow); 
+}
 
 @keyframes spin { 
     100% { transform: rotate(360deg); } 
@@ -897,7 +920,11 @@ body, html {
 </head>
 <body>
 
-
+<div id="loading-screen">
+    <div class="spinner"></div>
+    <h2 class="glitch-text" data-text="GENERATING INFINITE UNIVERSE...">GENERATING INFINITE UNIVERSE...</h2>
+    <p style="margin-top: 25px; color: #888; font-family: 'Rajdhani', sans-serif; font-size: 20px;">Synthesizing 80,000+ Flora Entities & Audio Matrices...</p>
+</div>
 
 <div id="webgl-container"></div>
 <div id="fx-overlay"></div>
@@ -1552,32 +1579,32 @@ const Engine = {
         
         document.addEventListener('mousemove', Input.onMouseMove);
         
-              document.addEventListener('pointerlockchange', () => {
-          const isLocked = document.pointerLockElement === document.body;
-          UI.isShopOpen = !isLocked;
-          
-          if(!isLocked) {
-              // MOUSE IS FREE: Show shop, hide crosshair
-              document.getElementById('shop-panel').style.display = 'flex';
-              document.getElementById('crosshair').style.display = 'none';
-              UI.renderShopList('upgrades'); // Force refresh so buttons work
-          } else {
-              // MOUSE IS LOCKED: Hide shop, show crosshair
-              document.getElementById('shop-panel').style.display = 'none';
-              document.getElementById('crosshair').style.display = 'block';
-              document.getElementById('pause-overlay').style.display = 'none';
-          }
-      });
+        document.addEventListener('pointerlockchange', () => {
+            const isLocked = document.pointerLockElement === document.body;
+            UI.isShopOpen = !isLocked;
+            
+            // Show HUD overlays based on lock status
+            if(!isLocked && document.getElementById('shop-panel').style.display === 'none') {
+                document.getElementById('pause-overlay').style.display = 'flex';
+            } else {
+                document.getElementById('pause-overlay').style.display = 'none';
+            }
+            
+            if(isLocked) {
+                document.getElementById('shop-panel').style.display = 'none';
+                document.getElementById('crosshair').style.display = 'block';
+            } else if (UI.isShopOpen) {
+                document.getElementById('crosshair').style.display = 'none';
+            }
+        });
 
         UI.init(); 
         this.loop();
         
-        // FORCE LIGHTING ON (Fixes pitch black bug)
-        EnvSys.update(0, this.scene); 
-        if(EnvSys.sunLight) EnvSys.sunLight.intensity = 1.2;
-        if(EnvSys.ambLight) EnvSys.ambLight.intensity = 0.5;
-        
-        
+        setTimeout(() => {
+            document.getElementById('loading-screen').style.opacity = '0';
+            setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 1000);
+        }, 2000);
     },
 
     // Procedural Texture Generation for Terrain
@@ -2012,15 +2039,6 @@ const Input = {
             if(Math.random() < 0.15 && State.isSprinting && !State.inSafeZone) {
                 Engine.spawnParticle(State.pos.clone().add(new THREE.Vector3(0,-5,0)), 0x444444, 1.5, 8, 0.6);
             }
-           const dx = -State.pos.x;
-        const dz = -State.pos.z;
-        const angleToBase = Math.atan2(dx, dz);
-        const relativeAngle = angleToBase + State.yaw; // Use + State.yaw to sync with camera
-
-        const gpsEl = document.getElementById('gps');
-        if (gpsEl) {
-            document.getElementById('gps-arrow').style.transform = `rotate(${relativeAngle}rad)`;
-            gpsEl.style.opacity = State.inSafeZone ? "0" : "1";
         }
     }
 };
@@ -2312,13 +2330,10 @@ const UI = {
         const container = document.getElementById(`list-${cat}`); 
         container.innerHTML = '';
         
-        // Ensure the shop panel is interactable
-        document.getElementById('shop-panel').style.pointerEvents = 'auto';
-
         if(cat === 'prestige' && this.currentPage[cat] === 0) {
             container.innerHTML += `
                 <div class="upgrade-card" style="border-color:var(--gold); flex: 0.5; min-height: 120px;" onclick="Game.showRebirthModal()">
-                    <div style="text-align:center; pointer-events:none;">
+                    <div style="text-align:center;">
                         <h3 style="color:var(--gold); font-family:'Orbitron',sans-serif; margin:0 0 10px 0; font-size:24px; text-shadow:0 0 15px var(--gold-glow);">PERFORM REBIRTH</h3>
                         <p style="font-size:14px; color:#ccc; margin:0;">Sacrifice all mortal possessions to ascend to higher dimensions.</p>
                     </div>
@@ -2348,48 +2363,34 @@ const UI = {
                 const isMax = inv.count >= item.max; 
                 const canAfford = currAmount >= inv.currentCost;
                 
-                const costHtml = isMax ? `<span class="uc-cost">MAX LEVEL</span>` : `<span class="uc-cost ${cat==='prestige'?'prestige-cost':''}">${UI.formatNum(inv.currentCost)} ${currencyStr}</span>`;
+                const costHtml = isMax ? `<span class="uc-cost">MAX LEVEL REACHED</span>` : `<span class="uc-cost ${cat==='prestige'?'prestige-cost':''}">${this.formatNum(inv.currentCost)} ${currencyStr}</span>`;
                 
                 const div = document.createElement('div'); 
                 div.className = `upgrade-card ${isMax ? 'maxed' : (!canAfford ? 'locked' : '')}`;
-                
-                // CRITICAL FIX FOR CLICKS:
-                div.onclick = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    Game.buyItem(item.id, cat);
-                };
-
-                div.innerHTML = `
-                      <div class="uc-header" style="pointer-events:none;">
+                  div.onclick = (e) => { 
+                      e.stopPropagation(); // Stops the click from being ignored by the shop panel
+                      Game.buyItem(item.id, cat); 
+                  };                
+                                  div.innerHTML = `
+                      <div class="uc-header" style="margin-bottom: 5px;">
                           <span class="uc-name" style="font-size: 18px; color:${cat==='prestige'?'var(--gold)':(cat==='mutations'?'var(--secondary)':'#fff')}">${item.name}</span>
-                          <span class="uc-level">Lv.${inv.count}</span>
+                          <span class="uc-level" style="font-size: 12px; padding: 2px 8px;">Lv.${inv.count}</span>
                       </div>
-                      <div class="uc-effect" style="pointer-events:none;">${item.effectDesc}</div>
-                      <div class="uc-footer" style="pointer-events:none;">${costHtml}</div>
+                      <div class="uc-effect" style="font-size: 14px; margin-bottom: 10px; padding: 4px;">${item.effectDesc}</div>
+                      <div class="uc-footer" style="padding-top: 10px;">${costHtml}</div>
                   `;
                 container.appendChild(div);
             });
         }
 
-        // Pagination
         let maxPage = Math.ceil(DB[cat].length / this.itemsPerPage) - 1;
-        const nav = document.createElement('div');
-        nav.className = 'pagination-controls';
-        nav.innerHTML = `
-            <button class="page-btn" ${page === 0 ? 'disabled' : ''}>PREV</button>
-            <span class="page-info">PAGE ${page + 1} / ${maxPage + 1}</span>
-            <button class="page-btn" ${page === maxPage ? 'disabled' : ''}>NEXT</button>
-        `;
-        
-        // Add listeners to pagination buttons
-        nav.querySelectorAll('button')[0].onclick = () => UI.changePage(cat, -1);
-        nav.querySelectorAll('button')[1].onclick = () => UI.changePage(cat, 1);
-        
-        container.appendChild(nav);
-    }
-
-     
+        container.innerHTML += `
+            <div class="pagination-controls">
+                <button class="page-btn" ${page === 0 ? 'disabled' : ''} onclick="UI.changePage('${cat}', -1)">PREV</button>
+                <span class="page-info">PAGE ${page + 1} / ${maxPage + 1}</span>
+                <button class="page-btn" ${page === maxPage ? 'disabled' : ''} onclick="UI.changePage('${cat}', 1)">NEXT</button>
+            </div>`;
+    },
     
     spawnToast(msg, color) {
         const container = document.getElementById('alert-container'); 
@@ -2513,10 +2514,7 @@ const Game = {
 window.onload = () => Engine.init();
 
 </script>
-         <div id="gps" style="position:fixed; bottom:50px; left:50%; transform:translateX(-50%); width:60px; height:60px; background:rgba(0,0,0,0.5); border:2px solid #00ffcc; border-radius:50%; z-index:9999; display:flex; align-items:center; justify-content:center; box-shadow:0 0 20px #00ffcc;">
-       <div id="gps-arrow" style="width:0; height:0; border-left:15px solid transparent; border-right:15px solid transparent; border-bottom:30px solid #00ffcc; filter:drop-shadow(0 0 5px #00ffcc); transform-origin: 50% 100%;"></div>
-       <div style="position:absolute; width:100%; text-align:center; top:-25px; color:#00ffcc; font-weight:bold; font-family:'Orbitron'; font-size:12px; letter-spacing:1px;">BASE</div>
-   </div>
+
    <button class="tab-btn" id="btn-weather" onclick="WeatherSys.cycle()" style="position:absolute; bottom:20px; right:20px; z-index:100; font-size:24px;">☀️</button>
 </body>
 </html>
