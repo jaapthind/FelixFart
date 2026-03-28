@@ -417,11 +417,12 @@ body, html {
 .shop-content { 
     flex: 1; 
     display: flex; 
-    height: 65vh; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; padding-right: 15px;
     flex-direction: column; 
-    overflow: hidden; 
-    justify-content: flex-start; 
     gap: 15px; 
+    padding-right: 10px;
+    height: 60vh; /* Fixed height */
+    overflow-y: auto; /* Enable scrolling */
+    overflow-x: hidden;
 }
 
 /* Bigger Upgrade Cards */
@@ -2366,15 +2367,14 @@ const UI = {
                 div.className = `upgrade-card ${isMax ? 'maxed' : (!canAfford ? 'locked' : '')}`;
                 div.onclick = () => Game.buyItem(item.id, cat);
                 
-                div.innerHTML = `
-                    <div class="uc-header">
-                        <span class="uc-name" style="color:${cat==='prestige'?'var(--gold)':(cat==='mutations'?'var(--secondary)':'#fff')}">${item.name}</span>
-                        <span class="uc-level">Lv.${inv.count}/${item.max}</span>
-                    </div>
-                    <div class="uc-desc">${item.desc}</div>
-                    <div class="uc-effect">${item.effectDesc}</div>
-                    <div class="uc-footer">${costHtml}</div>
-                `;
+                                  div.innerHTML = `
+                      <div class="uc-header" style="margin-bottom: 5px;">
+                          <span class="uc-name" style="font-size: 18px; color:${cat==='prestige'?'var(--gold)':(cat==='mutations'?'var(--secondary)':'#fff')}">${item.name}</span>
+                          <span class="uc-level" style="font-size: 12px; padding: 2px 8px;">Lv.${inv.count}</span>
+                      </div>
+                      <div class="uc-effect" style="font-size: 14px; margin-bottom: 10px; padding: 4px;">${item.effectDesc}</div>
+                      <div class="uc-footer" style="padding-top: 10px;">${costHtml}</div>
+                  `;
                 container.appendChild(div);
             });
         }
