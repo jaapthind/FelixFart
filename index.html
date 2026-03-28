@@ -1,1058 +1,1080 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FelixFart: Battle Royale Tycoon</title>
-    <style>
-        :root {
-            --bg-color: #0d1117;
-            --panel-bg: rgba(22, 27, 34, 0.85);
-            --text-main: #c9d1d9;
-            --fart-color: #39ff14;
-            --fart-shadow: rgba(57, 255, 20, 0.5);
-            --bean-color: #d2691e;
-            --danger: #ff4444;
-            --home-color: #00ffcc;
-            --ui-border: #30363d;
-            --gold: #ffd700;
-            --epic: #b82bf2;
-            --legendary: #ff8c00;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FelixFart </title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script>
+<style>
+/* ==========================================================================
+   ADVANCED UI STYLES - FULL HUD & SHOP SYSTEM
+   ========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap');
 
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow: hidden; background-color: var(--bg-color);
-            font-family: 'Consolas', 'Courier New', monospace;
-            color: var(--text-main); user-select: none;
-        }
+:root {
+    --primary: #39ff14;
+    --primary-glow: rgba(57, 255, 20, 0.6);
+    --secondary: #ff00ff;
+    --secondary-glow: rgba(255, 0, 255, 0.6);
+    --tertiary: #00ffff;
+    --tertiary-glow: rgba(0, 255, 255, 0.6);
+    --bg-dark: #0a0a0f;
+    --bg-panel: rgba(10, 10, 15, 0.85);
+    --text-main: #e0e0e0;
+    --text-dim: #888888;
+    --bean-color: #d2691e;
+    --bean-glow: rgba(210, 105, 30, 0.6);
+    --danger: #ff3333;
+    --danger-glow: rgba(255, 51, 51, 0.6);
+    --gold: #ffd700;
+    --gold-glow: rgba(255, 215, 0, 0.6);
+    --border-radius: 12px;
+    --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
 
-        #game-container { position: relative; width: 100vw; height: 100vh; }
-        #game-canvas { display: block; width: 100%; height: 100%; }
+* { box-sizing: border-box; user-select: none; }
+body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Rajdhani', sans-serif; color: var(--text-main); }
+#webgl-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
 
-        /* Advanced UI Panels */
-        .hud-panel {
-            position: absolute; background: var(--panel-bg);
-            border: 1px solid var(--ui-border); border-radius: 12px;
-            padding: 15px; box-shadow: 0 8px 32px rgba(0,0,0,0.8);
-            backdrop-filter: blur(10px); z-index: 10;
-            display: flex; flex-direction: column;
-        }
+/* HUD Base */
+.hud-element { position: absolute; z-index: 10; background: var(--bg-panel); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--border-radius); backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+.glitch-text { font-family: 'Orbitron', sans-serif; position: relative; display: inline-block; }
+.glitch-text::before, .glitch-text::after { content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.8; }
+.glitch-text::before { left: 2px; text-shadow: -1px 0 var(--danger); animation: glitch-anim-1 2s infinite linear alternate-reverse; }
+.glitch-text::after { left: -2px; text-shadow: -1px 0 var(--tertiary); animation: glitch-anim-2 3s infinite linear alternate-reverse; }
+@keyframes glitch-anim-1 { 0% { clip-path: inset(20% 0 80% 0); } 20% { clip-path: inset(60% 0 10% 0); } 40% { clip-path: inset(40% 0 50% 0); } 60% { clip-path: inset(80% 0 5% 0); } 80% { clip-path: inset(10% 0 70% 0); } 100% { clip-path: inset(30% 0 20% 0); } }
+@keyframes glitch-anim-2 { 0% { clip-path: inset(10% 0 60% 0); } 20% { clip-path: inset(30% 0 20% 0); } 40% { clip-path: inset(70% 0 10% 0); } 60% { clip-path: inset(20% 0 50% 0); } 80% { clip-path: inset(50% 0 30% 0); } 100% { clip-path: inset(5% 0 80% 0); } }
 
-        /* Top Left Stats */
-        #stats-hud { top: 15px; left: 15px; width: 280px; }
-        #stats-hud h1 {
-            margin: 0 0 15px 0; color: var(--fart-color);
-            text-shadow: 0 0 10px var(--fart-shadow);
-            font-size: 26px; text-transform: uppercase; font-weight: 900;
-            letter-spacing: 2px; text-align: center;
-        }
-        
-        .stat-group {
-            background: rgba(0,0,0,0.4); border-radius: 8px;
-            padding: 10px; margin-bottom: 10px; border: 1px solid #444;
-        }
-        
-        .stat-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; }
-        .stat-value { font-weight: bold; font-family: monospace; font-size: 15px; }
-        .val-fart { color: var(--fart-color); text-shadow: 0 0 5px var(--fart-color); }
-        .val-bean { color: var(--bean-color); }
-        .val-mult { color: var(--epic); }
-        .val-rebirth { color: var(--home-color); }
+/* Top Left Stats */
+#stats-panel { top: 20px; left: 20px; width: 350px; padding: 20px; border-top: 4px solid var(--primary); }
+#stats-panel h1 { margin: 0 0 20px 0; font-family: 'Orbitron', sans-serif; font-size: 28px; color: var(--primary); text-shadow: 0 0 15px var(--primary-glow); text-transform: uppercase; letter-spacing: 2px; }
+.stat-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 18px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; }
+.stat-label { color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; font-size: 14px; }
+.stat-val { font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 20px; }
+.val-fart { color: var(--primary); text-shadow: 0 0 10px var(--primary-glow); }
+.val-bean { color: var(--bean-color); text-shadow: 0 0 10px var(--bean-glow); }
+.val-mult { color: var(--secondary); text-shadow: 0 0 10px var(--secondary-glow); }
 
-        /* Capacity Bars */
-        .bar-wrap { width: 100%; height: 22px; background: #111; border-radius: 6px; position: relative; overflow: hidden; border: 1px solid #555; margin-top: 5px; box-shadow: inset 0 2px 5px rgba(0,0,0,0.8); }
-        .bar-fill { height: 100%; width: 0%; transition: width 0.1s linear; }
-        #stomach-fill { background: linear-gradient(90deg, #8a5a2b, var(--bean-color)); }
-        #stamina-fill { background: linear-gradient(90deg, #0055ff, #00aaff); width: 100%; }
-        .bar-text { position: absolute; top: 0; left: 0; width: 100%; text-align: center; line-height: 22px; font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px #000, -1px -1px 2px #000; color: white; }
+/* Progress Bars */
+.bar-container { width: 100%; height: 24px; background: rgba(0,0,0,0.5); border-radius: 12px; margin-top: 8px; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); box-shadow: inset 0 2px 5px rgba(0,0,0,0.8); }
+.bar-fill { height: 100%; width: 0%; transition: width 0.1s linear; position: relative; }
+.bar-fill::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); animation: shimmer 2s infinite; }
+@keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+#stomach-fill { background: linear-gradient(90deg, #8a5a2b, var(--bean-color)); box-shadow: 0 0 10px var(--bean-glow); }
+#stamina-fill { background: linear-gradient(90deg, #0055ff, var(--tertiary)); box-shadow: 0 0 10px var(--tertiary-glow); }
+.bar-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; text-shadow: 1px 1px 2px #000, -1px -1px 2px #000; letter-spacing: 1px; font-family: 'Orbitron', sans-serif; }
 
-        /* Upgrade Shop - Right Side */
-        #shop-hud { top: 15px; right: 15px; width: 340px; bottom: 15px; }
-        
-        .tabs { display: flex; margin-bottom: 15px; gap: 5px; }
-        .tab-btn {
-            flex: 1; padding: 8px; background: #222; color: #aaa;
-            border: 1px solid #444; border-radius: 6px; cursor: pointer;
-            font-weight: bold; text-align: center; transition: 0.2s;
-        }
-        .tab-btn.active { background: var(--fart-color); color: #000; border-color: #fff; }
+/* Right Shop Panel */
+#shop-panel { top: 20px; right: 20px; width: 400px; bottom: 20px; display: flex; flex-direction: column; padding: 15px; border-right: 4px solid var(--secondary); }
+.shop-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+.tab-btn { flex: 1; padding: 12px 0; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text-dim); font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: var(--transition); letter-spacing: 1px; }
+.tab-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.tab-btn.active { background: var(--secondary); color: #000; border-color: var(--secondary); box-shadow: 0 0 15px var(--secondary-glow); }
+.tab-btn[data-target="prestige"].active { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 15px var(--gold-glow); }
 
-        .list-container { flex-grow: 1; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 8px; }
-        .list-container::-webkit-scrollbar { width: 6px; }
-        .list-container::-webkit-scrollbar-track { background: #111; border-radius: 3px; }
-        .list-container::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
-        .list-container::-webkit-scrollbar-thumb:hover { background: var(--fart-color); }
+.shop-content { flex: 1; overflow-y: auto; padding-right: 10px; display: flex; flex-direction: column; gap: 12px; }
+.shop-content::-webkit-scrollbar { width: 6px; }
+.shop-content::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); border-radius: 3px; }
+.shop-content::-webkit-scrollbar-thumb { background: var(--secondary); border-radius: 3px; }
 
-        .upg-card {
-            background: linear-gradient(145deg, #1a1f26, #12151a); border: 1px solid #444;
-            border-radius: 8px; padding: 12px; cursor: pointer; transition: all 0.15s ease;
-            position: relative; overflow: hidden;
-        }
-        .upg-card:hover { border-color: var(--fart-color); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(57, 255, 20, 0.15); }
-        .upg-card.locked { opacity: 0.4; filter: grayscale(100%); cursor: not-allowed; transform: none; box-shadow: none; }
-        .upg-card.maxed { border-color: var(--gold); background: rgba(255, 215, 0, 0.05); }
-        
-        .upg-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-        .upg-name { font-weight: bold; font-size: 15px; color: #fff; text-transform: uppercase; }
-        .upg-lvl { font-size: 12px; background: #333; padding: 2px 6px; border-radius: 10px; }
-        .upg-desc { font-size: 11px; color: #999; margin-bottom: 8px; line-height: 1.4; }
-        .upg-cost { font-size: 13px; color: var(--fart-color); font-weight: bold; text-align: right; }
-        .upg-cost.rebirth-cost { color: var(--gold); }
+.upgrade-card { background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(0,0,0,0.5)); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 15px; cursor: pointer; transition: var(--transition); position: relative; overflow: hidden; }
+.upgrade-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--primary); transition: var(--transition); }
+.upgrade-card:hover { transform: translateX(-5px); border-color: var(--primary); box-shadow: 0 5px 20px rgba(0,0,0,0.6), inset 0 0 15px rgba(57, 255, 20, 0.1); }
+.upgrade-card:hover::before { width: 100%; opacity: 0.1; }
+.upgrade-card.locked { opacity: 0.5; filter: grayscale(100%); cursor: not-allowed; }
+.upgrade-card.locked:hover { transform: none; border-color: rgba(255,255,255,0.1); box-shadow: none; }
+.upgrade-card.locked::before { background: #555; }
+.upgrade-card.maxed { border-color: var(--gold); }
+.upgrade-card.maxed::before { background: var(--gold); }
 
-        /* Minimap - Bottom Left */
-        #minimap-hud { bottom: 15px; left: 15px; width: 240px; height: 240px; padding: 8px; border-radius: 50%; border: 4px solid var(--ui-border); overflow: hidden; background: #000; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
-        #minimap-canvas { width: 100%; height: 100%; border-radius: 50%; }
+.uc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; position: relative; z-index: 2; }
+.uc-name { font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: bold; color: #fff; text-transform: uppercase; }
+.uc-level { background: rgba(0,0,0,0.8); padding: 3px 8px; border-radius: 12px; font-size: 12px; color: var(--tertiary); font-family: 'Orbitron', sans-serif; border: 1px solid var(--tertiary); }
+.uc-desc { font-size: 13px; color: var(--text-dim); margin-bottom: 12px; line-height: 1.4; position: relative; z-index: 2; }
+.uc-footer { display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2; }
+.uc-cost { font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: bold; color: var(--primary); text-shadow: 0 0 5px var(--primary-glow); }
+.uc-cost.prestige-cost { color: var(--gold); text-shadow: 0 0 5px var(--gold-glow); }
 
-        /* Center Notifications */
-        #notif-area { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; pointer-events: none; z-index: 100; gap: 10px; }
-        .toast { background: rgba(0, 0, 0, 0.85); border: 2px solid var(--fart-color); color: #fff; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; animation: slideUpFade 2.5s forwards; box-shadow: 0 0 15px var(--fart-shadow); }
-        @keyframes slideUpFade {
-            0% { opacity: 0; transform: translateY(30px) scale(0.8); }
-            10% { opacity: 1; transform: translateY(0) scale(1.1); }
-            20% { transform: scale(1); }
-            80% { opacity: 1; transform: translateY(-20px); }
-            100% { opacity: 0; transform: translateY(-50px); }
-        }
+/* Minimap */
+#minimap-panel { bottom: 20px; left: 20px; width: 250px; height: 250px; padding: 10px; border-bottom: 4px solid var(--tertiary); border-radius: 50%; overflow: hidden; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; }
+#minimap-canvas { width: 100%; height: 100%; border-radius: 50%; box-shadow: inset 0 0 20px #000; }
 
-        /* Screen Shake and Damage overlays */
-        @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            20% { transform: translate(-3px, 0px) rotate(1deg); }
-            30% { transform: translate(3px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(1deg); }
-            50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
-            70% { transform: translate(3px, 1px) rotate(-1deg); }
-            80% { transform: translate(-1px, -1px) rotate(1deg); }
-            90% { transform: translate(1px, 2px) rotate(0deg); }
-            100% { transform: translate(1px, -2px) rotate(-1deg); }
-        }
-        .shake-active { animation: shake 0.4s; }
-        
-        #damage-overlay { position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; box-shadow: inset 0 0 150px rgba(255, 0, 0, 0); transition: box-shadow 0.2s; z-index: 5; }
-        .taking-damage #damage-overlay { box-shadow: inset 0 0 150px rgba(255, 0, 0, 0.6); }
+/* Center Alerts */
+#alert-container { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); z-index: 100; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.alert-toast { background: rgba(0,0,0,0.9); border: 2px solid var(--primary); padding: 15px 30px; border-radius: 8px; color: #fff; font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; box-shadow: 0 0 20px var(--primary-glow); animation: slideInFade 2s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+@keyframes slideInFade { 0% { opacity: 0; transform: translateY(50px) scale(0.5); } 15% { opacity: 1; transform: translateY(0) scale(1.1); } 30% { transform: scale(1); } 80% { opacity: 1; transform: translateY(-20px); } 100% { opacity: 0; transform: translateY(-100px); } }
 
-        /* Rebirth Modal */
-        #rebirth-modal { display: none; position: absolute; top:0; left:0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; flex-direction: column; }
-        .modal-content { background: #111; border: 2px solid var(--gold); padding: 40px; border-radius: 16px; text-align: center; max-width: 500px; box-shadow: 0 0 50px rgba(255, 215, 0, 0.3); }
-        .modal-content h2 { color: var(--gold); font-size: 32px; margin-top: 0; }
-        .modal-content p { font-size: 16px; line-height: 1.6; color: #ddd; }
-        .btn-massive { margin-top: 20px; background: var(--gold); color: #000; border: none; padding: 15px 30px; font-size: 20px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; }
-        .btn-massive:hover { transform: scale(1.05); box-shadow: 0 0 20px var(--gold); }
-        .btn-cancel { margin-top: 15px; background: transparent; color: #888; border: none; text-decoration: underline; cursor: pointer; }
+/* Crosshair & Interaction */
+#crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; pointer-events: none; z-index: 50; }
+#crosshair::before, #crosshair::after { content: ''; position: absolute; background: rgba(255,255,255,0.5); }
+#crosshair::before { top: 9px; left: 0; width: 20px; height: 2px; }
+#crosshair::after { top: 0; left: 9px; width: 2px; height: 20px; }
+.interact-prompt { position: absolute; top: 55%; left: 50%; transform: translateX(-50%); font-size: 18px; font-family: 'Orbitron', sans-serif; color: var(--gold); text-shadow: 0 0 10px var(--gold-glow); display: none; z-index: 50; pointer-events: none; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px; border: 1px solid var(--gold); }
 
-    </style>
+/* Rebirth Screen */
+#rebirth-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(20px); }
+.rebirth-box { background: #111; border: 2px solid var(--gold); padding: 50px; border-radius: 20px; text-align: center; max-width: 600px; box-shadow: 0 0 50px var(--gold-glow), inset 0 0 30px rgba(255, 215, 0, 0.2); animation: pulseBox 2s infinite alternate; }
+@keyframes pulseBox { 0% { box-shadow: 0 0 30px var(--gold-glow); } 100% { box-shadow: 0 0 70px var(--gold-glow); } }
+.rebirth-box h2 { font-family: 'Orbitron', sans-serif; color: var(--gold); font-size: 40px; margin: 0 0 20px 0; text-shadow: 0 0 20px var(--gold-glow); text-transform: uppercase; letter-spacing: 5px; }
+.rebirth-box p { font-size: 18px; color: #ccc; margin-bottom: 20px; line-height: 1.6; }
+.rebirth-gain { font-family: 'Orbitron', sans-serif; font-size: 48px; color: var(--gold); font-weight: 900; margin: 30px 0; display: block; text-shadow: 0 0 20px var(--gold-glow); }
+.btn-ascend { background: transparent; border: 3px solid var(--gold); color: var(--gold); padding: 20px 50px; font-size: 24px; font-family: 'Orbitron', sans-serif; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: var(--transition); border-radius: 10px; position: relative; overflow: hidden; }
+.btn-ascend:hover { background: var(--gold); color: #000; box-shadow: 0 0 30px var(--gold-glow); transform: scale(1.05); }
+.btn-cancel { background: transparent; border: none; color: #666; font-family: 'Rajdhani', sans-serif; font-size: 18px; margin-top: 20px; cursor: pointer; text-decoration: underline; transition: color 0.2s; }
+.btn-cancel:hover { color: #fff; }
+
+/* Damage/Screen FX */
+#fx-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; transition: box-shadow 0.2s; }
+.fx-damage { box-shadow: inset 0 0 200px rgba(255, 0, 0, 0.8); }
+.fx-heal { box-shadow: inset 0 0 150px rgba(0, 255, 204, 0.5); }
+.fx-speed { box-shadow: inset 0 0 100px rgba(0, 85, 255, 0.3); }
+
+/* Loading Screen */
+#loading-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--primary); font-family: 'Orbitron', sans-serif; transition: opacity 1s; }
+.spinner { width: 80px; height: 80px; border: 5px solid rgba(57, 255, 20, 0.2); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+@keyframes spin { 100% { transform: rotate(360deg); } }
+</style>
 </head>
 <body>
 
-<div id="game-container">
-    <canvas id="game-canvas"></canvas>
-    <div id="damage-overlay"></div>
+<div id="loading-screen">
+    <div class="spinner"></div>
+    <h2 class="glitch-text" data-text="GENERATING WORLD...">GENERATING WORLD...</h2>
+</div>
 
-    <div id="stats-hud" class="hud-panel">
-        <h1>FelixFart BR</h1>
-        
-        <div class="stat-group">
-            <div class="stat-row"><span>Total Farts:</span><span id="txt-farts" class="stat-value val-fart">0</span></div>
-            <div class="stat-row"><span>Fart Multiplier:</span><span id="txt-mult" class="stat-value val-mult">x1.00</span></div>
-            <div class="stat-row"><span>Beans Devoured:</span><span id="txt-beans" class="stat-value val-bean">0</span></div>
-            <div class="stat-row" style="display:none;" id="row-rebirth"><span>Prestige Tokens:</span><span id="txt-tokens" class="stat-value val-rebirth">0</span></div>
-        </div>
+<div id="webgl-container"></div>
+<div id="fx-overlay"></div>
+<div id="crosshair"></div>
+<div id="interact-prompt" class="interact-prompt">[SPACE] TO DIGEST BEANS</div>
 
-        <div class="stat-group">
-            <div class="stat-row" style="margin-bottom:2px;"><span>Stomach Capacity</span><span id="txt-stom" class="stat-value">0 / 10</span></div>
-            <div class="bar-wrap"><div id="stomach-fill" class="bar-fill"></div><div id="stomach-pct" class="bar-text">0%</div></div>
+<div id="stats-panel" class="hud-element">
+    <h1 class="glitch-text" data-text="FELIXFART 3D">FELIXFART 3D</h1>
+    <div class="stat-row">
+        <span class="stat-label">Total Farts Generated</span>
+        <span id="txt-farts" class="stat-val val-fart">0</span>
+    </div>
+    <div class="stat-row">
+        <span class="stat-label">Global Multiplier</span>
+        <span id="txt-mult" class="stat-val val-mult">x1.00</span>
+    </div>
+    <div class="stat-row">
+        <span class="stat-label">Beans Devoured</span>
+        <span id="txt-beans" class="stat-val val-bean">0</span>
+    </div>
+    <div class="stat-row" id="row-prestige" style="display:none;">
+        <span class="stat-label" style="color:var(--gold)">Astral Tokens</span>
+        <span id="txt-tokens" class="stat-val" style="color:var(--gold); text-shadow:0 0 10px var(--gold-glow)">0</span>
+    </div>
+    
+    <div style="margin-top: 25px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+            <span class="stat-label" style="color:#fff;">Stomach Capacity</span>
+            <span id="txt-stom" style="font-family:'Orbitron',sans-serif; font-size:14px; font-weight:bold;">0 / 10</span>
         </div>
-
-        <div class="stat-group">
-            <div class="stat-row" style="margin-bottom:2px;"><span>Sprint Stamina</span></div>
-            <div class="bar-wrap"><div id="stamina-fill" class="bar-fill"></div><div class="bar-text">SHIFT to Sprint</div></div>
-        </div>
-        
-        <div style="font-size: 11px; color: #777; text-align: center; margin-top: 5px;">WASD: Move | SHIFT: Sprint | SPACE: Fart @ Base</div>
+        <div class="bar-container"><div id="stomach-fill" class="bar-fill"></div><div id="stomach-pct" class="bar-text">0%</div></div>
     </div>
 
-    <div id="shop-hud" class="hud-panel">
-        <div class="tabs">
-            <div class="tab-btn active" onclick="switchTab('upgrades')">Upgrades</div>
-            <div class="tab-btn" onclick="switchTab('mutations')">Mutations</div>
-            <div class="tab-btn" style="color:var(--gold)" onclick="switchTab('prestige')">Prestige</div>
+    <div style="margin-top: 15px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+            <span class="stat-label" style="color:#fff;">Stamina (SHIFT to Sprint)</span>
         </div>
-        <div id="list-upgrades" class="list-container"></div>
-        <div id="list-mutations" class="list-container" style="display:none;"></div>
-        <div id="list-prestige" class="list-container" style="display:none;">
-            <div class="upg-card" onclick="showRebirthModal()" style="border-color: var(--gold); text-align: center; padding: 20px;">
-                <h3 style="color:var(--gold); margin: 0 0 10px 0; text-transform: uppercase;">Perform Rebirth</h3>
-                <p style="font-size:12px; color:#aaa; margin:0;">Reset all progress for permanent multipliers and Tokens.</p>
+        <div class="bar-container"><div id="stamina-fill" class="bar-fill" style="width:100%;"></div><div class="bar-text">READY</div></div>
+    </div>
+
+    <div style="margin-top: 20px; font-size: 12px; color: #666; text-align: center; font-family: 'Rajdhani', sans-serif; letter-spacing: 1px;">
+        WASD: Move | MOUSE: Look | SHIFT: Sprint<br>Collect Beans -> Return to Base -> SPACE to Fart
+    </div>
+</div>
+
+<div id="shop-panel" class="hud-element">
+    <div class="shop-tabs">
+        <button class="tab-btn active" data-target="upgrades" onclick="UI.switchTab('upgrades')">Upgrades</button>
+        <button class="tab-btn" data-target="mutations" onclick="UI.switchTab('mutations')">Mutations</button>
+        <button class="tab-btn" data-target="prestige" onclick="UI.switchTab('prestige')">Astral</button>
+    </div>
+    
+    <div id="list-upgrades" class="shop-content"></div>
+    <div id="list-mutations" class="shop-content" style="display:none;"></div>
+    <div id="list-prestige" class="shop-content" style="display:none;">
+        <div class="upgrade-card" style="border-color:var(--gold); margin-bottom:20px;" onclick="Game.showRebirthModal()">
+            <div style="text-align:center;">
+                <h3 style="color:var(--gold); font-family:'Orbitron',sans-serif; margin:0 0 10px 0; font-size:20px; text-shadow:0 0 10px var(--gold-glow);">PERFORM REBIRTH</h3>
+                <p style="font-size:13px; color:#ccc; margin:0;">Sacrifice all mortal possessions to ascend. Gain Astral Tokens for permanent god-tier multipliers.</p>
             </div>
-            <div id="prestige-upgrades" style="margin-top: 15px;"></div>
         </div>
+        <div id="prestige-items"></div>
     </div>
+</div>
 
-    <div id="minimap-hud">
-        <canvas id="minimap-canvas"></canvas>
-    </div>
+<div id="minimap-panel" class="hud-element">
+    <canvas id="minimap-canvas"></canvas>
+</div>
 
-    <div id="notif-area"></div>
+<div id="alert-container"></div>
 
-    <div id="rebirth-modal">
-        <div class="modal-content">
-            <h2>ASCEND TO THE ASTRAL PLANE</h2>
-            <p>You will lose all Farts, Beans, Upgrades, and Mutations.</p>
-            <p>You will gain <span id="rebirth-gain" style="color:var(--gold); font-weight:bold; font-size:24px;">0</span> Prestige Tokens.</p>
-            <p>Tokens permanently boost your base Fart generation and unlock God-Tier upgrades.</p>
-            <button class="btn-massive" onclick="executeRebirth()">DO IT</button><br>
-            <button class="btn-cancel" onclick="document.getElementById('rebirth-modal').style.display='none'">Nevermind</button>
-        </div>
+<div id="rebirth-overlay">
+    <div class="rebirth-box">
+        <h2>ASCENSION PROTOCOL</h2>
+        <p>Warning: Initiating ascension will obliterate your current physical form. You will lose all Farts, Beans, Upgrades, and Mutations.</p>
+        <p>Your essence will be crystallized into Astral Tokens, unlocking reality-bending permanent multipliers.</p>
+        <span class="rebirth-gain">+<span id="rebirth-amt">0</span> TOKENS</span>
+        <button class="btn-ascend" onclick="Game.executeRebirth()">TRANSCEND</button><br>
+        <button class="btn-cancel" onclick="document.getElementById('rebirth-overlay').style.display='none'">ABORT SEQUENCE</button>
     </div>
 </div>
 
 <script>
 /**
- * FELIXFART: BATTLE ROYALE TYCOON ENGINE
- * Highly scalable, chunk-based pseudo-generation, complex particle physics.
+ * FELIXFART 3D: ULTIMATE TYCOON ENGINE
+ * Advanced Three.js implementation with procedural chunking, physics, particle systems, and massive data trees.
  */
 
 // ==========================================
-// CONSTANTS & CONFIGURATION
+// MASSIVE DATA DICTIONARY
+// ==========================================
+const DB = {
+    upgrades: [],
+    mutations: [],
+    prestige: []
+};
+
+// Procedurally generate 100 upgrades to ensure massive scale
+const upgradeAdjectives = ["Elastic", "Reinforced", "Titanium", "Quantum", "Nuclear", "Cosmic", "Galactic", "Divine", "Abyssal", "Infinite"];
+const upgradeNouns = ["Stomach", "Intestines", "Lungs", "Shoes", "Tractor Beam", "Digester", "Valve", "Compressor", "Sphincter", "Aura"];
+
+for(let i=0; i<100; i++) {
+    let tier = Math.floor(i / 10);
+    let typeIndex = i % 10;
+    
+    let typeMap = ['cap', 'fart', 'stam', 'speed', 'rad', 'digest', 'auto', 'fart', 'cap', 'rad'];
+    let type = typeMap[typeIndex];
+    
+    let baseCost = 10 * Math.pow(2.5, tier) * (typeIndex + 1);
+    let name = `${upgradeAdjectives[tier]} ${upgradeNouns[typeIndex]} Mk.${(i%5)+1}`;
+    
+    let val, desc;
+    switch(type) {
+        case 'cap': val = 10 * Math.pow(2, tier); desc = `+${val} Capacity`; break;
+        case 'fart': val = 1.2 + (tier * 0.2); desc = `Farts x${val.toFixed(1)}`; break;
+        case 'stam': val = 20 * (tier + 1); desc = `+${val} Max Stamina`; break;
+        case 'speed': val = 0.05 + (tier * 0.02); desc = `+${(val*100).toFixed(0)}% Speed`; break;
+        case 'rad': val = 5 + (tier * 2); desc = `+${val}m Pickup Radius`; break;
+        case 'digest': val = 1.5 + (tier * 0.5); desc = `Digest x${val.toFixed(1)} faster`; break;
+        case 'auto': val = 1 * Math.pow(5, tier); desc = `Auto-fart ${val}/sec`; break;
+    }
+
+    DB.upgrades.push({
+        id: `u_${i}`,
+        name: name,
+        desc: desc,
+        cost: Math.floor(baseCost),
+        mult: 1.15 + (tier * 0.05),
+        max: 10 + (tier * 5),
+        type: type,
+        val: val
+    });
+}
+
+// Procedurally generate 50 mutations
+const mutAdj = ["Toxic", "Radioactive", "Biohazard", "Corrosive", "Mutated", "Sentient"];
+for(let i=0; i<50; i++) {
+    let tier = Math.floor(i/10);
+    let type = i % 2 === 0 ? 'auto' : 'fart';
+    let baseCost = 5000 * Math.pow(4, tier);
+    
+    DB.mutations.push({
+        id: `m_${i}`,
+        name: `${mutAdj[tier]} Anomaly ${i+1}`,
+        desc: type === 'auto' ? `Insane Auto-Fart +${Math.pow(10, tier+1)}/s` : `Massive Fart Multiplier x${Math.pow(2, tier+1)}`,
+        cost: Math.floor(baseCost),
+        mult: 2.0,
+        max: 5,
+        type: type,
+        val: type === 'auto' ? Math.pow(10, tier+1) : Math.pow(2, tier+1)
+    });
+}
+
+// Prestige Upgrades
+const presNames = ["Golden Bean", "God Speed", "Astral Capacity", "Divine Digestion", "Omnipotent Radius", "Ethereal Lungs", "Creator's Valve", "Void Compression", "Celestial Aura", "The Ultimate Fart"];
+const presTypes = ['pfart', 'pspeed', 'pcap', 'pdigest', 'prad', 'pstam', 'pauto', 'pfart', 'prad', 'pfart'];
+for(let i=0; i<10; i++) {
+    DB.prestige.push({
+        id: `p_${i}`,
+        name: presNames[i],
+        desc: `Base stat massively multiplied. Level dictates power.`,
+        cost: 1 * Math.pow(3, i),
+        mult: 2.5,
+        max: 99,
+        type: presTypes[i],
+        val: i === 9 ? 100 : (2 + i*0.5)
+    });
+}
+
+// ==========================================
+// GAME STATE
 // ==========================================
 const C = {
-    WORLD_SIZE: 10000,
-    HOME_X: 5000, HOME_Y: 5000, HOME_RADIUS: 400,
-    CHUNK_SIZE: 1000,
-    MAX_BEANS: 3000,
-    MAX_ENEMIES: 200,
-    MAX_DECOR: 5000,
-    COLORS: {
-        grass: '#2d4c1e', dirt: '#4a3525', water: '#1a4365', toxic: '#2e5c1a',
-        home: 'rgba(0, 255, 204, 0.15)', homeBorder: '#00ffcc'
-    }
+    WORLD_SIZE: 5000,
+    CHUNK_SIZE: 200,
+    HOME_RADIUS: 100,
+    MAX_BEANS: 1000,
+    MAX_PARTICLES: 5000
 };
 
-// ==========================================
-// GAME STATE & DATA
-// ==========================================
-const state = {
-    farts: 0,
-    beansEaten: 0,
-    beansInStomach: 0,
-    stomachCap: 10,
-    prestigeTokens: 0,
-    rebirths: 0,
+const State = {
+    // Currencies
+    farts: 0, beansEaten: 0, beansInStomach: 0, prestigeTokens: 0, rebirths: 0,
     
-    // Multipliers
-    multFart: 1, multSpeed: 1, multCap: 1, multRadius: 1, multStamina: 1,
+    // Stats (Calculated)
+    stomachCap: 10, maxStamina: 100, stamina: 100,
+    multFart: 1, multSpeed: 1, multRadius: 1, multDigest: 1, autoFart: 0,
     
-    // Player Stats
-    x: C.HOME_X, y: C.HOME_Y,
-    vx: 0, vy: 0,
-    baseSpeed: 6, sprintMult: 1.8,
-    stamina: 100, maxStamina: 100,
-    radius: 18,
-    pickupRadius: 30,
-    digestionRate: 5, // beans per sec
-    autoFart: 0,
+    // Player Physics
+    pos: new THREE.Vector3(0, 5, 0),
+    vel: new THREE.Vector3(0, 0, 0),
+    baseSpeed: 40, sprintMult: 2.0,
+    yaw: 0, pitch: 0,
     
-    // Environmental
-    timeOfDay: 0, // 0 to Math.PI * 2
-    daySpeed: 0.0005,
-    camera: { x: C.HOME_X, y: C.HOME_Y, zoom: 1 },
-    keys: {},
-    activeTab: 'upgrades',
-    shakeTimer: 0
+    // State Flags
+    inSafeZone: true,
+    isSprinting: false,
+    inventory: {}
 };
 
-// ==========================================
-// ARRAYS
-// ==========================================
-const entities = {
-    beans: [], enemies: [], decor: [], particles: [], texts: []
-};
+// Initialize Inventory
+[...DB.upgrades, ...DB.mutations, ...DB.prestige].forEach(item => {
+    State.inventory[item.id] = { count: 0, currentCost: item.cost };
+});
 
 // ==========================================
-// PROCEDURAL TERRAIN GENERATION (Pseudo-Noise)
+// MATH & PROCEDURAL GEN UTILS (Simplex Noise alternative)
 // ==========================================
-function getBiome(x, y) {
-    // Combining multiple sine waves for pseudo-random organic shapes
-    let noise = Math.sin(x * 0.002) + Math.cos(y * 0.002) + 
-                Math.sin((x+y) * 0.005) * 0.5 + 
-                Math.cos((x-y) * 0.001) * 1.5;
-    
-    const distToCenter = Math.hypot(x - C.HOME_X, y - C.HOME_Y);
-    if (distToCenter < C.HOME_RADIUS) return 'home';
-
-    if (noise > 1.2) return 'water';    // 15%
-    if (noise > 0.5) return 'grass';    // 40%
-    if (noise > -0.8) return 'dirt';    // 35%
-    return 'toxic';                     // 10%
+// Custom PRNG based noise to generate terrain heightmap and bean placement without external libs
+class PRNG {
+    constructor(seed) { this.seed = seed; }
+    next() { this.seed = (this.seed * 9301 + 49297) % 233280; return this.seed / 233280; }
 }
 
-// Pre-generate static decor based on biomes
-function initWorld() {
-    // Generate Decor
-    for(let i=0; i<C.MAX_DECOR; i++) {
-        let x = Math.random() * C.WORLD_SIZE;
-        let y = Math.random() * C.WORLD_SIZE;
-        let b = getBiome(x,y);
-        if(b === 'water' || b === 'home') continue;
+function hash(x, y, seed) {
+    let h = seed + x * 374761393 + y * 668265263;
+    h = (h ^ (h >> 13)) * 1274126177;
+    return h ^ (h >> 16);
+}
+
+function smoothStep(t) { return t * t * (3 - 2 * t); }
+function lerp(a, b, t) { return a + t * (b - a); }
+
+function noise2D(x, y, seed = 12345) {
+    let xi = Math.floor(x), yi = Math.floor(y);
+    let xf = x - xi, yf = y - yi;
+    let u = smoothStep(xf), v = smoothStep(yf);
+    
+    let a = hash(xi, yi, seed) % 256 / 256;
+    let b = hash(xi+1, yi, seed) % 256 / 256;
+    let c = hash(xi, yi+1, seed) % 256 / 256;
+    let d = hash(xi+1, yi+1, seed) % 256 / 256;
+    
+    let x1 = lerp(a, b, u);
+    let x2 = lerp(c, d, u);
+    return lerp(x1, x2, v);
+}
+
+function fbm(x, y, octaves = 4) {
+    let v = 0, a = 0.5, f = 1.0;
+    for(let i=0; i<octaves; i++) {
+        v += a * noise2D(x * f, y * f);
+        f *= 2.0; a *= 0.5;
+    }
+    return v;
+}
+
+// ==========================================
+// ENGINE: THREE.JS SETUP
+// ==========================================
+const Engine = {
+    scene: null, camera: null, renderer: null,
+    clock: new THREE.Clock(),
+    raycaster: new THREE.Raycaster(),
+    
+    // Entity Groups
+    beansGroup: null, chunkGroup: null, particlesGroup: null,
+    
+    // Arrays
+    beans: [], chunks: new Map(), particles: [],
+    
+    // Materials
+    matBeanNorm: null, matBeanEpic: null, matBeanLeg: null,
+    matGround: null, matSafeZone: null,
+    
+    init() {
+        const container = document.getElementById('webgl-container');
         
-        let type = Math.random() > 0.5 ? 'tree' : (Math.random() > 0.5 ? 'rock' : 'bush');
-        if(b === 'toxic') type = 'dead_tree';
+        // Scene & Fog
+        this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color(0x050508);
+        this.scene.fog = new THREE.FogExp2(0x050508, 0.003);
+
+        // Camera
+        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 2000);
+        this.scene.add(this.camera);
+
+        // Renderer
+        this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(this.renderer.domElement);
+
+        // Lights
+        const ambLight = new THREE.AmbientLight(0xffffff, 0.2);
+        this.scene.add(ambLight);
         
-        entities.decor.push({
-            x: x, y: y, type: type,
-            size: (type==='tree'||type==='dead_tree') ? 40+Math.random()*40 : 15+Math.random()*20,
-            rot: Math.random() * Math.PI*2
+        const dirLight = new THREE.DirectionalLight(0xffaa55, 0.8);
+        dirLight.position.set(100, 200, 50);
+        dirLight.castShadow = true;
+        dirLight.shadow.camera.top = 200;
+        dirLight.shadow.camera.bottom = -200;
+        dirLight.shadow.camera.left = -200;
+        dirLight.shadow.camera.right = 200;
+        this.scene.add(dirLight);
+        
+        // Home Base Light
+        const pointLight = new THREE.PointLight(0x00ffcc, 2.0, C.HOME_RADIUS * 2);
+        pointLight.position.set(0, 20, 0);
+        this.scene.add(pointLight);
+
+        // Groups
+        this.beansGroup = new THREE.Group();
+        this.scene.add(this.beansGroup);
+        
+        this.chunkGroup = new THREE.Group();
+        this.scene.add(this.chunkGroup);
+        
+        // Materials Init
+        this.initMaterials();
+        
+        // Build Home Base
+        this.buildHomeBase();
+
+        // Initial Beans
+        for(let i=0; i<C.MAX_BEANS; i++) this.spawnBean();
+
+        // Event Listeners
+        window.addEventListener('resize', () => this.onResize());
+        document.addEventListener('keydown', Input.onKeyDown);
+        document.addEventListener('keyup', Input.onKeyUp);
+        
+        // Pointer Lock for FPS controls
+        document.body.addEventListener('click', () => {
+            if(!UI.isShopOpen) document.body.requestPointerLock();
         });
-    }
+        document.addEventListener('mousemove', Input.onMouseMove);
+        document.addEventListener('pointerlockchange', () => {
+            UI.isShopOpen = document.pointerLockElement !== document.body;
+            document.getElementById('crosshair').style.display = UI.isShopOpen ? 'none' : 'block';
+        });
 
-    // Initial Beans
-    for(let i=0; i<1000; i++) spawnBean();
-    
-    // Initial Enemies
-    for(let i=0; i<50; i++) spawnEnemy();
-}
+        UI.init();
+        this.loop();
+        
+        setTimeout(() => {
+            document.getElementById('loading-screen').style.opacity = '0';
+            setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 1000);
+        }, 1500);
+    },
 
-// ==========================================
-// UPGRADES & SHOP DATA
-// ==========================================
-const db = {
-    upgrades: [
-        { id: 'u1', name: 'Elastic Stomach', desc: '+15 Capacity', cost: 10, mult: 1.4, max: 50, type: 'cap', val: 15 },
-        { id: 'u2', name: 'Pinto Beans', desc: 'Farts x1.5', cost: 50, mult: 1.6, max: 20, type: 'fart', val: 1.5 },
-        { id: 'u3', name: 'Running Shoes', desc: '+10% Speed', cost: 100, mult: 1.5, max: 10, type: 'speed', val: 0.1 },
-        { id: 'u4', name: 'Lung Expansion', desc: '+20 Max Stamina', cost: 150, mult: 1.3, max: 20, type: 'stam', val: 20 },
-        { id: 'u5', name: 'Magnetic Gut', desc: '+15 Pickup Radius', cost: 300, mult: 1.7, max: 15, type: 'rad', val: 15 },
-        { id: 'u6', name: 'Black Beans', desc: 'Farts x2.0', cost: 800, mult: 2.0, max: 20, type: 'fart', val: 2.0 },
-        { id: 'u7', name: 'Industrial Intestines', desc: '+100 Capacity', cost: 1500, mult: 1.5, max: 50, type: 'cap', val: 100 },
-        { id: 'u8', name: 'Nitro Boosters', desc: '+15% Speed', cost: 4000, mult: 1.8, max: 10, type: 'speed', val: 0.15 },
-        { id: 'u9', name: 'Kidney Beans', desc: 'Farts x3.0', cost: 10000, mult: 2.5, max: 20, type: 'fart', val: 3.0 },
-        { id: 'u10', name: 'Black Hole Stomach', desc: '+1000 Capacity', cost: 25000, mult: 1.6, max: 50, type: 'cap', val: 1000 },
-        { id: 'u11', name: 'Tractor Beam', desc: '+50 Pickup Radius', cost: 50000, mult: 2.0, max: 10, type: 'rad', val: 50 },
-        { id: 'u12', name: 'Baked Beans', desc: 'Farts x5.0', cost: 150000, mult: 3.0, max: 20, type: 'fart', val: 5.0 },
-        { id: 'u13', name: 'Stamina Reactor', desc: '+100 Max Stamina', cost: 300000, mult: 1.5, max: 20, type: 'stam', val: 100 },
-        { id: 'u14', name: 'Quantum Gut', desc: '+10000 Capacity', cost: 1000000, mult: 1.8, max: 50, type: 'cap', val: 10000 },
-        { id: 'u15', name: 'Nuclear Beans', desc: 'Farts x10.0', cost: 5000000, mult: 4.0, max: 20, type: 'fart', val: 10.0 },
-        //... Extensible logic handles rendering perfectly
-    ],
-    mutations: [
-        { id: 'm1', name: 'Leaky Valve', desc: 'Auto-fart 1/sec', cost: 500, mult: 1.5, max: 50, type: 'auto', val: 1 },
-        { id: 'm2', name: 'Rapid Digestion', desc: 'Digest 2x faster', cost: 2000, mult: 2.5, max: 10, type: 'digest', val: 2 },
-        { id: 'm3', name: 'Toxic Aura', desc: 'Damage enemies nearby', cost: 10000, mult: 3.0, max: 5, type: 'aura', val: 1 },
-        { id: 'm4', name: 'Gaseous Anomaly', desc: 'Auto-fart 50/sec', cost: 50000, mult: 1.6, max: 50, type: 'auto', val: 50 },
-        { id: 'm5', name: 'Turbo Digestion', desc: 'Digest 5x faster', cost: 250000, mult: 3.0, max: 10, type: 'digest', val: 5 },
-        { id: 'm6', name: 'Fart Turbine', desc: 'Auto-fart 1000/sec', cost: 2000000, mult: 1.8, max: 50, type: 'auto', val: 1000 }
-    ],
-    prestige: [
-        { id: 'p1', name: 'Golden Beans', desc: 'Base Multiplier x5', cost: 1, mult: 2, max: 99, type: 'pfart', val: 5 },
-        { id: 'p2', name: 'God Speed', desc: 'Base Speed x1.5', cost: 3, mult: 3, max: 5, type: 'pspeed', val: 1.5 },
-        { id: 'p3', name: 'Astral Stomach', desc: 'Base Cap x10', cost: 5, mult: 4, max: 10, type: 'pcap', val: 10 }
-    ]
-};
+    initMaterials() {
+        // Custom Shader for Grid Ground
+        const groundVert = `
+            varying vec2 vUv;
+            varying vec3 vPos;
+            void main() {
+                vUv = uv;
+                vPos = (modelMatrix * vec4(position, 1.0)).xyz;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `;
+        const groundFrag = `
+            varying vec2 vUv;
+            varying vec3 vPos;
+            uniform vec3 color;
+            void main() {
+                float grid1 = abs(fract(vPos.x * 0.05) - 0.5) * 2.0;
+                float grid2 = abs(fract(vPos.z * 0.05) - 0.5) * 2.0;
+                float line = min(grid1, grid2);
+                float glow = 1.0 - smoothstep(0.0, 0.05, line);
+                
+                vec3 baseColor = vec3(0.05, 0.05, 0.08);
+                vec3 gridColor = vec3(0.2, 0.8, 0.2) * glow * 0.5;
+                
+                // Dist to center
+                float dist = length(vPos.xz);
+                float safeZone = 1.0 - smoothstep(${C.HOME_RADIUS - 10.0}, ${C.HOME_RADIUS}, dist);
+                vec3 finalColor = mix(baseColor + gridColor, vec3(0.0, 0.2, 0.2), safeZone * 0.5);
+                
+                gl_FragColor = vec4(finalColor, 1.0);
+            }
+        `;
+        
+        this.matGround = new THREE.ShaderMaterial({
+            vertexShader: groundVert,
+            fragmentShader: groundFrag,
+            uniforms: { color: { value: new THREE.Color(0x111111) } }
+        });
 
-// Tracking user ownership
-const inventory = {};
-[...db.upgrades, ...db.mutations, ...db.prestige].forEach(item => inventory[item.id] = { count: 0, currentCost: item.cost });
+        // Bean Materials
+        this.matBeanNorm = new THREE.MeshStandardMaterial({ color: 0xd2691e, roughness: 0.7, metalness: 0.2 });
+        this.matBeanEpic = new THREE.MeshStandardMaterial({ color: 0x8a2be2, roughness: 0.3, metalness: 0.8, emissive: 0x4a0082 });
+        this.matBeanLeg = new THREE.MeshStandardMaterial({ color: 0xffd700, roughness: 0.1, metalness: 1.0, emissive: 0x886600 });
+    },
 
-// ==========================================
-// CLASSES
-// ==========================================
+    buildHomeBase() {
+        // Huge ground plane
+        const geoPlane = new THREE.PlaneGeometry(C.WORLD_SIZE, C.WORLD_SIZE, 10, 10);
+        geoPlane.rotateX(-Math.PI / 2);
+        const meshPlane = new THREE.Mesh(geoPlane, this.matGround);
+        meshPlane.receiveShadow = true;
+        this.scene.add(meshPlane);
 
-class Bean {
-    constructor() {
-        this.respawn();
-    }
-    respawn() {
-        let valid = false;
-        while(!valid) {
-            this.x = Math.random() * C.WORLD_SIZE;
-            this.y = Math.random() * C.WORLD_SIZE;
-            if (getBiome(this.x, this.y) !== 'home') valid = true;
+        // Safe Zone Dome
+        const geoDome = new THREE.SphereGeometry(C.HOME_RADIUS, 32, 16, 0, Math.PI*2, 0, Math.PI/2);
+        const matDome = new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.1, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
+        const meshDome = new THREE.Mesh(geoDome, matDome);
+        this.scene.add(meshDome);
+
+        // Center Toilet/Altar
+        const geoAltar = new THREE.CylinderGeometry(5, 5, 10, 16);
+        const matAltar = new THREE.MeshStandardMaterial({ color: 0x333333, emissive: 0x00ffcc, emissiveIntensity: 0.2 });
+        const meshAltar = new THREE.Mesh(geoAltar, matAltar);
+        meshAltar.position.y = 5;
+        meshAltar.castShadow = true;
+        this.scene.add(meshAltar);
+    },
+
+    spawnBean() {
+        let x, z;
+        while(true) {
+            x = (Math.random() - 0.5) * C.WORLD_SIZE * 0.8;
+            z = (Math.random() - 0.5) * C.WORLD_SIZE * 0.8;
+            if (Math.hypot(x, z) > C.HOME_RADIUS + 20) break;
         }
+        
+        let y = fbm(x*0.01, z*0.01) * 20 + 2; // Follow terrain pseudo-height
         
         let rand = Math.random();
-        if(rand < 0.05) { this.tier = 3; this.color = varToHex('--legendary'); this.val = 50; this.size = 8; }
-        else if(rand < 0.20) { this.tier = 2; this.color = varToHex('--epic'); this.val = 10; this.size = 6; }
-        else { this.tier = 1; this.color = varToHex('--bean-color'); this.val = 1; this.size = 4; }
+        let tier = 1, mat = this.matBeanNorm, val = 1, size = 1;
+        if(rand < 0.05) { tier = 3; mat = this.matBeanLeg; val = 50; size = 2.5; }
+        else if(rand < 0.20) { tier = 2; mat = this.matBeanEpic; val = 10; size = 1.8; }
         
-        this.wobble = Math.random() * Math.PI * 2;
-    }
-}
+        const geo = new THREE.IcosahedronGeometry(size, 0);
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(x, y, z);
+        mesh.castShadow = true;
+        
+        mesh.userData = { tier, val, rotSpeed: new THREE.Vector3(Math.random()*0.05, Math.random()*0.05, Math.random()*0.05), baseY: y, phase: Math.random()*Math.PI*2 };
+        
+        this.beansGroup.add(mesh);
+        this.beans.push(mesh);
+    },
 
-class Enemy {
-    constructor() {
-        this.respawn();
-    }
-    respawn() {
-        this.x = Math.random() * C.WORLD_SIZE;
-        this.y = Math.random() * C.WORLD_SIZE;
-        this.speed = 2 + Math.random() * 3;
-        this.size = 15;
-        this.color = '#ff4444';
-        this.state = 'wander'; // wander, chase
-        this.angle = Math.random() * Math.PI * 2;
-        this.timer = 0;
-    }
-    update(dt) {
-        let distToPlayer = Math.hypot(this.x - state.x, this.y - state.y);
+    spawnParticle(pos, color, scale, speed, life) {
+        // Simple cube particles for performance
+        const geo = new THREE.BoxGeometry(scale, scale, scale);
+        const mat = new THREE.MeshBasicMaterial({ color: color, transparent: true });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.copy(pos);
         
-        // Don't enter home zone
-        let distToHome = Math.hypot(this.x - C.HOME_X, this.y - C.HOME_Y);
+        const angle = Math.random() * Math.PI * 2;
+        const velY = Math.random() * speed;
+        const velX = Math.cos(angle) * speed;
+        const velZ = Math.sin(angle) * speed;
         
-        if (distToPlayer < 600 && distToHome > C.HOME_RADIUS) {
-            this.state = 'chase';
-        } else {
-            this.state = 'wander';
+        mesh.userData = { vel: new THREE.Vector3(velX, velY, velZ), life: life, maxLife: life };
+        this.scene.add(mesh);
+        this.particles.push(mesh);
+    },
+
+    createExplosion(pos, colorHex, count) {
+        for(let i=0; i<count; i++) {
+            this.spawnParticle(pos, colorHex, Math.random()*2+0.5, Math.random()*20+5, Math.random()*1+0.5);
         }
+    },
 
-        if (this.state === 'chase') {
-            this.angle = Math.atan2(state.y - this.y, state.x - this.x);
-        } else {
-            this.timer -= dt;
-            if(this.timer <= 0) {
-                this.angle += (Math.random() - 0.5) * 2;
-                this.timer = 1 + Math.random() * 2;
-            }
-        }
+    onResize() {
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+    },
 
-        let nx = this.x + Math.cos(this.angle) * this.speed;
-        let ny = this.y + Math.sin(this.angle) * this.speed;
+    loop() {
+        requestAnimationFrame(() => this.loop());
+        const dt = Math.min(this.clock.getDelta(), 0.1);
         
-        // Bounce off home dome
-        if (Math.hypot(nx - C.HOME_X, ny - C.HOME_Y) < C.HOME_RADIUS) {
-            this.angle += Math.PI; // turn around
-        } else {
-            this.x = nx; this.y = ny;
+        if(!UI.isShopOpen) {
+            Input.update(dt);
+            Logic.update(dt);
         }
-
-        // Keep in bounds
-        this.x = Math.max(0, Math.min(C.WORLD_SIZE, this.x));
-        this.y = Math.max(0, Math.min(C.WORLD_SIZE, this.y));
-
-        // Attack Player
-        if (distToPlayer < this.size + state.radius && distToHome > C.HOME_RADIUS) {
-            if (state.beansInStomach > 0) {
-                let stolen = Math.max(1, Math.floor(state.beansInStomach * 0.05));
-                state.beansInStomach -= stolen;
-                spawnText(state.x, state.y, `-${stolen} Beans!`, '#ff4444');
-                document.body.classList.add('taking-damage');
-                setTimeout(()=>document.body.classList.remove('taking-damage'), 200);
-                
-                // Knockback
-                state.vx = Math.cos(this.angle) * 20;
-                state.vy = Math.sin(this.angle) * 20;
-            }
-        }
-    }
-}
-
-class Particle {
-    constructor(x, y, color, speed, size, life) {
-        this.x = x; this.y = y;
-        let ang = Math.random() * Math.PI * 2;
-        this.vx = Math.cos(ang) * speed * Math.random();
-        this.vy = Math.sin(ang) * speed * Math.random();
-        this.color = color;
-        this.size = size;
-        this.life = life;
-        this.maxLife = life;
-    }
-    update(dt) {
-        this.x += this.vx; this.y += this.vy;
-        this.vx *= 0.95; this.vy *= 0.95; // friction
-        this.life -= dt;
-        this.size = Math.max(0, this.size * 0.98);
-    }
-}
-
-class FText {
-    constructor(x, y, text, color) {
-        this.x = x + (Math.random()*20-10);
-        this.y = y;
-        this.text = text;
-        this.color = color;
-        this.life = 1.5;
-        this.vy = -30; // pixels per sec
-    }
-    update(dt) {
-        this.y += this.vy * dt;
-        this.life -= dt;
-    }
-}
-
-// ==========================================
-// HELPERS
-// ==========================================
-function varToHex(varName) {
-    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
-}
-
-function formatNum(num) {
-    if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';
-    if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
-    if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
-    if (num >= 1e3) return (num / 1e3).toFixed(1) + 'k';
-    return Math.floor(num).toString();
-}
-
-function spawnBean() {
-    if(entities.beans.length < C.MAX_BEANS) entities.beans.push(new Bean());
-}
-
-function spawnEnemy() {
-    if(entities.enemies.length < C.MAX_ENEMIES) entities.enemies.push(new Enemy());
-}
-
-function spawnText(x, y, txt, col) {
-    entities.texts.push(new FText(x, y, txt, col));
-}
-
-function createExplosion(x, y, color, count, power) {
-    for(let i=0; i<count; i++) {
-        entities.particles.push(new Particle(x, y, color, power, 5+Math.random()*8, 0.5+Math.random()*1));
-    }
-}
-
-function screenShake(duration) {
-    state.shakeTimer = duration;
-    document.getElementById('game-canvas').classList.add('shake-active');
-    setTimeout(() => {
-        if(state.shakeTimer <= 0) document.getElementById('game-canvas').classList.remove('shake-active');
-    }, duration * 1000);
-}
-
-function pushNotification(msg) {
-    const area = document.getElementById('notif-area');
-    const t = document.createElement('div');
-    t.className = 'toast'; t.innerText = msg;
-    area.appendChild(t);
-    setTimeout(() => t.remove(), 2500);
-}
-
-// ==========================================
-// SHOP & UPGRADE LOGIC
-// ==========================================
-function switchTab(tabName) {
-    state.activeTab = tabName;
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    event.target.classList.add('active');
-    
-    document.getElementById('list-upgrades').style.display = tabName === 'upgrades' ? 'flex' : 'none';
-    document.getElementById('list-mutations').style.display = tabName === 'mutations' ? 'flex' : 'none';
-    document.getElementById('list-prestige').style.display = tabName === 'prestige' ? 'flex' : 'none';
-    
-    renderShop();
-}
-
-function buyItem(id, category) {
-    const itemData = db[category].find(i => i.id === id);
-    const inv = inventory[id];
-    
-    let currency = category === 'prestige' ? state.prestigeTokens : state.farts;
-    
-    if (inv.count >= itemData.max) return;
-    if (currency < inv.currentCost) {
-        pushNotification("Not enough resources!");
-        return;
-    }
-
-    // Deduct
-    if (category === 'prestige') state.prestigeTokens -= inv.currentCost;
-    else state.farts -= inv.currentCost;
-
-    // Apply stats
-    inv.count++;
-    inv.currentCost = Math.floor(inv.currentCost * itemData.mult);
-
-    // Recalculate global stats
-    recalculateStats();
-    
-    pushNotification(`Upgraded: ${itemData.name}`);
-    renderShop();
-    updateUI();
-}
-
-function recalculateStats() {
-    // Reset to base
-    state.stomachCap = 10;
-    state.multFart = 1;
-    state.multSpeed = 1;
-    state.multStamina = 1;
-    state.maxStamina = 100;
-    state.multRadius = 1;
-    state.autoFart = 0;
-    state.digestionRate = 5;
-
-    // Apply prestige base multipliers first
-    db.prestige.forEach(p => {
-        let c = inventory[p.id].count;
-        if(c===0) return;
-        if(p.type === 'pfart') state.multFart *= Math.pow(p.val, c);
-        if(p.type === 'pspeed') state.multSpeed *= Math.pow(p.val, c);
-        if(p.type === 'pcap') state.stomachCap *= Math.pow(p.val, c);
-    });
-
-    // Apply normal upgrades
-    db.upgrades.forEach(u => {
-        let c = inventory[u.id].count;
-        if(c===0) return;
-        if(u.type === 'cap') state.stomachCap += (u.val * c);
-        if(u.type === 'fart') state.multFart *= Math.pow(u.val, c);
-        if(u.type === 'speed') state.multSpeed += (u.val * c);
-        if(u.type === 'stam') state.maxStamina += (u.val * c);
-        if(u.type === 'rad') state.multRadius += (u.val * c / 100); 
-    });
-
-    // Apply mutations
-    db.mutations.forEach(m => {
-        let c = inventory[m.id].count;
-        if(c===0) return;
-        if(m.type === 'auto') state.autoFart += (m.val * c);
-        if(m.type === 'digest') state.digestionRate *= Math.pow(m.val, c);
-    });
-}
-
-function renderShop() {
-    ['upgrades', 'mutations', 'prestige'].forEach(cat => {
-        const container = document.getElementById(`list-${cat}`);
-        if(cat !== 'prestige') container.innerHTML = '';
-        else document.getElementById('prestige-upgrades').innerHTML = ''; // Keep the rebirth button
         
-        let targetDiv = cat === 'prestige' ? document.getElementById('prestige-upgrades') : container;
-
-        db[cat].forEach(item => {
-            const inv = inventory[item.id];
-            const isMax = inv.count >= item.max;
-            let currency = cat === 'prestige' ? state.prestigeTokens : state.farts;
-            const canAfford = currency >= inv.currentCost;
-            
-            const div = document.createElement('div');
-            div.className = `upg-card ${isMax ? 'maxed' : (!canAfford ? 'locked' : '')}`;
-            div.onclick = () => buyItem(item.id, cat);
-            
-            let costStr = isMax ? 'MAX LEVEL' : `${formatNum(inv.currentCost)} ${cat==='prestige'?'Tokens':'Farts'}`;
-            let costClass = cat === 'prestige' ? 'upg-cost rebirth-cost' : 'upg-cost';
-
-            div.innerHTML = `
-                <div class="upg-header">
-                    <span class="upg-name" style="color:${cat==='prestige'?'var(--gold)':(cat==='mutations'?'var(--epic)':'#fff')}">${item.name}</span>
-                    <span class="upg-lvl">Lv.${inv.count}/${item.max}</span>
-                </div>
-                <div class="upg-desc">${item.desc}</div>
-                <div class="${costClass}">${costStr}</div>
-            `;
-            targetDiv.appendChild(div);
+        // Animations
+        const time = this.clock.getElapsedTime();
+        this.beans.forEach(b => {
+            b.rotation.x += b.userData.rotSpeed.x;
+            b.rotation.y += b.userData.rotSpeed.y;
+            b.rotation.z += b.userData.rotSpeed.z;
+            b.position.y = b.userData.baseY + Math.sin(time * 2 + b.userData.phase) * 2;
         });
-    });
-}
 
-// ==========================================
-// REBIRTH LOGIC
-// ==========================================
-function calcRebirthTokens() {
-    return Math.floor(Math.pow(state.farts / 1000000, 0.5)); 
-}
+        // Particles
+        for(let i=this.particles.length-1; i>=0; i--) {
+            let p = this.particles[i];
+            p.position.addScaledVector(p.userData.vel, dt);
+            p.userData.vel.y -= 30 * dt; // gravity
+            p.userData.life -= dt;
+            p.material.opacity = p.userData.life / p.userData.maxLife;
+            p.scale.setScalar(p.userData.life / p.userData.maxLife);
+            if(p.userData.life <= 0) {
+                this.scene.remove(p);
+                p.geometry.dispose();
+                p.material.dispose();
+                this.particles.splice(i, 1);
+            }
+        }
 
-function showRebirthModal() {
-    const gain = calcRebirthTokens();
-    if(gain < 1) {
-        pushNotification("Need at least 1,000,000 Farts to Rebirth!");
-        return;
+        this.renderer.render(this.scene, this.camera);
+        UI.renderMinimap();
     }
-    document.getElementById('rebirth-gain').innerText = formatNum(gain);
-    document.getElementById('rebirth-modal').style.display = 'flex';
-}
-
-function executeRebirth() {
-    const gain = calcRebirthTokens();
-    state.prestigeTokens += gain;
-    state.rebirths++;
-    
-    // Reset Currencies
-    state.farts = 0;
-    state.beansInStomach = 0;
-    
-    // Reset Upgrades & Mutations (Keep Prestige)
-    db.upgrades.forEach(u => { inventory[u.id].count = 0; inventory[u.id].currentCost = u.cost; });
-    db.mutations.forEach(m => { inventory[m.id].count = 0; inventory[m.id].currentCost = m.cost; });
-    
-    // Teleport Home
-    state.x = C.HOME_X; state.y = C.HOME_Y;
-    
-    document.getElementById('rebirth-modal').style.display = 'none';
-    document.getElementById('row-rebirth').style.display = 'flex';
-    
-    recalculateStats();
-    renderShop();
-    updateUI();
-    createExplosion(state.x, state.y, varToHex('--gold'), 200, 20);
-    screenShake(1.0);
-    pushNotification(`ASCENDED! +${formatNum(gain)} TOKENS`);
-}
+};
 
 // ==========================================
-// INPUT HANDLING
+// INPUT SYSTEM
 // ==========================================
-window.addEventListener('keydown', e => state.keys[e.code] = true);
-window.addEventListener('keyup', e => state.keys[e.code] = false);
-
-// ==========================================
-// MAIN LOOP & LOGIC
-// ==========================================
-let lastTime = performance.now();
-const canvas = document.getElementById('game-canvas');
-const ctx = canvas.getContext('2d');
-const miniCanvas = document.getElementById('minimap-canvas');
-const mCtx = miniCanvas.getContext('2d');
-
-function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resize);
-resize();
-
-function update(dt) {
-    // Time
-    state.timeOfDay += C.daySpeed * dt;
-    if(state.timeOfDay > Math.PI * 2) state.timeOfDay = 0;
-
-    // Movement
-    let dx = 0, dy = 0;
-    if (state.keys['KeyW'] || state.keys['ArrowUp']) dy -= 1;
-    if (state.keys['KeyS'] || state.keys['ArrowDown']) dy += 1;
-    if (state.keys['KeyA'] || state.keys['ArrowLeft']) dx -= 1;
-    if (state.keys['KeyD'] || state.keys['ArrowRight']) dx += 1;
-
-    // Normalize
-    if (dx !== 0 && dy !== 0) {
-        let len = Math.hypot(dx, dy);
-        dx /= len; dy /= len;
-    }
-
-    // Sprint & Stamina
-    let isSprinting = state.keys['ShiftLeft'] && state.stamina > 0 && (dx!==0 || dy!==0);
-    let currentSpeed = state.baseSpeed * state.multSpeed;
-    if (isSprinting) {
-        currentSpeed *= state.sprintMult;
-        state.stamina -= 20 * dt; // Drain
-    } else {
-        state.stamina += 10 * dt; // Recover
-    }
-    state.stamina = Math.max(0, Math.min(state.maxStamina, state.stamina));
-
-    // Physics
-    state.vx += (dx * currentSpeed - state.vx) * 10 * dt; // Smooth acceleration
-    state.vy += (dy * currentSpeed - state.vy) * 10 * dt;
+const Input = {
+    keys: { w:false, a:false, s:false, d:false, shift:false, space:false },
     
-    state.x += state.vx;
-    state.y += state.vy;
-
-    // Bounds
-    state.x = Math.max(state.radius, Math.min(C.WORLD_SIZE - state.radius, state.x));
-    state.y = Math.max(state.radius, Math.min(C.WORLD_SIZE - state.radius, state.y));
-
-    // Camera follow
-    state.camera.x += (state.x - canvas.width/2 - state.camera.x) * 5 * dt;
-    state.camera.y += (state.y - canvas.height/2 - state.camera.y) * 5 * dt;
-    state.camera.x = Math.max(0, Math.min(C.WORLD_SIZE - canvas.width, state.camera.x));
-    state.camera.y = Math.max(0, Math.min(C.WORLD_SIZE - canvas.height, state.camera.y));
-
-    // Home Logic & Farting
-    let distToHome = Math.hypot(state.x - C.HOME_X, state.y - C.HOME_Y);
-    let atHome = distToHome < C.HOME_RADIUS;
-
-    if (atHome) {
-        // Heal stamina instantly at home
-        state.stamina = state.maxStamina;
+    onKeyDown(e) {
+        if(e.code === 'KeyW') Input.keys.w = true;
+        if(e.code === 'KeyA') Input.keys.a = true;
+        if(e.code === 'KeyS') Input.keys.s = true;
+        if(e.code === 'KeyD') Input.keys.d = true;
+        if(e.code === 'ShiftLeft') Input.keys.shift = true;
+        if(e.code === 'Space') Input.keys.space = true;
         
-        if (state.beansInStomach > 0) {
-            let digestAmt = state.digestionRate * dt;
-            if (state.keys['Space']) digestAmt *= 10; // Turbo
+        if(e.code === 'Tab') { e.preventDefault(); UI.toggleShop(); }
+    },
+    
+    onKeyUp(e) {
+        if(e.code === 'KeyW') Input.keys.w = false;
+        if(e.code === 'KeyA') Input.keys.a = false;
+        if(e.code === 'KeyS') Input.keys.s = false;
+        if(e.code === 'KeyD') Input.keys.d = false;
+        if(e.code === 'ShiftLeft') Input.keys.shift = false;
+        if(e.code === 'Space') Input.keys.space = false;
+    },
+    
+    onMouseMove(e) {
+        if(document.pointerLockElement === document.body) {
+            const sensitivity = 0.002;
+            State.yaw -= e.movementX * sensitivity;
+            State.pitch -= e.movementY * sensitivity;
+            State.pitch = Math.max(-Math.PI/2, Math.min(Math.PI/2, State.pitch));
+        }
+    },
+    
+    update(dt) {
+        // Look
+        Engine.camera.rotation.set(0,0,0);
+        Engine.camera.rotateY(State.yaw);
+        Engine.camera.rotateX(State.pitch);
+
+        // Move dir
+        const dir = new THREE.Vector3();
+        if(Input.keys.w) dir.z -= 1;
+        if(Input.keys.s) dir.z += 1;
+        if(Input.keys.a) dir.x -= 1;
+        if(Input.keys.d) dir.x += 1;
+        dir.normalize();
+        
+        dir.applyAxisAngle(new THREE.Vector3(0,1,0), State.yaw);
+
+        // Sprint
+        State.isSprinting = Input.keys.shift && State.stamina > 0 && dir.length() > 0;
+        let speed = State.baseSpeed * State.multSpeed;
+        if(State.isSprinting) {
+            speed *= State.sprintMult;
+            State.stamina -= 25 * dt;
+        } else {
+            State.stamina += 15 * dt;
+        }
+        State.stamina = Math.max(0, Math.min(State.maxStamina, State.stamina));
+
+        // Physics
+        const targetVel = dir.multiplyScalar(speed);
+        State.vel.lerp(targetVel, 10 * dt);
+        State.pos.addScaledVector(State.vel, dt);
+        
+        // Bounds constraint
+        const halfSize = C.WORLD_SIZE/2;
+        State.pos.x = Math.max(-halfSize, Math.min(halfSize, State.pos.x));
+        State.pos.z = Math.max(-halfSize, Math.min(halfSize, State.pos.z));
+        
+        // Height constraint
+        let terrainY = fbm(State.pos.x*0.01, State.pos.z*0.01) * 20;
+        State.pos.y = terrainY + 5; // Eye level
+        
+        Engine.camera.position.copy(State.pos);
+
+        // Head bobbing
+        if(State.vel.length() > 1 && !State.inSafeZone) {
+            Engine.camera.position.y += Math.sin(Engine.clock.getElapsedTime() * 10) * 0.5;
+        }
+    }
+};
+
+// ==========================================
+// GAME LOGIC & SYSTEMS
+// ==========================================
+const Logic = {
+    update(dt) {
+        this.checkZones();
+        this.processCollection();
+        this.processFarts(dt);
+        
+        if(Engine.clock.getElapsedTime() % 0.5 < dt) UI.updateStats(); // Throttle UI
+    },
+    
+    checkZones() {
+        const distToCenter = Math.hypot(State.pos.x, State.pos.z);
+        State.inSafeZone = distToCenter < C.HOME_RADIUS;
+        
+        const prompt = document.getElementById('interact-prompt');
+        if(State.inSafeZone && State.beansInStomach > 0) {
+            prompt.style.display = 'block';
+            document.getElementById('fx-overlay').className = 'fx-heal';
+            State.stamina = State.maxStamina; // Instant heal
+        } else {
+            prompt.style.display = 'none';
+            if(State.isSprinting) document.getElementById('fx-overlay').className = 'fx-speed';
+            else document.getElementById('fx-overlay').className = '';
+        }
+    },
+    
+    processCollection() {
+        if(State.beansInStomach >= State.stomachCap) return;
+        
+        const collectRad = 5 + (State.multRadius * 2);
+        
+        for(let i=Engine.beans.length-1; i>=0; i--) {
+            let b = Engine.beans[i];
+            let dist = State.pos.distanceTo(b.position);
             
-            digestAmt = Math.min(digestAmt, state.beansInStomach);
-            
-            if (digestAmt > 0) {
-                state.beansInStomach -= digestAmt;
-                let generated = digestAmt * state.multFart;
-                state.farts += generated;
+            if(dist < collectRad) {
+                // Collect
+                State.beansInStomach += b.userData.val;
+                State.beansEaten += b.userData.val;
+                if(State.beansInStomach > State.stomachCap) State.beansInStomach = State.stomachCap;
                 
-                if (Math.random() < 0.1) {
-                    createExplosion(state.x, state.y, varToHex('--fart-color'), 5, 5);
-                    spawnText(state.x, state.y - 20, `+${formatNum(generated)}`, varToHex('--fart-color'));
+                UI.spawnToast(`+${b.userData.val} BEAN`, b.userData.tier === 3 ? 'var(--gold)' : 'var(--bean-color)');
+                
+                // Remove & Respawn
+                Engine.beansGroup.remove(b);
+                Engine.beans.splice(i, 1);
+                Engine.spawnBean();
+                
+                if(State.beansInStomach >= State.stomachCap) break;
+            }
+        }
+    },
+    
+    processFarts(dt) {
+        // Auto fart
+        if(State.autoFart > 0) {
+            State.farts += State.autoFart * State.multFart * dt;
+        }
+        
+        // Active Digestion at home
+        if(State.inSafeZone && State.beansInStomach > 0 && Input.keys.space) {
+            let amount = 10 * State.multDigest * dt;
+            amount = Math.min(amount, State.beansInStomach);
+            
+            if(amount > 0) {
+                State.beansInStomach -= amount;
+                let generated = amount * State.multFart;
+                State.farts += generated;
+                
+                // Visual FX
+                if(Math.random() < 0.2) {
+                    Engine.createExplosion(State.pos.clone().add(new THREE.Vector3(0,-2,0)), 0x39ff14, 5);
+                    Engine.camera.position.y += Math.random() * 2; // Screen shake
                 }
             }
         }
-    }
+    },
 
-    // Auto Fart
-    if (state.autoFart > 0) {
-        state.farts += state.autoFart * dt * state.multFart;
-    }
+    recalculateStats() {
+        // Base reset
+        State.stomachCap = 10;
+        State.maxStamina = 100;
+        State.multFart = 1;
+        State.multSpeed = 1;
+        State.multRadius = 1;
+        State.multDigest = 1;
+        State.autoFart = 0;
 
-    // Bean Collection
-    let pRad = state.radius + state.pickupRadius * state.multRadius;
-    if (state.beansInStomach < state.stomachCap) {
-        for(let i = entities.beans.length - 1; i >= 0; i--) {
-            let b = entities.beans[i];
-            if (Math.hypot(state.x - b.x, state.y - b.y) < pRad) {
-                // Collect
-                state.beansInStomach += b.val;
-                state.beansEaten += b.val;
-                if (state.beansInStomach > state.stomachCap) state.beansInStomach = state.stomachCap;
-                
-                spawnText(b.x, b.y, `+${b.val}`, b.color);
-                b.respawn();
-                if(state.beansInStomach >= state.stomachCap) break;
-            }
-        }
-    }
+        // Prestige applies multiplicatively first
+        DB.prestige.forEach(p => {
+            let c = State.inventory[p.id].count;
+            if(c === 0) return;
+            let val = Math.pow(p.val, c);
+            if(p.type==='pfart') State.multFart *= val;
+            if(p.type==='pspeed') State.multSpeed *= val;
+            if(p.type==='pcap') State.stomachCap *= val;
+            if(p.type==='pdigest') State.multDigest *= val;
+            if(p.type==='prad') State.multRadius *= val;
+            if(p.type==='pstam') State.maxStamina *= val;
+            if(p.type==='pauto') State.autoFart += (10 * val);
+        });
 
-    // Maintain Bean Count
-    while(entities.beans.length < C.MAX_BEANS) spawnBean();
+        // Upgrades (additive or multiplicative based on type)
+        DB.upgrades.forEach(u => {
+            let c = State.inventory[u.id].count;
+            if(c === 0) return;
+            if(u.type==='cap') State.stomachCap += (u.val * c);
+            if(u.type==='fart') State.multFart *= Math.pow(u.val, c);
+            if(u.type==='stam') State.maxStamina += (u.val * c);
+            if(u.type==='speed') State.multSpeed += (u.val * c);
+            if(u.type==='rad') State.multRadius += (u.val * c);
+            if(u.type==='digest') State.multDigest *= Math.pow(u.val, c);
+            if(u.type==='auto') State.autoFart += (u.val * c);
+        });
 
-    // Updates Arrays
-    entities.enemies.forEach(e => e.update(dt));
-    for (let i = entities.particles.length - 1; i >= 0; i--) {
-        entities.particles[i].update(dt);
-        if (entities.particles[i].life <= 0) entities.particles.splice(i, 1);
-    }
-    for (let i = entities.texts.length - 1; i >= 0; i--) {
-        entities.texts[i].update(dt);
-        if (entities.texts[i].life <= 0) entities.texts.splice(i, 1);
-    }
-    
-    if(state.shakeTimer > 0) state.shakeTimer -= dt;
-}
-
-function updateUI() {
-    document.getElementById('txt-farts').innerText = formatNum(state.farts);
-    document.getElementById('txt-mult').innerText = `x${formatNum(state.multFart)}`;
-    document.getElementById('txt-beans').innerText = formatNum(state.beansEaten);
-    document.getElementById('txt-tokens').innerText = formatNum(state.prestigeTokens);
-    
-    document.getElementById('txt-stom').innerText = `${Math.floor(state.beansInStomach)} / ${formatNum(state.stomachCap)}`;
-    
-    let stomPct = Math.min(100, (state.beansInStomach / state.stomachCap) * 100);
-    document.getElementById('stomach-fill').style.width = `${stomPct}%`;
-    document.getElementById('stomach-pct').innerText = `${stomPct.toFixed(1)}%`;
-    
-    let stamPct = (state.stamina / state.maxStamina) * 100;
-    document.getElementById('stamina-fill').style.width = `${stamPct}%`;
-    
-    // Update shop button states dynamically
-    renderShop();
-}
-
-// ==========================================
-// RENDERING
-// ==========================================
-function render() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    let cx = state.camera.x, cy = state.camera.y;
-
-    // 1. Draw Ground (Grid & Biomes)
-    ctx.fillStyle = C.COLORS.dirt;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Grid optimization: Only draw visible chunks
-    let startX = Math.floor(cx / C.CHUNK_SIZE) * C.CHUNK_SIZE;
-    let startY = Math.floor(cy / C.CHUNK_SIZE) * C.CHUNK_SIZE;
-    let endX = startX + canvas.width + C.CHUNK_SIZE;
-    let endY = startY + canvas.height + C.CHUNK_SIZE;
-
-    // Draw coarse biome rectangles for background (simulation of terrain)
-    for(let x = startX; x < endX; x += 100) {
-        for(let y = startY; y < endY; y += 100) {
-            let b = getBiome(x+50, y+50);
-            if(b !== 'dirt') {
-                ctx.fillStyle = C.COLORS[b];
-                ctx.fillRect(x - cx, y - cy, 100, 100);
-            }
-        }
-    }
-
-    // Grid lines
-    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    for(let x = startX; x < endX; x += 100) { ctx.moveTo(x-cx, 0); ctx.lineTo(x-cx, canvas.height); }
-    for(let y = startY; y < endY; y += 100) { ctx.moveTo(0, y-cy); ctx.lineTo(canvas.width, y-cy); }
-    ctx.stroke();
-
-    // 2. Draw Home Base
-    let hx = C.HOME_X - cx, hy = C.HOME_Y - cy;
-    let rad = C.HOME_RADIUS;
-    if(hx > -rad && hx < canvas.width+rad && hy > -rad && hy < canvas.height+rad) {
-        let grad = ctx.createRadialGradient(hx, hy, 0, hx, hy, rad);
-        grad.addColorStop(0, 'rgba(0, 255, 204, 0.2)');
-        grad.addColorStop(1, 'rgba(0, 255, 204, 0.0)');
-        ctx.fillStyle = grad;
-        ctx.beginPath(); ctx.arc(hx, hy, rad, 0, Math.PI*2); ctx.fill();
-        ctx.strokeStyle = C.COLORS.homeBorder; ctx.lineWidth = 4;
-        ctx.setLineDash([15, 20]); ctx.stroke(); ctx.setLineDash([]);
+        // Mutations
+        DB.mutations.forEach(m => {
+            let c = State.inventory[m.id].count;
+            if(c === 0) return;
+            if(m.type==='fart') State.multFart *= Math.pow(m.val, c);
+            if(m.type==='auto') State.autoFart += (m.val * c);
+        });
         
-        ctx.fillStyle = C.COLORS.homeBorder;
-        ctx.font = 'bold 30px Consolas'; ctx.textAlign = 'center';
-        ctx.fillText("SAFE ZONE", hx, hy);
-        ctx.font = '16px Consolas';
-        ctx.fillText("FART HERE", hx, hy + 25);
+        UI.updateStats();
     }
-
-    // 3. Draw Decor
-    entities.decor.forEach(d => {
-        let scX = d.x - cx, scY = d.y - cy;
-        if(scX > -100 && scX < canvas.width+100 && scY > -100 && scY < canvas.height+100) {
-            ctx.save(); ctx.translate(scX, scY); ctx.rotate(d.rot);
-            if(d.type === 'tree') {
-                ctx.fillStyle = '#1e3814'; ctx.beginPath(); ctx.arc(0,0, d.size, 0, Math.PI*2); ctx.fill();
-                ctx.fillStyle = '#2d4c1e'; ctx.beginPath(); ctx.arc(-5,-5, d.size*0.7, 0, Math.PI*2); ctx.fill();
-            } else if (d.type === 'rock') {
-                ctx.fillStyle = '#555'; ctx.beginPath(); ctx.rect(-d.size/2, -d.size/2, d.size, d.size); ctx.fill();
-            } else if (d.type === 'bush') {
-                ctx.fillStyle = '#4caf50'; ctx.beginPath(); ctx.arc(0,0, d.size, 0, Math.PI*2); ctx.fill();
-            } else if (d.type === 'dead_tree') {
-                ctx.strokeStyle = '#222'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-d.size); ctx.stroke();
-            }
-            ctx.restore();
-        }
-    });
-
-    // 4. Draw Beans
-    let t = performance.now() * 0.005;
-    entities.beans.forEach(b => {
-        let scX = b.x - cx, scY = b.y - cy;
-        if(scX > -20 && scX < canvas.width+20 && scY > -20 && scY < canvas.height+20) {
-            ctx.fillStyle = b.color;
-            ctx.beginPath();
-            ctx.arc(scX, scY + Math.sin(t + b.wobble)*3, b.size, 0, Math.PI*2);
-            ctx.fill();
-            if(b.tier > 1) { // Glow
-                ctx.shadowColor = b.color; ctx.shadowBlur = 10; ctx.fill(); ctx.shadowBlur = 0;
-            }
-        }
-    });
-
-    // 5. Draw Enemies
-    entities.enemies.forEach(e => {
-        let scX = e.x - cx, scY = e.y - cy;
-        if(scX > -20 && scX < canvas.width+20 && scY > -20 && scY < canvas.height+20) {
-            ctx.fillStyle = e.color;
-            ctx.beginPath(); ctx.arc(scX, scY, e.size, 0, Math.PI*2); ctx.fill();
-            // Eye
-            ctx.fillStyle = '#fff';
-            ctx.beginPath(); ctx.arc(scX + Math.cos(e.angle)*5, scY + Math.sin(e.angle)*5, 4, 0, Math.PI*2); ctx.fill();
-        }
-    });
-
-    // 6. Draw Player
-    let pX = state.x - cx, pY = state.y - cy;
-    
-    // Aura
-    ctx.fillStyle = `rgba(57, 255, 20, 0.05)`;
-    ctx.beginPath(); ctx.arc(pX, pY, state.radius + state.pickupRadius * state.multRadius, 0, Math.PI*2); ctx.fill();
-    ctx.strokeStyle = 'rgba(57, 255, 20, 0.2)'; ctx.lineWidth = 1; ctx.stroke();
-
-    ctx.save(); ctx.translate(pX, pY);
-    let rot = Math.atan2(state.vy, state.vx);
-    if(state.vx !== 0 || state.vy !== 0) ctx.rotate(rot);
-    
-    // Body dynamic color based on stomach
-    let pct = state.beansInStomach / state.stomachCap;
-    let r = Math.floor(52 + (200 * pct));
-    let g = Math.floor(152 - (100 * pct));
-    let b = Math.floor(219 - (200 * pct));
-    ctx.fillStyle = `rgb(${r},${g},${b})`;
-    
-    ctx.beginPath(); ctx.arc(0, 0, state.radius, 0, Math.PI*2); ctx.fill();
-    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
-    
-    // Eyes
-    ctx.fillStyle = '#000';
-    ctx.beginPath(); ctx.arc(state.radius-6, -6, 3, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(state.radius-6, 6, 3, 0, Math.PI*2); ctx.fill();
-    
-    ctx.restore();
-
-    // 7. Particles
-    entities.particles.forEach(p => {
-        let scX = p.x - cx, scY = p.y - cy;
-        if(scX > -10 && scX < canvas.width+10 && scY > -10 && scY < canvas.height+10) {
-            ctx.globalAlpha = p.life / p.maxLife;
-            ctx.fillStyle = p.color;
-            ctx.beginPath(); ctx.arc(scX, scY, p.size, 0, Math.PI*2); ctx.fill();
-            ctx.globalAlpha = 1.0;
-        }
-    });
-
-    // 8. Texts
-    ctx.font = 'bold 16px Consolas';
-    entities.texts.forEach(txt => {
-        let scX = txt.x - cx, scY = txt.y - cy;
-        ctx.globalAlpha = txt.life / 1.5;
-        ctx.fillStyle = txt.color;
-        ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
-        ctx.strokeText(txt.text, scX, scY);
-        ctx.fillText(txt.text, scX, scY);
-        ctx.globalAlpha = 1.0;
-    });
-
-    // 9. Day / Night Cycle Overlay
-    let darkness = Math.sin(state.timeOfDay); // -1 to 1
-    if (darkness > 0) {
-        ctx.globalAlpha = darkness * 0.7; // Max 70% dark
-        ctx.fillStyle = '#050510';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.globalAlpha = 1.0;
-    }
-
-    renderMinimap();
-}
-
-function renderMinimap() {
-    mCtx.clearRect(0,0, miniCanvas.width, miniCanvas.height);
-    let scale = miniCanvas.width / C.WORLD_SIZE;
-    
-    // BG
-    mCtx.fillStyle = '#111';
-    mCtx.fillRect(0,0, miniCanvas.width, miniCanvas.height);
-
-    // Home
-    mCtx.fillStyle = 'rgba(0, 255, 204, 0.4)';
-    mCtx.beginPath(); mCtx.arc(C.HOME_X*scale, C.HOME_Y*scale, C.HOME_RADIUS*scale, 0, Math.PI*2); mCtx.fill();
-
-    // Player
-    mCtx.fillStyle = '#fff';
-    mCtx.beginPath(); mCtx.arc(state.x*scale, state.y*scale, 4, 0, Math.PI*2); mCtx.fill();
-
-    // Camera Box
-    mCtx.strokeStyle = 'rgba(255,255,255,0.5)'; mCtx.lineWidth = 1;
-    mCtx.strokeRect(state.camera.x*scale, state.camera.y*scale, canvas.width*scale, canvas.height*scale);
-}
+};
 
 // ==========================================
-// STARTUP
+// UI MANAGERS
 // ==========================================
-initWorld();
-renderShop();
-recalculateStats();
+const UI = {
+    isShopOpen: false,
+    
+    init() {
+        this.renderShopList('upgrades');
+        this.renderShopList('mutations');
+        this.renderShopList('prestige');
+    },
+    
+    formatNum(n) {
+        if(n >= 1e15) return (n/1e15).toFixed(2) + 'Q';
+        if(n >= 1e12) return (n/1e12).toFixed(2) + 'T';
+        if(n >= 1e9) return (n/1e9).toFixed(2) + 'B';
+        if(n >= 1e6) return (n/1e6).toFixed(2) + 'M';
+        if(n >= 1e3) return (n/1e3).toFixed(1) + 'k';
+        return Math.floor(n).toString();
+    },
+    
+    updateStats() {
+        document.getElementById('txt-farts').innerText = this.formatNum(State.farts);
+        document.getElementById('txt-mult').innerText = `x${this.formatNum(State.multFart)}`;
+        document.getElementById('txt-beans').innerText = this.formatNum(State.beansEaten);
+        document.getElementById('txt-tokens').innerText = this.formatNum(State.prestigeTokens);
+        
+        let stomStr = `${Math.floor(State.beansInStomach)} / ${this.formatNum(State.stomachCap)}`;
+        document.getElementById('txt-stom').innerText = stomStr;
+        
+        let stomPct = Math.min(100, (State.beansInStomach / State.stomachCap) * 100);
+        document.getElementById('stomach-fill').style.width = `${stomPct}%`;
+        document.getElementById('stomach-pct').innerText = `${stomPct.toFixed(1)}%`;
+        
+        let stamPct = (State.stamina / State.maxStamina) * 100;
+        document.getElementById('stamina-fill').style.width = `${stamPct}%`;
+    },
+    
+    toggleShop() {
+        if(document.pointerLockElement === document.body) {
+            document.exitPointerLock();
+        } else {
+            document.body.requestPointerLock();
+        }
+    },
+    
+    switchTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`.tab-btn[data-target="${tab}"]`).classList.add('active');
+        
+        document.getElementById('list-upgrades').style.display = tab === 'upgrades' ? 'flex' : 'none';
+        document.getElementById('list-mutations').style.display = tab === 'mutations' ? 'flex' : 'none';
+        document.getElementById('list-prestige').style.display = tab === 'prestige' ? 'flex' : 'none';
+        
+        this.renderShopList(tab);
+    },
+    
+    renderShopList(cat) {
+        const container = cat === 'prestige' ? document.getElementById('prestige-items') : document.getElementById(`list-${cat}`);
+        container.innerHTML = '';
+        
+        const currencyStr = cat === 'prestige' ? 'Tokens' : 'Farts';
+        const currAmount = cat === 'prestige' ? State.prestigeTokens : State.farts;
+        
+        DB[cat].forEach(item => {
+            const inv = State.inventory[item.id];
+            const isMax = inv.count >= item.max;
+            const canAfford = currAmount >= inv.currentCost;
+            
+            const div = document.createElement('div');
+            div.className = `upgrade-card ${isMax ? 'maxed' : (!canAfford ? 'locked' : '')}`;
+            div.onclick = () => Game.buyItem(item.id, cat);
+            
+            let costHtml = isMax ? `<span class="uc-cost">MAXED</span>` : `<span class="uc-cost ${cat==='prestige'?'prestige-cost':''}">${this.formatNum(inv.currentCost)} ${currencyStr}</span>`;
+            
+            div.innerHTML = `
+                <div class="uc-header">
+                    <span class="uc-name" style="color:${cat==='prestige'?'var(--gold)':(cat==='mutations'?'var(--secondary)':'#fff')}">${item.name}</span>
+                    <span class="uc-level">Lv.${inv.count}/${item.max}</span>
+                </div>
+                <div class="uc-desc">${item.desc}</div>
+                <div class="uc-footer">${costHtml}</div>
+            `;
+            container.appendChild(div);
+        });
+    },
+    
+    spawnToast(msg, color) {
+        const container = document.getElementById('alert-container');
+        const el = document.createElement('div');
+        el.className = 'alert-toast';
+        el.style.borderColor = color;
+        el.style.boxShadow = `0 0 20px ${color}`;
+        el.innerText = msg;
+        container.appendChild(el);
+        setTimeout(() => el.remove(), 2000);
+    },
+    
+    renderMinimap() {
+        const canvas = document.getElementById('minimap-canvas');
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width = 250, h = canvas.height = 250;
+        
+        ctx.clearRect(0,0,w,h);
+        const scale = w / C.WORLD_SIZE;
+        const cx = w/2, cy = h/2;
+        
+        // Draw Home
+        ctx.fillStyle = 'rgba(0, 255, 204, 0.3)';
+        ctx.beginPath(); ctx.arc(cx, cy, C.HOME_RADIUS * scale, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = '#00ffcc'; ctx.lineWidth = 2; ctx.stroke();
+        
+        // Draw Player
+        const px = cx + (State.pos.x * scale);
+        const py = cy + (State.pos.z * scale);
+        
+        // Beans (only close ones for perf)
+        ctx.fillStyle = '#d2691e';
+        Engine.beans.forEach(b => {
+            let bx = cx + (b.position.x * scale);
+            let by = cy + (b.position.z * scale);
+            if(Math.hypot(bx-px, by-py) < 50) { // Culling on minimap
+                ctx.fillRect(bx, by, 2, 2);
+            }
+        });
+        
+        // Player marker
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.rotate(-State.yaw);
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.moveTo(0, -6); ctx.lineTo(4, 4); ctx.lineTo(-4, 4); ctx.fill();
+        ctx.restore();
+    }
+};
 
-let frameCount = 0;
-function loop(timestamp) {
-    let dt = (timestamp - lastTime) / 1000;
-    if(dt > 0.1) dt = 0.1; // Cap dt
-    lastTime = timestamp;
+// ==========================================
+// GAME CORE CONTROLLER
+// ==========================================
+const Game = {
+    buyItem(id, cat) {
+        const itemData = DB[cat].find(i => i.id === id);
+        const inv = State.inventory[id];
+        
+        let currency = cat === 'prestige' ? State.prestigeTokens : State.farts;
+        if(inv.count >= itemData.max) return;
+        if(currency < inv.currentCost) {
+            UI.spawnToast("INSUFFICIENT FUNDS", "var(--danger)");
+            return;
+        }
+
+        if(cat === 'prestige') State.prestigeTokens -= inv.currentCost;
+        else State.farts -= inv.currentCost;
+
+        inv.count++;
+        inv.currentCost = Math.floor(inv.currentCost * itemData.mult);
+
+        Logic.recalculateStats();
+        UI.renderShopList(cat);
+        UI.spawnToast(`ACQUIRED: ${itemData.name}`, "var(--primary)");
+    },
     
-    update(dt);
-    render();
+    calcRebirthGain() {
+        // Gain 1 token per 1 Million farts (scaling non-linearly)
+        return Math.floor(Math.pow(State.farts / 1000000, 0.6));
+    },
     
-    if(frameCount++ % 15 === 0) updateUI(); // Throttle UI updates
+    showRebirthModal() {
+        const gain = this.calcRebirthGain();
+        if(gain < 1) {
+            UI.spawnToast("REQUIRE MIN 1,000,000 FARTS", "var(--danger)");
+            return;
+        }
+        document.getElementById('rebirth-amt').innerText = UI.formatNum(gain);
+        document.getElementById('rebirth-overlay').style.display = 'flex';
+        document.exitPointerLock();
+    },
     
-    requestAnimationFrame(loop);
-}
-requestAnimationFrame(loop);
+    executeRebirth() {
+        const gain = this.calcRebirthGain();
+        State.prestigeTokens += gain;
+        State.rebirths++;
+        
+        // Reset Currencies
+        State.farts = 0;
+        State.beansInStomach = 0;
+        
+        // Reset Upgrades/Mutations
+        DB.upgrades.forEach(u => { State.inventory[u.id].count = 0; State.inventory[u.id].currentCost = u.cost; });
+        DB.mutations.forEach(m => { State.inventory[m.id].count = 0; State.inventory[m.id].currentCost = m.cost; });
+        
+        // Teleport Home
+        State.pos.set(0, 5, 0);
+        State.vel.set(0, 0, 0);
+        
+        document.getElementById('rebirth-overlay').style.display = 'none';
+        document.getElementById('row-prestige').style.display = 'flex';
+        
+        Logic.recalculateStats();
+        UI.switchTab('upgrades');
+        
+        Engine.createExplosion(new THREE.Vector3(0,5,0), 0xffd700, 500);
+        document.getElementById('fx-overlay').style.boxShadow = "inset 0 0 500px rgba(255, 215, 0, 1)";
+        setTimeout(()=> document.getElementById('fx-overlay').style.boxShadow = "none", 2000);
+        
+        UI.spawnToast(`ASCENSION COMPLETE. +${UI.formatNum(gain)} TOKENS`, "var(--gold)");
+        document.body.requestPointerLock();
+    }
+};
+
+// ==========================================
+// BOOTSTRAP
+// ==========================================
+window.onload = () => Engine.init();
 
 </script>
 </body>
