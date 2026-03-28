@@ -91,14 +91,10 @@ body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
 .uc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; position: relative; z-index: 2; }
 .uc-name { font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: bold; color: #fff; text-transform: uppercase; }
 .uc-level { background: rgba(0,0,0,0.8); padding: 3px 8px; border-radius: 12px; font-size: 12px; color: var(--tertiary); font-family: 'Orbitron', sans-serif; border: 1px solid var(--tertiary); }
-.uc-desc { font-size: 13px; color: var(--text-dim); margin-bottom: 12px; line-height: 1.4; position: relative; z-index: 2; }
+.uc-desc { font-size: 13px; color: var(--text-dim); margin-bottom: 12px; line-height: 1.4; position: relative; z-index: 2; font-style: italic; }
 .uc-footer { display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2; }
 .uc-cost { font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: bold; color: var(--primary); text-shadow: 0 0 5px var(--primary-glow); }
 .uc-cost.prestige-cost { color: var(--gold); text-shadow: 0 0 5px var(--gold-glow); }
-
-/* Minimap */
-#minimap-panel { bottom: 20px; left: 20px; width: 250px; height: 250px; padding: 10px; border-bottom: 4px solid var(--tertiary); border-radius: 50%; overflow: hidden; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; }
-#minimap-canvas { width: 100%; height: 100%; border-radius: 50%; box-shadow: inset 0 0 20px #000; }
 
 /* Center Alerts */
 #alert-container { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); z-index: 100; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 10px; }
@@ -207,10 +203,6 @@ body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
     </div>
 </div>
 
-<div id="minimap-panel" class="hud-element">
-    <canvas id="minimap-canvas"></canvas>
-</div>
-
 <div id="alert-container"></div>
 
 <div id="rebirth-overlay">
@@ -255,13 +247,13 @@ for(let i=0; i<100; i++) {
     
     let val, desc;
     switch(type) {
-        case 'cap': val = 10 * Math.pow(2, tier); desc = `+${val} Capacity`; break;
-        case 'fart': val = 1.2 + (tier * 0.2); desc = `Farts x${val.toFixed(1)}`; break;
-        case 'stam': val = 20 * (tier + 1); desc = `+${val} Max Stamina`; break;
-        case 'speed': val = 0.05 + (tier * 0.02); desc = `+${(val*100).toFixed(0)}% Speed`; break;
-        case 'rad': val = 5 + (tier * 2); desc = `+${val}m Pickup Radius`; break;
-        case 'digest': val = 1.5 + (tier * 0.5); desc = `Digest x${val.toFixed(1)} faster`; break;
-        case 'auto': val = 1 * Math.pow(5, tier); desc = `Auto-fart ${val}/sec`; break;
+        case 'cap': val = 10 * Math.pow(2, tier); desc = `Increases stomach capacity by +${val}, allowing you to hold more beans.`; break;
+        case 'fart': val = 1.2 + (tier * 0.2); desc = `Boosts base fart output by a x${val.toFixed(1)} multiplier.`; break;
+        case 'stam': val = 20 * (tier + 1); desc = `Increases max stamina by +${val} so you can sprint longer.`; break;
+        case 'speed': val = 0.05 + (tier * 0.02); desc = `Enhances leg muscles for a +${(val*100).toFixed(0)}% movement speed bonus.`; break;
+        case 'rad': val = 5 + (tier * 2); desc = `Expands bean magnetic pickup radius by +${val} meters.`; break;
+        case 'digest': val = 1.5 + (tier * 0.5); desc = `Speeds up safezone bean digestion by a x${val.toFixed(1)} multiplier.`; break;
+        case 'auto': val = 1 * Math.pow(5, tier); desc = `Automatically generates ${val} farts per second without digesting.`; break;
     }
 
     DB.upgrades.push({
@@ -286,7 +278,7 @@ for(let i=0; i<50; i++) {
     DB.mutations.push({
         id: `m_${i}`,
         name: `${mutAdj[tier]} Anomaly ${i+1}`,
-        desc: type === 'auto' ? `Insane Auto-Fart +${Math.pow(10, tier+1)}/s` : `Massive Fart Multiplier x${Math.pow(2, tier+1)}`,
+        desc: type === 'auto' ? `Triggers an insane passive auto-fart reaction giving +${Math.pow(10, tier+1)}/s.` : `Radically mutates your core for a massive x${Math.pow(2, tier+1)} fart multiplier.`,
         cost: Math.floor(baseCost),
         mult: 2.0,
         max: 5,
@@ -302,7 +294,7 @@ for(let i=0; i<10; i++) {
     DB.prestige.push({
         id: `p_${i}`,
         name: presNames[i],
-        desc: `Base stat massively multiplied. Level dictates power.`,
+        desc: `Permenantly alters reality. Base stat is massively multiplied based on its astral level.`,
         cost: 1 * Math.pow(3, i),
         mult: 2.5,
         max: 99,
@@ -348,9 +340,8 @@ const State = {
 });
 
 // ==========================================
-// MATH & PROCEDURAL GEN UTILS (Simplex Noise alternative)
+// MATH & PROCEDURAL GEN UTILS
 // ==========================================
-// Custom PRNG based noise to generate terrain heightmap and bean placement without external libs
 class PRNG {
     constructor(seed) { this.seed = seed; }
     next() { this.seed = (this.seed * 9301 + 49297) % 233280; return this.seed / 233280; }
@@ -486,7 +477,6 @@ const Engine = {
     },
 
     initMaterials() {
-        // Custom Shader for Grid Ground
         const groundVert = `
             varying vec2 vUv;
             varying vec3 vPos;
@@ -509,7 +499,6 @@ const Engine = {
                 vec3 baseColor = vec3(0.05, 0.05, 0.08);
                 vec3 gridColor = vec3(0.2, 0.8, 0.2) * glow * 0.5;
                 
-                // Dist to center
                 float dist = length(vPos.xz);
                 float safeZone = 1.0 - smoothstep(${C.HOME_RADIUS - 10.0}, ${C.HOME_RADIUS}, dist);
                 vec3 finalColor = mix(baseColor + gridColor, vec3(0.0, 0.2, 0.2), safeZone * 0.5);
@@ -524,27 +513,23 @@ const Engine = {
             uniforms: { color: { value: new THREE.Color(0x111111) } }
         });
 
-        // Bean Materials
         this.matBeanNorm = new THREE.MeshStandardMaterial({ color: 0xd2691e, roughness: 0.7, metalness: 0.2 });
         this.matBeanEpic = new THREE.MeshStandardMaterial({ color: 0x8a2be2, roughness: 0.3, metalness: 0.8, emissive: 0x4a0082 });
         this.matBeanLeg = new THREE.MeshStandardMaterial({ color: 0xffd700, roughness: 0.1, metalness: 1.0, emissive: 0x886600 });
     },
 
     buildHomeBase() {
-        // Huge ground plane
         const geoPlane = new THREE.PlaneGeometry(C.WORLD_SIZE, C.WORLD_SIZE, 10, 10);
         geoPlane.rotateX(-Math.PI / 2);
         const meshPlane = new THREE.Mesh(geoPlane, this.matGround);
         meshPlane.receiveShadow = true;
         this.scene.add(meshPlane);
 
-        // Safe Zone Dome
         const geoDome = new THREE.SphereGeometry(C.HOME_RADIUS, 32, 16, 0, Math.PI*2, 0, Math.PI/2);
         const matDome = new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.1, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
         const meshDome = new THREE.Mesh(geoDome, matDome);
         this.scene.add(meshDome);
 
-        // Center Toilet/Altar
         const geoAltar = new THREE.CylinderGeometry(5, 5, 10, 16);
         const matAltar = new THREE.MeshStandardMaterial({ color: 0x333333, emissive: 0x00ffcc, emissiveIntensity: 0.2 });
         const meshAltar = new THREE.Mesh(geoAltar, matAltar);
@@ -561,7 +546,7 @@ const Engine = {
             if (Math.hypot(x, z) > C.HOME_RADIUS + 20) break;
         }
         
-        let y = fbm(x*0.01, z*0.01) * 20 + 2; // Follow terrain pseudo-height
+        let y = fbm(x*0.01, z*0.01) * 20 + 2;
         
         let rand = Math.random();
         let tier = 1, mat = this.matBeanNorm, val = 1, size = 1;
@@ -580,7 +565,6 @@ const Engine = {
     },
 
     spawnParticle(pos, color, scale, speed, life) {
-        // Simple cube particles for performance
         const geo = new THREE.BoxGeometry(scale, scale, scale);
         const mat = new THREE.MeshBasicMaterial({ color: color, transparent: true });
         const mesh = new THREE.Mesh(geo, mat);
@@ -617,7 +601,6 @@ const Engine = {
             Logic.update(dt);
         }
         
-        // Animations
         const time = this.clock.getElapsedTime();
         this.beans.forEach(b => {
             b.rotation.x += b.userData.rotSpeed.x;
@@ -626,11 +609,10 @@ const Engine = {
             b.position.y = b.userData.baseY + Math.sin(time * 2 + b.userData.phase) * 2;
         });
 
-        // Particles
         for(let i=this.particles.length-1; i>=0; i--) {
             let p = this.particles[i];
             p.position.addScaledVector(p.userData.vel, dt);
-            p.userData.vel.y -= 30 * dt; // gravity
+            p.userData.vel.y -= 30 * dt;
             p.userData.life -= dt;
             p.material.opacity = p.userData.life / p.userData.maxLife;
             p.scale.setScalar(p.userData.life / p.userData.maxLife);
@@ -643,7 +625,6 @@ const Engine = {
         }
 
         this.renderer.render(this.scene, this.camera);
-        UI.renderMinimap();
     }
 };
 
@@ -683,12 +664,10 @@ const Input = {
     },
     
     update(dt) {
-        // Look
         Engine.camera.rotation.set(0,0,0);
         Engine.camera.rotateY(State.yaw);
         Engine.camera.rotateX(State.pitch);
 
-        // Move dir
         const dir = new THREE.Vector3();
         if(Input.keys.w) dir.z -= 1;
         if(Input.keys.s) dir.z += 1;
@@ -698,7 +677,6 @@ const Input = {
         
         dir.applyAxisAngle(new THREE.Vector3(0,1,0), State.yaw);
 
-        // Sprint
         State.isSprinting = Input.keys.shift && State.stamina > 0 && dir.length() > 0;
         let speed = State.baseSpeed * State.multSpeed;
         if(State.isSprinting) {
@@ -709,23 +687,19 @@ const Input = {
         }
         State.stamina = Math.max(0, Math.min(State.maxStamina, State.stamina));
 
-        // Physics
         const targetVel = dir.multiplyScalar(speed);
         State.vel.lerp(targetVel, 10 * dt);
         State.pos.addScaledVector(State.vel, dt);
         
-        // Bounds constraint
         const halfSize = C.WORLD_SIZE/2;
         State.pos.x = Math.max(-halfSize, Math.min(halfSize, State.pos.x));
         State.pos.z = Math.max(-halfSize, Math.min(halfSize, State.pos.z));
         
-        // Height constraint
         let terrainY = fbm(State.pos.x*0.01, State.pos.z*0.01) * 20;
-        State.pos.y = terrainY + 5; // Eye level
+        State.pos.y = terrainY + 5; 
         
         Engine.camera.position.copy(State.pos);
 
-        // Head bobbing
         if(State.vel.length() > 1 && !State.inSafeZone) {
             Engine.camera.position.y += Math.sin(Engine.clock.getElapsedTime() * 10) * 0.5;
         }
@@ -741,7 +715,7 @@ const Logic = {
         this.processCollection();
         this.processFarts(dt);
         
-        if(Engine.clock.getElapsedTime() % 0.5 < dt) UI.updateStats(); // Throttle UI
+        if(Engine.clock.getElapsedTime() % 0.5 < dt) UI.updateStats();
     },
     
     checkZones() {
@@ -752,7 +726,7 @@ const Logic = {
         if(State.inSafeZone && State.beansInStomach > 0) {
             prompt.style.display = 'block';
             document.getElementById('fx-overlay').className = 'fx-heal';
-            State.stamina = State.maxStamina; // Instant heal
+            State.stamina = State.maxStamina;
         } else {
             prompt.style.display = 'none';
             if(State.isSprinting) document.getElementById('fx-overlay').className = 'fx-speed';
@@ -770,14 +744,12 @@ const Logic = {
             let dist = State.pos.distanceTo(b.position);
             
             if(dist < collectRad) {
-                // Collect
                 State.beansInStomach += b.userData.val;
                 State.beansEaten += b.userData.val;
                 if(State.beansInStomach > State.stomachCap) State.beansInStomach = State.stomachCap;
                 
                 UI.spawnToast(`+${b.userData.val} BEAN`, b.userData.tier === 3 ? 'var(--gold)' : 'var(--bean-color)');
                 
-                // Remove & Respawn
                 Engine.beansGroup.remove(b);
                 Engine.beans.splice(i, 1);
                 Engine.spawnBean();
@@ -788,12 +760,10 @@ const Logic = {
     },
     
     processFarts(dt) {
-        // Auto fart
         if(State.autoFart > 0) {
             State.farts += State.autoFart * State.multFart * dt;
         }
         
-        // Active Digestion at home
         if(State.inSafeZone && State.beansInStomach > 0 && Input.keys.space) {
             let amount = 10 * State.multDigest * dt;
             amount = Math.min(amount, State.beansInStomach);
@@ -803,17 +773,15 @@ const Logic = {
                 let generated = amount * State.multFart;
                 State.farts += generated;
                 
-                // Visual FX
                 if(Math.random() < 0.2) {
                     Engine.createExplosion(State.pos.clone().add(new THREE.Vector3(0,-2,0)), 0x39ff14, 5);
-                    Engine.camera.position.y += Math.random() * 2; // Screen shake
+                    Engine.camera.position.y += Math.random() * 2; 
                 }
             }
         }
     },
 
     recalculateStats() {
-        // Base reset
         State.stomachCap = 10;
         State.maxStamina = 100;
         State.multFart = 1;
@@ -822,7 +790,6 @@ const Logic = {
         State.multDigest = 1;
         State.autoFart = 0;
 
-        // Prestige applies multiplicatively first
         DB.prestige.forEach(p => {
             let c = State.inventory[p.id].count;
             if(c === 0) return;
@@ -836,7 +803,6 @@ const Logic = {
             if(p.type==='pauto') State.autoFart += (10 * val);
         });
 
-        // Upgrades (additive or multiplicative based on type)
         DB.upgrades.forEach(u => {
             let c = State.inventory[u.id].count;
             if(c === 0) return;
@@ -849,7 +815,6 @@ const Logic = {
             if(u.type==='auto') State.autoFart += (u.val * c);
         });
 
-        // Mutations
         DB.mutations.forEach(m => {
             let c = State.inventory[m.id].count;
             if(c === 0) return;
@@ -957,43 +922,6 @@ const UI = {
         el.innerText = msg;
         container.appendChild(el);
         setTimeout(() => el.remove(), 2000);
-    },
-    
-    renderMinimap() {
-        const canvas = document.getElementById('minimap-canvas');
-        const ctx = canvas.getContext('2d');
-        const w = canvas.width = 250, h = canvas.height = 250;
-        
-        ctx.clearRect(0,0,w,h);
-        const scale = w / C.WORLD_SIZE;
-        const cx = w/2, cy = h/2;
-        
-        // Draw Home
-        ctx.fillStyle = 'rgba(0, 255, 204, 0.3)';
-        ctx.beginPath(); ctx.arc(cx, cy, C.HOME_RADIUS * scale, 0, Math.PI*2); ctx.fill();
-        ctx.strokeStyle = '#00ffcc'; ctx.lineWidth = 2; ctx.stroke();
-        
-        // Draw Player
-        const px = cx + (State.pos.x * scale);
-        const py = cy + (State.pos.z * scale);
-        
-        // Beans (only close ones for perf)
-        ctx.fillStyle = '#d2691e';
-        Engine.beans.forEach(b => {
-            let bx = cx + (b.position.x * scale);
-            let by = cy + (b.position.z * scale);
-            if(Math.hypot(bx-px, by-py) < 50) { // Culling on minimap
-                ctx.fillRect(bx, by, 2, 2);
-            }
-        });
-        
-        // Player marker
-        ctx.save();
-        ctx.translate(px, py);
-        ctx.rotate(-State.yaw);
-        ctx.fillStyle = '#fff';
-        ctx.beginPath(); ctx.moveTo(0, -6); ctx.lineTo(4, 4); ctx.lineTo(-4, 4); ctx.fill();
-        ctx.restore();
     }
 };
 
@@ -1024,7 +952,6 @@ const Game = {
     },
     
     calcRebirthGain() {
-        // Gain 1 token per 1 Million farts (scaling non-linearly)
         return Math.floor(Math.pow(State.farts / 1000000, 0.6));
     },
     
@@ -1044,15 +971,12 @@ const Game = {
         State.prestigeTokens += gain;
         State.rebirths++;
         
-        // Reset Currencies
         State.farts = 0;
         State.beansInStomach = 0;
         
-        // Reset Upgrades/Mutations
         DB.upgrades.forEach(u => { State.inventory[u.id].count = 0; State.inventory[u.id].currentCost = u.cost; });
         DB.mutations.forEach(m => { State.inventory[m.id].count = 0; State.inventory[m.id].currentCost = m.cost; });
         
-        // Teleport Home
         State.pos.set(0, 5, 0);
         State.vel.set(0, 0, 0);
         
