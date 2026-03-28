@@ -2312,10 +2312,13 @@ const UI = {
         const container = document.getElementById(`list-${cat}`); 
         container.innerHTML = '';
         
+        // Ensure the shop panel is interactable
+        document.getElementById('shop-panel').style.pointerEvents = 'auto';
+
         if(cat === 'prestige' && this.currentPage[cat] === 0) {
             container.innerHTML += `
                 <div class="upgrade-card" style="border-color:var(--gold); flex: 0.5; min-height: 120px;" onclick="Game.showRebirthModal()">
-                    <div style="text-align:center;">
+                    <div style="text-align:center; pointer-events:none;">
                         <h3 style="color:var(--gold); font-family:'Orbitron',sans-serif; margin:0 0 10px 0; font-size:24px; text-shadow:0 0 15px var(--gold-glow);">PERFORM REBIRTH</h3>
                         <p style="font-size:14px; color:#ccc; margin:0;">Sacrifice all mortal possessions to ascend to higher dimensions.</p>
                     </div>
@@ -2345,35 +2348,48 @@ const UI = {
                 const isMax = inv.count >= item.max; 
                 const canAfford = currAmount >= inv.currentCost;
                 
-                const costHtml = isMax ? `<span class="uc-cost">MAX LEVEL REACHED</span>` : `<span class="uc-cost ${cat==='prestige'?'prestige-cost':''}">${this.formatNum(inv.currentCost)} ${currencyStr}</span>`;
+                const costHtml = isMax ? `<span class="uc-cost">MAX LEVEL</span>` : `<span class="uc-cost ${cat==='prestige'?'prestige-cost':''}">${UI.formatNum(inv.currentCost)} ${currencyStr}</span>`;
                 
                 const div = document.createElement('div'); 
                 div.className = `upgrade-card ${isMax ? 'maxed' : (!canAfford ? 'locked' : '')}`;
-                div.onmousedown = (e) => { 
-                   e.preventDefault();
-                   e.stopPropagation();
-                   Game.buyItem(item.id, cat); 
-               };                
-                                  div.innerHTML = `
-                      <div class="uc-header" style="margin-bottom: 5px;">
+                
+                // CRITICAL FIX FOR CLICKS:
+                div.onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    Game.buyItem(item.id, cat);
+                };
+
+                div.innerHTML = `
+                      <div class="uc-header" style="pointer-events:none;">
                           <span class="uc-name" style="font-size: 18px; color:${cat==='prestige'?'var(--gold)':(cat==='mutations'?'var(--secondary)':'#fff')}">${item.name}</span>
-                          <span class="uc-level" style="font-size: 12px; padding: 2px 8px;">Lv.${inv.count}</span>
+                          <span class="uc-level">Lv.${inv.count}</span>
                       </div>
-                      <div class="uc-effect" style="font-size: 14px; margin-bottom: 10px; padding: 4px;">${item.effectDesc}</div>
-                      <div class="uc-footer" style="padding-top: 10px;">${costHtml}</div>
+                      <div class="uc-effect" style="pointer-events:none;">${item.effectDesc}</div>
+                      <div class="uc-footer" style="pointer-events:none;">${costHtml}</div>
                   `;
                 container.appendChild(div);
             });
         }
 
+        // Pagination
         let maxPage = Math.ceil(DB[cat].length / this.itemsPerPage) - 1;
-        container.innerHTML += `
-            <div class="pagination-controls">
-                <button class="page-btn" ${page === 0 ? 'disabled' : ''} onclick="UI.changePage('${cat}', -1)">PREV</button>
-                <span class="page-info">PAGE ${page + 1} / ${maxPage + 1}</span>
-                <button class="page-btn" ${page === maxPage ? 'disabled' : ''} onclick="UI.changePage('${cat}', 1)">NEXT</button>
-            </div>`;
-    },
+        const nav = document.createElement('div');
+        nav.className = 'pagination-controls';
+        nav.innerHTML = `
+            <button class="page-btn" ${page === 0 ? 'disabled' : ''}>PREV</button>
+            <span class="page-info">PAGE ${page + 1} / ${maxPage + 1}</span>
+            <button class="page-btn" ${page === maxPage ? 'disabled' : ''}>NEXT</button>
+        `;
+        
+        // Add listeners to pagination buttons
+        nav.querySelectorAll('button')[0].onclick = () => UI.changePage(cat, -1);
+        nav.querySelectorAll('button')[1].onclick = () => UI.changePage(cat, 1);
+        
+        container.appendChild(nav);
+    }
+
+     
     
     spawnToast(msg, color) {
         const container = document.getElementById('alert-container'); 
