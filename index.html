@@ -3,1694 +3,1079 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>FelixFart 3D: Ultimate Tycoon Edition V3 (No-Load & Expanded)</title>
+<title>FelixFart </title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script>
 <style>
+/* ==========================================================================
+   ADVANCED UI STYLES - FULL HUD & SHOP SYSTEM
+   ========================================================================== */
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap');
 
 :root {
     --primary: #39ff14;
-    --primary-glow: rgba(57,255,20,0.6);
+    --primary-glow: rgba(57, 255, 20, 0.6);
     --secondary: #ff00ff;
-    --secondary-glow: rgba(255,0,255,0.6);
+    --secondary-glow: rgba(255, 0, 255, 0.6);
     --tertiary: #00ffff;
-    --tertiary-glow: rgba(0,255,255,0.6);
+    --tertiary-glow: rgba(0, 255, 255, 0.6);
     --bg-dark: #0a0a0f;
-    --bg-panel: rgba(8,8,14,0.88);
+    --bg-panel: rgba(10, 10, 15, 0.85);
     --text-main: #e0e0e0;
-    --text-dim: #777;
+    --text-dim: #888888;
     --bean-color: #d2691e;
-    --bean-glow: rgba(210,105,30,0.6);
+    --bean-glow: rgba(210, 105, 30, 0.6);
     --danger: #ff3333;
+    --danger-glow: rgba(255, 51, 51, 0.6);
     --gold: #ffd700;
-    --gold-glow: rgba(255,215,0,0.6);
-    --border-radius: 10px;
-    --transition: all 0.3s cubic-bezier(0.25,0.8,0.25,1);
+    --gold-glow: rgba(255, 215, 0, 0.6);
+    --border-radius: 12px;
+    --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-* { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
-body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Rajdhani', sans-serif; color: var(--text-main); }
+* { box-sizing: border-box; user-select: none; }
+body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Rajdhani', sans-serif; color: var(--text-main); }
 #webgl-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-canvas { display: block; }
 
-/* HUD PANELS */
-.hud { position: absolute; z-index: 10; background: var(--bg-panel); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--border-radius); backdrop-filter: blur(12px); box-shadow: 0 8px 32px rgba(0,0,0,0.6); }
+/* HUD Base */
+.hud-element { position: absolute; z-index: 10; background: var(--bg-panel); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--border-radius); backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+.glitch-text { font-family: 'Orbitron', sans-serif; position: relative; display: inline-block; }
+.glitch-text::before, .glitch-text::after { content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.8; }
+.glitch-text::before { left: 2px; text-shadow: -1px 0 var(--danger); animation: glitch-anim-1 2s infinite linear alternate-reverse; }
+.glitch-text::after { left: -2px; text-shadow: -1px 0 var(--tertiary); animation: glitch-anim-2 3s infinite linear alternate-reverse; }
+@keyframes glitch-anim-1 { 0% { clip-path: inset(20% 0 80% 0); } 20% { clip-path: inset(60% 0 10% 0); } 40% { clip-path: inset(40% 0 50% 0); } 60% { clip-path: inset(80% 0 5% 0); } 80% { clip-path: inset(10% 0 70% 0); } 100% { clip-path: inset(30% 0 20% 0); } }
+@keyframes glitch-anim-2 { 0% { clip-path: inset(10% 0 60% 0); } 20% { clip-path: inset(30% 0 20% 0); } 40% { clip-path: inset(70% 0 10% 0); } 60% { clip-path: inset(20% 0 50% 0); } 80% { clip-path: inset(50% 0 30% 0); } 100% { clip-path: inset(5% 0 80% 0); } }
 
-/* GLITCH EFFECTS */
-.glitch { font-family: 'Orbitron', sans-serif; position: relative; }
-.glitch::before, .glitch::after { content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.7; }
-.glitch::before { left: 2px; text-shadow: -1px 0 var(--danger); animation: g1 2s infinite linear alternate-reverse; }
-.glitch::after { left: -2px; text-shadow: 1px 0 var(--tertiary); animation: g2 3s infinite linear alternate-reverse; }
-@keyframes g1 { 0% { clip-path: inset(20% 0 80% 0) } 30% { clip-path: inset(60% 0 10% 0) } 60% { clip-path: inset(80% 0 5% 0) } 100% { clip-path: inset(30% 0 20% 0) } }
-@keyframes g2 { 0% { clip-path: inset(10% 0 60% 0) } 30% { clip-path: inset(70% 0 10% 0) } 60% { clip-path: inset(20% 0 50% 0) } 100% { clip-path: inset(5% 0 80% 0) } }
+/* Top Left Stats */
+#stats-panel { top: 20px; left: 20px; width: 350px; padding: 20px; border-top: 4px solid var(--primary); }
+#stats-panel h1 { margin: 0 0 20px 0; font-family: 'Orbitron', sans-serif; font-size: 28px; color: var(--primary); text-shadow: 0 0 15px var(--primary-glow); text-transform: uppercase; letter-spacing: 2px; }
+.stat-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 18px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; }
+.stat-label { color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; font-size: 14px; }
+.stat-val { font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 20px; }
+.val-fart { color: var(--primary); text-shadow: 0 0 10px var(--primary-glow); }
+.val-bean { color: var(--bean-color); text-shadow: 0 0 10px var(--bean-glow); }
+.val-mult { color: var(--secondary); text-shadow: 0 0 10px var(--secondary-glow); }
 
-/* LEFT STATS PANEL */
-#stats-panel { top: 20px; left: 20px; width: 360px; padding: 22px; border-top: 3px solid var(--primary); transition: transform 0.3s; }
-#stats-panel h1 { font-family: 'Orbitron', sans-serif; font-size: 26px; color: var(--primary); text-shadow: 0 0 20px var(--primary-glow); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 22px; }
-.srow { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.04); }
-.slabel { color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; font-size: 13px; }
-.sval { font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 18px; }
-.sv-fart { color: var(--primary); text-shadow: 0 0 8px var(--primary-glow); }
-.sv-bean { color: var(--bean-color); text-shadow: 0 0 8px var(--bean-glow); }
-.sv-mult { color: var(--secondary); text-shadow: 0 0 8px var(--secondary-glow); }
-.sv-gold { color: var(--gold); text-shadow: 0 0 8px var(--gold-glow); }
-.sv-fps { color: var(--tertiary); text-shadow: 0 0 8px var(--tertiary-glow); }
-.sv-auto { color: #ff8c00; text-shadow: 0 0 8px rgba(255,140,0,0.6); }
-.sv-hp { color: var(--danger); text-shadow: 0 0 8px rgba(255,51,51,0.6); }
+/* Progress Bars */
+.bar-container { width: 100%; height: 24px; background: rgba(0,0,0,0.5); border-radius: 12px; margin-top: 8px; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); box-shadow: inset 0 2px 5px rgba(0,0,0,0.8); }
+.bar-fill { height: 100%; width: 0%; transition: width 0.1s linear; position: relative; }
+.bar-fill::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); animation: shimmer 2s infinite; }
+@keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+#stomach-fill { background: linear-gradient(90deg, #8a5a2b, var(--bean-color)); box-shadow: 0 0 10px var(--bean-glow); }
+#stamina-fill { background: linear-gradient(90deg, #0055ff, var(--tertiary)); box-shadow: 0 0 10px var(--tertiary-glow); }
+.bar-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; text-shadow: 1px 1px 2px #000, -1px -1px 2px #000; letter-spacing: 1px; font-family: 'Orbitron', sans-serif; }
 
-/* BARS */
-.barlabel { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 13px; }
-.barwrap { width: 100%; height: 20px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); box-shadow: inset 0 2px 5px rgba(0,0,0,0.8); position: relative; margin-bottom: 12px; }
-.barfill { height: 100%; transition: width 0.15s linear; position: relative; }
-.barfill::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent); animation: shimmer 2s infinite; }
-@keyframes shimmer { 0% { transform: translateX(-100%) } 100% { transform: translateX(100%) } }
-#bf-stom { background: linear-gradient(90deg, #8a5a2b, var(--bean-color)); box-shadow: 0 0 10px var(--bean-glow); }
-#bf-stam { background: linear-gradient(90deg, #0044cc, var(--tertiary)); box-shadow: 0 0 10px var(--tertiary-glow); }
-#bf-hp { background: linear-gradient(90deg, #880000, var(--danger)); box-shadow: 0 0 10px rgba(255,51,51,0.5); }
-#bf-heat { background: linear-gradient(90deg, #ff4400, #ff0000); box-shadow: 0 0 10px rgba(255,0,0,0.5); }
-.bartxt { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; text-shadow: 1px 1px 2px #000, -1px -1px 2px #000; letter-spacing: 1px; font-family: 'Orbitron', sans-serif; }
+/* Right Shop Panel */
+#shop-panel { top: 20px; right: 20px; width: 400px; bottom: 20px; display: flex; flex-direction: column; padding: 15px; border-right: 4px solid var(--secondary); }
+.shop-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+.tab-btn { flex: 1; padding: 12px 0; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text-dim); font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: var(--transition); letter-spacing: 1px; }
+.tab-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.tab-btn.active { background: var(--secondary); color: #000; border-color: var(--secondary); box-shadow: 0 0 15px var(--secondary-glow); }
+.tab-btn[data-target="prestige"].active { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 15px var(--gold-glow); }
 
-/* QUEST LOG */
-#quest-panel { top: 20px; left: 400px; width: 300px; padding: 15px; border-top: 3px solid var(--gold); }
-#quest-panel h2 { font-family: 'Orbitron', sans-serif; font-size: 16px; color: var(--gold); margin-bottom: 10px; text-transform: uppercase; }
-.quest-item { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,215,0,0.2); padding: 10px; border-radius: 6px; margin-bottom: 8px; }
-.quest-title { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 5px; }
-.quest-prog { font-family: 'Orbitron', sans-serif; font-size: 12px; color: var(--tertiary); }
+.shop-content { flex: 1; overflow-y: auto; padding-right: 10px; display: flex; flex-direction: column; gap: 12px; }
+.shop-content::-webkit-scrollbar { width: 6px; }
+.shop-content::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); border-radius: 3px; }
+.shop-content::-webkit-scrollbar-thumb { background: var(--secondary); border-radius: 3px; }
 
-/* MINIMAP */
-#minimap { bottom: 20px; left: 20px; width: 220px; height: 220px; border-radius: 50%; padding: 8px; border: 2px solid var(--tertiary); box-shadow: 0 0 30px var(--tertiary-glow); overflow: hidden; background: rgba(0,0,0,0.8); }
-#minimap-canvas { width: 100%; height: 100%; border-radius: 50%; }
+.upgrade-card { background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(0,0,0,0.5)); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 15px; cursor: pointer; transition: var(--transition); position: relative; overflow: hidden; }
+.upgrade-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--primary); transition: var(--transition); }
+.upgrade-card:hover { transform: translateX(-5px); border-color: var(--primary); box-shadow: 0 5px 20px rgba(0,0,0,0.6), inset 0 0 15px rgba(57, 255, 20, 0.1); }
+.upgrade-card:hover::before { width: 100%; opacity: 0.1; }
+.upgrade-card.locked { opacity: 0.5; filter: grayscale(100%); cursor: not-allowed; }
+.upgrade-card.locked:hover { transform: none; border-color: rgba(255,255,255,0.1); box-shadow: none; }
+.upgrade-card.locked::before { background: #555; }
+.upgrade-card.maxed { border-color: var(--gold); }
+.upgrade-card.maxed::before { background: var(--gold); }
 
-/* RIGHT SHOP PANEL */
-#shop-panel { top: 20px; right: 20px; width: 420px; bottom: 20px; display: flex; flex-direction: column; padding: 15px; border-right: 3px solid var(--secondary); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform: translateX(120%); }
-#shop-panel.open { transform: translateX(0); }
-.tabs { display: flex; gap: 8px; margin-bottom: 16px; }
-.tab { flex: 1; padding: 10px 0; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; color: var(--text-dim); font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; cursor: pointer; transition: var(--transition); letter-spacing: 1px; }
-.tab:hover { background: rgba(255,255,255,0.08); color: #fff; }
-.tab.active { background: var(--secondary); color: #000; border-color: var(--secondary); box-shadow: 0 0 15px var(--secondary-glow); }
-.tab[data-t="prestige"].active { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 15px var(--gold-glow); }
-.tab[data-t="mutations"].active { background: var(--danger); border-color: var(--danger); box-shadow: 0 0 15px rgba(255,51,51,0.6); }
+.uc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; position: relative; z-index: 2; }
+.uc-name { font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: bold; color: #fff; text-transform: uppercase; }
+.uc-level { background: rgba(0,0,0,0.8); padding: 3px 8px; border-radius: 12px; font-size: 12px; color: var(--tertiary); font-family: 'Orbitron', sans-serif; border: 1px solid var(--tertiary); }
+.uc-desc { font-size: 13px; color: var(--text-dim); margin-bottom: 12px; line-height: 1.4; position: relative; z-index: 2; }
+.uc-footer { display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2; }
+.uc-cost { font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: bold; color: var(--primary); text-shadow: 0 0 5px var(--primary-glow); }
+.uc-cost.prestige-cost { color: var(--gold); text-shadow: 0 0 5px var(--gold-glow); }
 
-.shopcontent { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 8px; }
-.shopcontent::-webkit-scrollbar { width: 4px; }
-.shopcontent::-webkit-scrollbar-thumb { background: var(--secondary); border-radius: 2px; }
-.shopcontent::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+/* Minimap */
+#minimap-panel { bottom: 20px; left: 20px; width: 250px; height: 250px; padding: 10px; border-bottom: 4px solid var(--tertiary); border-radius: 50%; overflow: hidden; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; }
+#minimap-canvas { width: 100%; height: 100%; border-radius: 50%; box-shadow: inset 0 0 20px #000; }
 
-.card { background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(0,0,0,0.5)); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 13px; cursor: pointer; transition: var(--transition); position: relative; overflow: hidden; }
-.card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--primary); transition: var(--transition); }
-.card:hover { transform: translateX(-4px); border-color: rgba(57,255,20,0.4); box-shadow: 0 5px 20px rgba(0,0,0,0.7), inset 0 0 20px rgba(57,255,20,0.06); }
-.card:hover::before { width: 100%; opacity: 0.07; }
-.card.locked { opacity: 0.45; filter: grayscale(80%); cursor: not-allowed; }
-.card.locked:hover { transform: none; border-color: rgba(255,255,255,0.08); box-shadow: none; }
-.card.locked::before { background: #444; }
-.card.maxed { border-color: rgba(255,215,0,0.4); }
-.card.maxed::before { background: var(--gold); }
+/* Center Alerts */
+#alert-container { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); z-index: 100; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.alert-toast { background: rgba(0,0,0,0.9); border: 2px solid var(--primary); padding: 15px 30px; border-radius: 8px; color: #fff; font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; box-shadow: 0 0 20px var(--primary-glow); animation: slideInFade 2s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+@keyframes slideInFade { 0% { opacity: 0; transform: translateY(50px) scale(0.5); } 15% { opacity: 1; transform: translateY(0) scale(1.1); } 30% { transform: scale(1); } 80% { opacity: 1; transform: translateY(-20px); } 100% { opacity: 0; transform: translateY(-100px); } }
 
-.cheader { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
-.cname { font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 700; color: #fff; text-transform: uppercase; }
-.clvl { background: rgba(0,0,0,0.8); padding: 2px 7px; border-radius: 10px; font-size: 10px; color: var(--tertiary); font-family: 'Orbitron', sans-serif; border: 1px solid var(--tertiary); }
-.cdesc { font-size: 12px; color: var(--text-dim); margin-bottom: 10px; line-height: 1.45; }
-.cfooter { display: flex; justify-content: space-between; align-items: center; }
-.ccost { font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 700; color: var(--primary); text-shadow: 0 0 6px var(--primary-glow); }
-.ccost.goldcost { color: var(--gold); text-shadow: 0 0 6px var(--gold-glow); }
+/* Crosshair & Interaction */
+#crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; pointer-events: none; z-index: 50; }
+#crosshair::before, #crosshair::after { content: ''; position: absolute; background: rgba(255,255,255,0.5); }
+#crosshair::before { top: 9px; left: 0; width: 20px; height: 2px; }
+#crosshair::after { top: 0; left: 9px; width: 2px; height: 20px; }
+.interact-prompt { position: absolute; top: 55%; left: 50%; transform: translateX(-50%); font-size: 18px; font-family: 'Orbitron', sans-serif; color: var(--gold); text-shadow: 0 0 10px var(--gold-glow); display: none; z-index: 50; pointer-events: none; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px; border: 1px solid var(--gold); }
 
-/* WORLD/ENVIRONMENT STATS */
-#weather { position: absolute; top: 50%; right: 20px; transform: translateY(-50%); z-index: 10; display: flex; flex-direction: column; gap: 6px; align-items: center; transition: right 0.4s; }
-#weather.shop-open { right: 460px; }
-.wstat { background: var(--bg-panel); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 14px; font-family: 'Orbitron', sans-serif; font-size: 11px; color: var(--text-dim); text-align: center; backdrop-filter: blur(12px); width: 120px; }
-.wstat span { display: block; font-size: 15px; font-weight: 700; margin-top: 3px; }
-
-/* ALERTS & FX */
-#alerts { position: absolute; top: 20%; left: 50%; transform: translateX(-50%); z-index: 100; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.toast { background: rgba(0,0,0,0.95); border: 2px solid var(--primary); padding: 12px 28px; border-radius: 6px; color: #fff; font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; box-shadow: 0 0 25px var(--primary-glow); animation: toastAnim 2.5s forwards; }
-@keyframes toastAnim { 0% { opacity: 0; transform: translateY(40px) scale(0.6) } 12% { opacity: 1; transform: translateY(0) scale(1.05) } 25% { transform: scale(1) } 80% { opacity: 1; transform: translateY(-15px) } 100% { opacity: 0; transform: translateY(-80px) } }
-
-#combo { position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%); z-index: 50; pointer-events: none; opacity: 0; text-align: center; }
-#combo-val { font-family: 'Orbitron', sans-serif; font-size: 84px; font-weight: 900; color: var(--gold); text-shadow: 0 0 50px var(--gold-glow); line-height: 1; animation: pulseCombo 0.5s infinite alternate; }
-#combo-txt { font-family: 'Orbitron', sans-serif; font-size: 20px; color: #fff; letter-spacing: 6px; }
-@keyframes pulseCombo { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
-
-#iprompt { position: absolute; top: 65%; left: 50%; transform: translateX(-50%); font-family: 'Orbitron', sans-serif; font-size: 15px; color: var(--gold); text-shadow: 0 0 10px var(--gold-glow); display: none; z-index: 50; pointer-events: none; background: rgba(0,0,0,0.6); padding: 6px 18px; border-radius: 20px; border: 1px solid var(--gold); letter-spacing: 1px; }
-
-#boss-alert { display: none; position: absolute; top: 15%; left: 50%; transform: translateX(-50%); font-family: 'Orbitron', sans-serif; font-size: 45px; font-weight: 900; color: #ff0000; text-shadow: 0 0 30px #ff0000; letter-spacing: 8px; z-index: 100; text-align: center; animation: bPulse 0.5s infinite alternate; pointer-events: none; }
-@keyframes bPulse { 0% { transform: translateX(-50%) scale(1); opacity: 0.8; } 100% { transform: translateX(-50%) scale(1.1); opacity: 1; } }
-
-#fx { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; transition: box-shadow 0.25s, background 0.5s; }
-.fx-heal { box-shadow: inset 0 0 120px rgba(0,255,180,0.5) !important; }
-.fx-sprint { box-shadow: inset 0 0 80px rgba(0,85,255,0.3) !important; }
-.fx-damage { box-shadow: inset 0 0 200px rgba(255,0,0,0.8) !important; background: rgba(255,0,0,0.1); }
-.fx-fart { box-shadow: inset 0 0 150px rgba(57,255,20,0.4) !important; }
-
-/* REBIRTH OVERLAY */
-#rebirth-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(25px); }
-.rbox { background: #0a0a0a; border: 2px solid var(--gold); padding: 55px 60px; border-radius: 20px; text-align: center; max-width: 650px; box-shadow: 0 0 60px var(--gold-glow), inset 0 0 40px rgba(255,215,0,0.1); animation: rpulse 2.5s infinite alternate; }
-@keyframes rpulse { 0% { box-shadow: 0 0 30px var(--gold-glow) } 100% { box-shadow: 0 0 80px var(--gold-glow) } }
-.rbox h2 { font-family: 'Orbitron', sans-serif; color: var(--gold); font-size: 38px; margin-bottom: 20px; text-shadow: 0 0 25px var(--gold-glow); text-transform: uppercase; letter-spacing: 6px; }
-.rbox p { font-size: 16px; color: #bbb; margin-bottom: 15px; line-height: 1.65; }
-.rgain { font-family: 'Orbitron', sans-serif; font-size: 56px; color: var(--gold); font-weight: 900; margin: 30px 0; display: block; text-shadow: 0 0 25px var(--gold-glow); }
-.btn-asc { background: transparent; border: 3px solid var(--gold); color: var(--gold); padding: 18px 50px; font-size: 22px; font-family: 'Orbitron', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; transition: var(--transition); border-radius: 8px; }
-.btn-asc:hover { background: var(--gold); color: #000; box-shadow: 0 0 35px var(--gold-glow); transform: scale(1.04); }
-.btn-cancel { background: transparent; border: none; color: #555; font-family: 'Rajdhani', sans-serif; font-size: 17px; margin-top: 18px; cursor: pointer; text-decoration: underline; transition: color 0.2s; }
+/* Rebirth Screen */
+#rebirth-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(20px); }
+.rebirth-box { background: #111; border: 2px solid var(--gold); padding: 50px; border-radius: 20px; text-align: center; max-width: 600px; box-shadow: 0 0 50px var(--gold-glow), inset 0 0 30px rgba(255, 215, 0, 0.2); animation: pulseBox 2s infinite alternate; }
+@keyframes pulseBox { 0% { box-shadow: 0 0 30px var(--gold-glow); } 100% { box-shadow: 0 0 70px var(--gold-glow); } }
+.rebirth-box h2 { font-family: 'Orbitron', sans-serif; color: var(--gold); font-size: 40px; margin: 0 0 20px 0; text-shadow: 0 0 20px var(--gold-glow); text-transform: uppercase; letter-spacing: 5px; }
+.rebirth-box p { font-size: 18px; color: #ccc; margin-bottom: 20px; line-height: 1.6; }
+.rebirth-gain { font-family: 'Orbitron', sans-serif; font-size: 48px; color: var(--gold); font-weight: 900; margin: 30px 0; display: block; text-shadow: 0 0 20px var(--gold-glow); }
+.btn-ascend { background: transparent; border: 3px solid var(--gold); color: var(--gold); padding: 20px 50px; font-size: 24px; font-family: 'Orbitron', sans-serif; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: var(--transition); border-radius: 10px; position: relative; overflow: hidden; }
+.btn-ascend:hover { background: var(--gold); color: #000; box-shadow: 0 0 30px var(--gold-glow); transform: scale(1.05); }
+.btn-cancel { background: transparent; border: none; color: #666; font-family: 'Rajdhani', sans-serif; font-size: 18px; margin-top: 20px; cursor: pointer; text-decoration: underline; transition: color 0.2s; }
 .btn-cancel:hover { color: #fff; }
 
-/* CONTROLS HINT */
-#controls-hint { position: absolute; bottom: 20px; right: 20px; background: var(--bg-panel); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px 18px; font-size: 12px; color: var(--text-dim); line-height: 1.9; backdrop-filter: blur(12px); z-index: 10; text-align: right; transition: right 0.4s; }
-#controls-hint.shop-open { right: 460px; }
-#controls-hint span { color: rgba(255,255,255,0.5); font-family: 'Orbitron', sans-serif; font-size: 10px; padding: 2px 4px; background: rgba(255,255,255,0.1); border-radius: 4px; }
+/* Damage/Screen FX */
+#fx-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; transition: box-shadow 0.2s; }
+.fx-damage { box-shadow: inset 0 0 200px rgba(255, 0, 0, 0.8); }
+.fx-heal { box-shadow: inset 0 0 150px rgba(0, 255, 204, 0.5); }
+.fx-speed { box-shadow: inset 0 0 100px rgba(0, 85, 255, 0.3); }
 
-/* ACHIEVEMENT POPUP */
-#achievement { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(0,0,0,0.9)); border: 2px solid var(--gold); border-radius: 10px; padding: 15px 30px; z-index: 100; transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s; opacity: 0; text-align: center; pointer-events: none; }
-#achievement.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-#ach-title { font-family: 'Orbitron', sans-serif; font-size: 10px; color: var(--gold); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 5px; }
-#ach-text { font-family: 'Orbitron', sans-serif; font-size: 16px; color: #fff; font-weight: 700; }
+/* Loading Screen */
+#loading-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--primary); font-family: 'Orbitron', sans-serif; transition: opacity 1s; }
+.spinner { width: 80px; height: 80px; border: 5px solid rgba(57, 255, 20, 0.2); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+@keyframes spin { 100% { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
 
+<div id="loading-screen">
+    <div class="spinner"></div>
+    <h2 class="glitch-text" data-text="GENERATING WORLD...">GENERATING WORLD...</h2>
+</div>
+
 <div id="webgl-container"></div>
-<div id="fx"></div>
-<div id="iprompt">[E] TO PROCESS BEANS @ ALTAR</div>
-<div id="boss-alert">NIGHTMARE SLIME AWAKENED</div>
+<div id="fx-overlay"></div>
+<div id="crosshair"></div>
+<div id="interact-prompt" class="interact-prompt">[SPACE] TO DIGEST BEANS</div>
 
-<div id="stats-panel" class="hud">
-  <h1 class="glitch" data-text="FELIXFART 3D">FELIXFART 3D</h1>
-  <div class="srow"><span class="slabel">Total Farts</span><span id="txt-farts" class="sval sv-fart">0</span></div>
-  <div class="srow"><span class="slabel">Global Multiplier</span><span id="txt-mult" class="sval sv-mult">x1.00</span></div>
-  <div class="srow"><span class="slabel">Auto Fart/s</span><span id="txt-auto" class="sval sv-auto">0</span></div>
-  <div class="srow"><span class="slabel">Beans Devoured</span><span id="txt-beans" class="sval sv-bean">0</span></div>
-  <div class="srow"><span class="slabel">Farts/s Generated</span><span id="txt-fps" class="sval sv-fps">0</span></div>
-  <div class="srow" id="row-tokens" style="display:none;"><span class="slabel" style="color:var(--gold)">Astral Tokens</span><span id="txt-tokens" class="sval sv-gold">0</span></div>
-  <div class="srow" id="row-rebirths" style="display:none;"><span class="slabel" style="color:#aaa">Rebirths</span><span id="txt-rebirths" class="sval" style="color:#ccc">0</span></div>
-
-  <div style="margin-top:20px;">
-    <div class="barlabel"><span style="color:#ff3333;text-transform:uppercase;letter-spacing:1px;font-size:12px;">Health</span><span id="txt-hp" style="font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;color:#ff3333;">100/100</span></div>
-    <div class="barwrap"><div id="bf-hp" class="barfill" style="width:100%"></div><div class="bartxt" id="hp-txt">HEALTHY</div></div>
-    
-    <div class="barlabel"><span style="color:#aaa;text-transform:uppercase;letter-spacing:1px;font-size:12px;">Stomach</span><span id="txt-stom" style="font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;">0/10</span></div>
-    <div class="barwrap"><div id="bf-stom" class="barfill" style="width:0%"></div><div class="bartxt">0%</div></div>
-    
-    <div class="barlabel"><span style="color:#aaa;text-transform:uppercase;letter-spacing:1px;font-size:12px;">Stamina</span></div>
-    <div class="barwrap"><div id="bf-stam" class="barfill" style="width:100%"></div><div class="bartxt">READY</div></div>
-    
-    <div class="barlabel"><span style="color:#ff4400;text-transform:uppercase;letter-spacing:1px;font-size:12px;">Gut Heat</span><span id="txt-heat" style="font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;color:#ff4400;">COOL</span></div>
-    <div class="barwrap"><div id="bf-heat" class="barfill" style="width:0%"></div><div class="bartxt" id="heat-txt">COOL</div></div>
-  </div>
-</div>
-
-<div id="quest-panel" class="hud">
-  <h2>Active Directives</h2>
-  <div id="quest-list"></div>
-</div>
-
-<div id="shop-panel" class="hud">
-  <div class="tabs">
-    <button class="tab active" data-t="upgrades" onclick="UI.switchTab('upgrades')">Upgrades</button>
-    <button class="tab" data-t="mutations" onclick="UI.switchTab('mutations')">Mutations</button>
-    <button class="tab" data-t="prestige" onclick="UI.switchTab('prestige')">Astral</button>
-  </div>
-  <div id="list-upgrades" class="shopcontent"></div>
-  <div id="list-mutations" class="shopcontent" style="display:none;"></div>
-  <div id="list-prestige" class="shopcontent" style="display:none;">
-    <div class="card" style="border-color:var(--gold);" onclick="Game.showRebirthModal()">
-      <div style="text-align:center;">
-        <div style="font-family:'Orbitron',sans-serif;font-size:17px;color:var(--gold);text-shadow:0 0 12px var(--gold-glow);margin-bottom:8px;">⬡ PERFORM REBIRTH ⬡</div>
-        <div style="font-size:12px;color:#aaa;">Sacrifice all mortal ties for permanent Astral Tokens. Scales exponentially.</div>
-      </div>
+<div id="stats-panel" class="hud-element">
+    <h1 class="glitch-text" data-text="FELIXFART 3D">FELIXFART 3D</h1>
+    <div class="stat-row">
+        <span class="stat-label">Total Farts Generated</span>
+        <span id="txt-farts" class="stat-val val-fart">0</span>
     </div>
-    <div id="prestige-items"></div>
-  </div>
+    <div class="stat-row">
+        <span class="stat-label">Global Multiplier</span>
+        <span id="txt-mult" class="stat-val val-mult">x1.00</span>
+    </div>
+    <div class="stat-row">
+        <span class="stat-label">Beans Devoured</span>
+        <span id="txt-beans" class="stat-val val-bean">0</span>
+    </div>
+    <div class="stat-row" id="row-prestige" style="display:none;">
+        <span class="stat-label" style="color:var(--gold)">Astral Tokens</span>
+        <span id="txt-tokens" class="stat-val" style="color:var(--gold); text-shadow:0 0 10px var(--gold-glow)">0</span>
+    </div>
+    
+    <div style="margin-top: 25px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+            <span class="stat-label" style="color:#fff;">Stomach Capacity</span>
+            <span id="txt-stom" style="font-family:'Orbitron',sans-serif; font-size:14px; font-weight:bold;">0 / 10</span>
+        </div>
+        <div class="bar-container"><div id="stomach-fill" class="bar-fill"></div><div id="stomach-pct" class="bar-text">0%</div></div>
+    </div>
+
+    <div style="margin-top: 15px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+            <span class="stat-label" style="color:#fff;">Stamina (SHIFT to Sprint)</span>
+        </div>
+        <div class="bar-container"><div id="stamina-fill" class="bar-fill" style="width:100%;"></div><div class="bar-text">READY</div></div>
+    </div>
+
+    <div style="margin-top: 20px; font-size: 12px; color: #666; text-align: center; font-family: 'Rajdhani', sans-serif; letter-spacing: 1px;">
+        WASD: Move | MOUSE: Look | SHIFT: Sprint<br>Collect Beans -> Return to Base -> SPACE to Fart
+    </div>
 </div>
 
-<div id="minimap" class="hud">
-  <canvas id="minimap-canvas"></canvas>
+<div id="shop-panel" class="hud-element">
+    <div class="shop-tabs">
+        <button class="tab-btn active" data-target="upgrades" onclick="UI.switchTab('upgrades')">Upgrades</button>
+        <button class="tab-btn" data-target="mutations" onclick="UI.switchTab('mutations')">Mutations</button>
+        <button class="tab-btn" data-target="prestige" onclick="UI.switchTab('prestige')">Astral</button>
+    </div>
+    
+    <div id="list-upgrades" class="shop-content"></div>
+    <div id="list-mutations" class="shop-content" style="display:none;"></div>
+    <div id="list-prestige" class="shop-content" style="display:none;">
+        <div class="upgrade-card" style="border-color:var(--gold); margin-bottom:20px;" onclick="Game.showRebirthModal()">
+            <div style="text-align:center;">
+                <h3 style="color:var(--gold); font-family:'Orbitron',sans-serif; margin:0 0 10px 0; font-size:20px; text-shadow:0 0 10px var(--gold-glow);">PERFORM REBIRTH</h3>
+                <p style="font-size:13px; color:#ccc; margin:0;">Sacrifice all mortal possessions to ascend. Gain Astral Tokens for permanent god-tier multipliers.</p>
+            </div>
+        </div>
+        <div id="prestige-items"></div>
+    </div>
 </div>
 
-<div id="weather">
-  <div class="wstat">TIME<span id="txt-time" style="color:#fff;">12:00</span></div>
-  <div class="wstat">BIOME<span id="txt-biome" style="color:var(--primary);">WASTELAND</span></div>
-  <div class="wstat">COMBO<span id="txt-combo" style="color:var(--gold);">x1</span></div>
-  <div class="wstat">DIST<span id="txt-dist" style="color:var(--tertiary);">0m</span></div>
-  <div class="wstat">ALT<span id="txt-alt" style="color:#ff8c00;">0m</span></div>
+<div id="minimap-panel" class="hud-element">
+    <canvas id="minimap-canvas"></canvas>
 </div>
 
-<div id="alerts"></div>
-<div id="combo"><div id="combo-val">0x</div><div id="combo-txt">COMBO MULTIPLIER</div></div>
-<div id="achievement"><div id="ach-title">ACHIEVEMENT UNLOCKED</div><div id="ach-text"></div></div>
-
-<div id="controls-hint">
-  <span>WASD</span> Move &nbsp;|&nbsp; <span>MOUSE</span> Look<br>
-  <span>SPACE</span> Jump / Jetpack (Hold)<br>
-  <span>SHIFT</span> Sprint &nbsp;|&nbsp; <span>LCLICK</span> Melee<br>
-  <span>TAB</span> Shop &nbsp;|&nbsp; <span>E</span> Digest @ Base<br>
-  <span>F</span> Mega Fart
-</div>
+<div id="alert-container"></div>
 
 <div id="rebirth-overlay">
-  <div class="rbox">
-    <h2>ASCENSION PROTOCOL</h2>
-    <p>Warning: Initiating ascension obliterates your current physical form. All Farts, Beans, Upgrades, and Mutations will be reduced to cosmic dust.</p>
-    <p>Your essence will crystallize into Astral Tokens, providing reality-bending multipliers that persist across all dimensions.</p>
-    <span class="rgain">+<span id="rebirth-amt">0</span> TOKENS</span>
-    <button class="btn-asc" onclick="Game.executeRebirth()">TRANSCEND</button><br>
-    <button class="btn-cancel" onclick="document.getElementById('rebirth-overlay').style.display='none'">ABORT SEQUENCE</button>
-  </div>
+    <div class="rebirth-box">
+        <h2>ASCENSION PROTOCOL</h2>
+        <p>Warning: Initiating ascension will obliterate your current physical form. You will lose all Farts, Beans, Upgrades, and Mutations.</p>
+        <p>Your essence will be crystallized into Astral Tokens, unlocking reality-bending permanent multipliers.</p>
+        <span class="rebirth-gain">+<span id="rebirth-amt">0</span> TOKENS</span>
+        <button class="btn-ascend" onclick="Game.executeRebirth()">TRANSCEND</button><br>
+        <button class="btn-cancel" onclick="document.getElementById('rebirth-overlay').style.display='none'">ABORT SEQUENCE</button>
+    </div>
 </div>
 
 <script>
-// ==============================================================================
-// 1. DATA DICTIONARIES (MASSIVELY EXPANDED)
-// ==============================================================================
-const DB = { upgrades: [], mutations: [], prestige: [], quests: [] };
+/**
+ * FELIXFART 3D: ULTIMATE TYCOON ENGINE
+ * Advanced Three.js implementation with procedural chunking, physics, particle systems, and massive data trees.
+ */
 
-// 400 Procedurally Generated Upgrades
-const uAdj = ["Elastic","Reinforced","Titanium","Quantum","Nuclear","Cosmic","Galactic","Divine","Abyssal","Infinite","Astral","Void","Eldritch","Cybernetic","Bionic","Nano","Pneumatic","Hydraulic","Magnetic","Plasma"];
-const uNoun = ["Stomach","Intestines","Valve","Sphincter","Compressor","Aura","Tractor","Reactor","Lungs","Core","Filtration","Gland","Injector","Exhaust","Turbine","Synthesizer","Resonator","Catalyst","Vortex","Matrix"];
-const uType = ['cap','fart','stam','speed','rad','digest','auto','fart','cap','rad','hp','dmg','jump','stam','auto','speed','fart','hp','cap','digest'];
+// ==========================================
+// MASSIVE DATA DICTIONARY
+// ==========================================
+const DB = {
+    upgrades: [],
+    mutations: [],
+    prestige: []
+};
 
-for(let i=0; i<400; i++) {
-  let tier = Math.floor(i/20);
-  let ti = i%20;
-  let t = uType[ti];
-  let base = 10 * Math.pow(2.8, tier) * (ti+1);
-  let val, desc;
-  switch(t) {
-    case 'cap': val=10*Math.pow(2.2,tier); desc=`+${Math.floor(val)} Stomach Capacity`; break;
-    case 'fart': val=1.2+(tier*0.25); desc=`Fart Generation x${val.toFixed(2)}`; break;
-    case 'stam': val=20*(tier+1); desc=`+${val} Max Stamina`; break;
-    case 'speed': val=0.06+(tier*0.03); desc=`+${(val*100).toFixed(0)}% Movement Speed`; break;
-    case 'rad': val=5+(tier*3); desc=`+${val}m Vacuum Radius`; break;
-    case 'digest': val=1.6+(tier*0.6); desc=`Digestion Speed x${val.toFixed(1)}`; break;
-    case 'auto': val=2*Math.pow(7,tier); desc=`Passive Auto-fart +${Math.floor(val)}/sec`; break;
-    case 'hp': val=25*(tier+1); desc=`+${val} Max Health`; break;
-    case 'dmg': val=5*(tier+1); desc=`+${val} Attack Damage`; break;
-    case 'jump': val=1.1+(tier*0.1); desc=`Jump Power x${val.toFixed(2)}`; break;
-    default: val=1; desc='Unknown Module';
-  }
-  DB.upgrades.push({
-    id: `u${i}`, name: `${uAdj[tier%20]} ${uNoun[ti]} Mk.${(i%5)+1}`, desc,
-    cost: Math.floor(base), mult: 1.18 + (tier*0.06), max: 10 + (tier*5), type: t, val
-  });
+// Procedurally generate 100 upgrades to ensure massive scale
+const upgradeAdjectives = ["Elastic", "Reinforced", "Titanium", "Quantum", "Nuclear", "Cosmic", "Galactic", "Divine", "Abyssal", "Infinite"];
+const upgradeNouns = ["Stomach", "Intestines", "Lungs", "Shoes", "Tractor Beam", "Digester", "Valve", "Compressor", "Sphincter", "Aura"];
+
+for(let i=0; i<100; i++) {
+    let tier = Math.floor(i / 10);
+    let typeIndex = i % 10;
+    
+    let typeMap = ['cap', 'fart', 'stam', 'speed', 'rad', 'digest', 'auto', 'fart', 'cap', 'rad'];
+    let type = typeMap[typeIndex];
+    
+    let baseCost = 10 * Math.pow(2.5, tier) * (typeIndex + 1);
+    let name = `${upgradeAdjectives[tier]} ${upgradeNouns[typeIndex]} Mk.${(i%5)+1}`;
+    
+    let val, desc;
+    switch(type) {
+        case 'cap': val = 10 * Math.pow(2, tier); desc = `+${val} Capacity`; break;
+        case 'fart': val = 1.2 + (tier * 0.2); desc = `Farts x${val.toFixed(1)}`; break;
+        case 'stam': val = 20 * (tier + 1); desc = `+${val} Max Stamina`; break;
+        case 'speed': val = 0.05 + (tier * 0.02); desc = `+${(val*100).toFixed(0)}% Speed`; break;
+        case 'rad': val = 5 + (tier * 2); desc = `+${val}m Pickup Radius`; break;
+        case 'digest': val = 1.5 + (tier * 0.5); desc = `Digest x${val.toFixed(1)} faster`; break;
+        case 'auto': val = 1 * Math.pow(5, tier); desc = `Auto-fart ${val}/sec`; break;
+    }
+
+    DB.upgrades.push({
+        id: `u_${i}`,
+        name: name,
+        desc: desc,
+        cost: Math.floor(baseCost),
+        mult: 1.15 + (tier * 0.05),
+        max: 10 + (tier * 5),
+        type: type,
+        val: val
+    });
 }
 
-// 200 Procedurally Generated Mutations
-const mAdj = ["Toxic","Radioactive","Biohazard","Corrosive","Mutated","Sentient","Parasitic","Symbiotic","Necrotic","Fungal"];
-for(let i=0; i<200; i++) {
-  let tier = Math.floor(i/10);
-  let t = i%4===0 ? 'auto' : i%4===1 ? 'fart' : i%4===2 ? 'combo' : 'hp_regen';
-  let base = 3500 * Math.pow(5.5, tier) * ((i%10)+1);
-  let val, desc;
-  switch(t) {
-    case 'auto': val = Math.pow(15, tier+1); desc = `Mutated Auto-Generation +${val}/s`; break;
-    case 'combo': val = (tier+1)*2.5; desc = `Combo Timer +${val.toFixed(1)}s`; break;
-    case 'fart': val = Math.pow(2.8, tier+1); desc = `Base Output x${val.toFixed(2)}`; break;
-    case 'hp_regen': val = (tier+1)*2; desc = `Regenerate ${val} HP/sec`; break;
-  }
-  DB.mutations.push({
-    id: `m${i}`, name: `${mAdj[tier%10]} Anomaly Strain ${i+1}`, desc,
-    cost: Math.floor(base), mult: 2.4, max: 5, type: t, val
-  });
+// Procedurally generate 50 mutations
+const mutAdj = ["Toxic", "Radioactive", "Biohazard", "Corrosive", "Mutated", "Sentient"];
+for(let i=0; i<50; i++) {
+    let tier = Math.floor(i/10);
+    let type = i % 2 === 0 ? 'auto' : 'fart';
+    let baseCost = 5000 * Math.pow(4, tier);
+    
+    DB.mutations.push({
+        id: `m_${i}`,
+        name: `${mutAdj[tier]} Anomaly ${i+1}`,
+        desc: type === 'auto' ? `Insane Auto-Fart +${Math.pow(10, tier+1)}/s` : `Massive Fart Multiplier x${Math.pow(2, tier+1)}`,
+        cost: Math.floor(baseCost),
+        mult: 2.0,
+        max: 5,
+        type: type,
+        val: type === 'auto' ? Math.pow(10, tier+1) : Math.pow(2, tier+1)
+    });
 }
 
-// 20 Prestige Items
-const pNames=["Golden Bean","God Speed","Astral Capacity","Divine Digestion","Omnipotent Radius","Ethereal Lungs","Creator Valve","Void Core","Celestial Aura","The Omega Fart", "Titan Health", "Quantum Leap", "Slime Bane", "Time Warp", "Event Horizon", "Nebula Gas", "Supernova", "Dark Matter", "Singularity", "The Big Bang"];
-const pTypes=['pfart','pspeed','pcap','pdigest','prad','pstam','pauto','pfart','prad','pfart', 'php', 'pjump', 'pdmg', 'pcombo', 'prad', 'pfart', 'pauto', 'pcap', 'pdigest', 'pfart'];
-for(let i=0; i<20; i++) {
-  DB.prestige.push({
-    id: `p${i}`, name: pNames[i], desc: `Reality-bending permanent multiplier. Scales exponentially across all timelines.`,
-    cost: 1 * Math.pow(3.5, i), mult: 3.0, max: 99, type: pTypes[i], val: i===19 ? 500 : (2 + i*0.8)
-  });
+// Prestige Upgrades
+const presNames = ["Golden Bean", "God Speed", "Astral Capacity", "Divine Digestion", "Omnipotent Radius", "Ethereal Lungs", "Creator's Valve", "Void Compression", "Celestial Aura", "The Ultimate Fart"];
+const presTypes = ['pfart', 'pspeed', 'pcap', 'pdigest', 'prad', 'pstam', 'pauto', 'pfart', 'prad', 'pfart'];
+for(let i=0; i<10; i++) {
+    DB.prestige.push({
+        id: `p_${i}`,
+        name: presNames[i],
+        desc: `Base stat massively multiplied. Level dictates power.`,
+        cost: 1 * Math.pow(3, i),
+        mult: 2.5,
+        max: 99,
+        type: presTypes[i],
+        val: i === 9 ? 100 : (2 + i*0.5)
+    });
 }
 
-// Quests
-DB.quests = [
-  { id: 'q1', title: 'The First Emission', target: 100, type: 'fart', prog: 0, done: false, desc: 'Produce 100 total farts.' },
-  { id: 'q2', title: 'Bean Collector', target: 50, type: 'eat', prog: 0, done: false, desc: 'Consume 50 beans.' },
-  { id: 'q3', title: 'Slime Hunter', target: 5, type: 'kill', prog: 0, done: false, desc: 'Defeat 5 Toxic Slimes.' },
-  { id: 'q4', title: 'Combo Master', target: 15, type: 'combo', prog: 0, done: false, desc: 'Reach a x15 Fart Combo.' },
-  { id: 'q5', title: 'Deep Exploration', target: 2000, type: 'dist', prog: 0, done: false, desc: 'Travel 2000m from the Altar.' },
-  { id: 'q6', title: 'Nightmare Slayer', target: 1, type: 'boss', prog: 0, done: false, desc: 'Survive the night and defeat the Nightmare Slime.' }
-];
-
-// ==============================================================================
-// 2. CONSTANTS, STATE, & GLOBAL LOGIC
-// ==============================================================================
+// ==========================================
+// GAME STATE
+// ==========================================
 const C = {
-  WORLD: 24000, CHUNK: 300, HOME_RAD: 150, MAX_BEANS: 5000, MAX_ENEMIES: 150,
-  BIOMES: ['WASTELAND','TOXIC MARSH','BEAN FIELDS','CRYSTAL CAVES','VOID PLAINS','MAGMA FLATS','NEON JUNGLE','DEEP RIFT', 'FROZEN WASTES', 'SPORE FOREST'],
-  BIOME_COLORS: ['#39ff14','#00ff88','#d2691e','#00ffff','#8800ff','#ff4400','#ff00ff','#0044ff', '#aaccff', '#99ff33']
+    WORLD_SIZE: 5000,
+    CHUNK_SIZE: 200,
+    HOME_RADIUS: 100,
+    MAX_BEANS: 1000,
+    MAX_PARTICLES: 5000
 };
 
 const State = {
-  farts: 0, beansEaten: 0, beansInStomach: 0, tokens: 0, rebirths: 0,
-  stomachCap: 10, maxStamina: 100, stamina: 100, maxHp: 100, hp: 100,
-  multFart: 1, multSpeed: 1, multRadius: 1, multDigest: 1, autoFart: 0,
-  hpRegen: 0, attackDmg: 10, jumpMult: 1, comboDuration: 3,
-  heat: 0, comboMult: 1, comboTimer: 0, lastFartTime: 0, timeOfDay: 8, // Hours (0-24)
-  fartsLastSec: 0, fartAccum: 0, fartsThisSec: 0, slimesKilled: 0,
-  pos: new THREE.Vector3(0, 15, 0),
-  vel: new THREE.Vector3(0, 0, 0),
-  yaw: 0, pitch: 0.2,
-  baseSpeed: 48, sprintMult: 2.4, jumpForce: 40, gravity: 85,
-  inBase: true, isSprinting: false, isGrounded: false,
-  bossSpawnedThisNight: false,
-  inv: {}
+    // Currencies
+    farts: 0, beansEaten: 0, beansInStomach: 0, prestigeTokens: 0, rebirths: 0,
+    
+    // Stats (Calculated)
+    stomachCap: 10, maxStamina: 100, stamina: 100,
+    multFart: 1, multSpeed: 1, multRadius: 1, multDigest: 1, autoFart: 0,
+    
+    // Player Physics
+    pos: new THREE.Vector3(0, 5, 0),
+    vel: new THREE.Vector3(0, 0, 0),
+    baseSpeed: 40, sprintMult: 2.0,
+    yaw: 0, pitch: 0,
+    
+    // State Flags
+    inSafeZone: true,
+    isSprinting: false,
+    inventory: {}
 };
 
-// Init Inventory
-[...DB.upgrades, ...DB.mutations, ...DB.prestige].forEach(x => State.inv[x.id] = { count: 0, cost: x.cost });
+// Initialize Inventory
+[...DB.upgrades, ...DB.mutations, ...DB.prestige].forEach(item => {
+    State.inventory[item.id] = { count: 0, currentCost: item.cost };
+});
 
-const Achievements = [
-  {id:'a0', name:'Ignition', check:()=>State.farts>=1},
-  {id:'a1', name:'Gas Giant', check:()=>State.farts>=1e6},
-  {id:'a2', name:'Supernova', check:()=>State.farts>=1e9},
-  {id:'a3', name:'Dietary Fibers', check:()=>State.beansEaten>=500},
-  {id:'a4', name:'Predator', check:()=>State.slimesKilled>=50},
-  {id:'a5', name:'Ascended Being', check:()=>State.rebirths>=1},
-  {id:'a6', name:'Untouchable', check:()=>State.comboMult>=50}
-];
-const unlockedAch = new Set();
-
-function hash2(x, y, seed=12345) {
-  let h = seed + x * 374761393 + y * 668265263;
-  h = (h ^ (h >> 13)) * 1274126177;
-  return h ^ (h >> 16);
+// ==========================================
+// MATH & PROCEDURAL GEN UTILS (Simplex Noise alternative)
+// ==========================================
+// Custom PRNG based noise to generate terrain heightmap and bean placement without external libs
+class PRNG {
+    constructor(seed) { this.seed = seed; }
+    next() { this.seed = (this.seed * 9301 + 49297) % 233280; return this.seed / 233280; }
 }
+
+function hash(x, y, seed) {
+    let h = seed + x * 374761393 + y * 668265263;
+    h = (h ^ (h >> 13)) * 1274126177;
+    return h ^ (h >> 16);
+}
+
 function smoothStep(t) { return t * t * (3 - 2 * t); }
 function lerp(a, b, t) { return a + t * (b - a); }
-function noise2D(x, y, seed=12345) {
-  let xi = Math.floor(x), yi = Math.floor(y);
-  let xf = x - xi, yf = y - yi;
-  let u = smoothStep(xf), v = smoothStep(yf);
-  let a = Math.abs(hash2(xi, yi, seed)) % 1000 / 1000;
-  let b = Math.abs(hash2(xi+1, yi, seed)) % 1000 / 1000;
-  let c = Math.abs(hash2(xi, yi+1, seed)) % 1000 / 1000;
-  let d = Math.abs(hash2(xi+1, yi+1, seed)) % 1000 / 1000;
-  return lerp(lerp(a, b, u), lerp(c, d, u), v);
-}
-function fbm(x, y, oct=6) {
-  let v=0, a=0.5, f=1;
-  for(let i=0; i<oct; i++){ v += a * noise2D(x*f, y*f); f *= 2.0; a *= 0.5; }
-  return v;
-}
-function getTerrainY(x, z) {
-  let n = fbm(x*0.004, z*0.004, 6);
-  let n2 = fbm(x*0.001, z*0.001, 3) * 0.5;
-  let mountains = fbm(x*0.012, z*0.012, 4);
-  let dist = Math.hypot(x, z);
-  let baseFlat = Math.max(0, 1 - dist/(C.HOME_RAD*2));
-  return (n*45 + n2*30 + mountains*mountains*60) * (1 - baseFlat*0.9) + 1;
-}
-function getBiome(x, z) {
-  return Math.abs(hash2(Math.floor(x/600), Math.floor(z/600), 99)) % C.BIOMES.length;
+
+function noise2D(x, y, seed = 12345) {
+    let xi = Math.floor(x), yi = Math.floor(y);
+    let xf = x - xi, yf = y - yi;
+    let u = smoothStep(xf), v = smoothStep(yf);
+    
+    let a = hash(xi, yi, seed) % 256 / 256;
+    let b = hash(xi+1, yi, seed) % 256 / 256;
+    let c = hash(xi, yi+1, seed) % 256 / 256;
+    let d = hash(xi+1, yi+1, seed) % 256 / 256;
+    
+    let x1 = lerp(a, b, u);
+    let x2 = lerp(c, d, u);
+    return lerp(x1, x2, v);
 }
 
-// ==============================================================================
-// 3. PROCEDURAL AUDIO SYNTHESIZER
-// ==============================================================================
-const AudioSys = {
-  ctx: null, master: null, enabled: false,
-  
-  init() {
-    if (this.ctx && this.ctx.state === 'suspended') { this.ctx.resume(); return; }
-    try {
-      window.AudioContext = window.AudioContext || window.webkitAudioContext;
-      this.ctx = new AudioContext();
-      this.master = this.ctx.createGain();
-      this.master.gain.value = 0.3;
-      this.master.connect(this.ctx.destination);
-      this.enabled = true;
-    } catch(e) { console.warn("Audio Context Failed", e); }
-  },
-  
-  playTone(freq, type, dur, vol, slideFreq=null) {
-    if(!this.enabled || !this.ctx) return;
-    if(this.ctx.state === 'suspended') this.ctx.resume();
-    
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-    if(slideFreq) {
-      osc.frequency.exponentialRampToValueAtTime(slideFreq, this.ctx.currentTime + dur);
+function fbm(x, y, octaves = 4) {
+    let v = 0, a = 0.5, f = 1.0;
+    for(let i=0; i<octaves; i++) {
+        v += a * noise2D(x * f, y * f);
+        f *= 2.0; a *= 0.5;
     }
-    
-    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
-    
-    osc.connect(gain);
-    gain.connect(this.master);
-    
-    osc.start();
-    osc.stop(this.ctx.currentTime + dur);
-  },
-  
-  playFart(intensity=1) {
-    let baseFreq = 60 + Math.random() * 40;
-    this.playTone(baseFreq, 'sawtooth', 0.3 * intensity, 0.5, baseFreq * 0.5);
-    this.playTone(baseFreq * 1.5, 'square', 0.2 * intensity, 0.3, baseFreq * 0.2);
-  },
-  
-  playCollect(tier) {
-    let f = tier === 4 ? 880 : tier === 3 ? 660 : tier === 2 ? 440 : 220;
-    this.playTone(f, 'sine', 0.15, 0.2, f * 1.5);
-    if(tier >= 3) this.playTone(f*1.2, 'sine', 0.2, 0.2, f * 2.0);
-  },
-  
-  playHit() {
-    this.playTone(150, 'square', 0.1, 0.4, 50);
-  },
-  
-  playAscend() {
-    for(let i=0; i<10; i++) {
-      setTimeout(()=>this.playTone(200 + i*100, 'sine', 1.0, 0.3, 1000 + i*200), i*150);
-    }
-  }
-};
+    return v;
+}
 
-// ==============================================================================
-// 4. THREE.JS ENGINE CORE
-// ==============================================================================
+// ==========================================
+// ENGINE: THREE.JS SETUP
+// ==========================================
 const Engine = {
-  scene: null, cam: null, renderer: null, clock: new THREE.Clock(),
-  playerGrp: null, playerMesh: null, beansGrp: null, enemiesGrp: null,
-  particles: [], beans: [], enemies: [], chunkMap: new Map(),
-  matBeanN: null, matBeanE: null, matBeanL: null, matBeanM: null, matGround: null,
-  matEnemy: null, matBoss: null,
-  homeLight: null, sunLight: null, moonLight: null, skyGeo: null, skyMat: null,
-  bossActive: false,
-  
-  init() {
-    if(typeof THREE === 'undefined') { alert("Three.js failed to load. Check your internet connection."); return; }
-    const cont = document.getElementById('webgl-container');
-    this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x0a0a1a);
-    this.scene.fog = new THREE.FogExp2(0x0a0a1a, 0.0015);
-
-    this.cam = new THREE.PerspectiveCamera(85, innerWidth/innerHeight, 0.1, 5000);
+    scene: null, camera: null, renderer: null,
+    clock: new THREE.Clock(),
+    raycaster: new THREE.Raycaster(),
     
-    this.playerGrp = new THREE.Group();
-    this.playerMesh = new THREE.Mesh(
-      new THREE.CapsuleGeometry(1.5, 3.5, 8, 16),
-      new THREE.MeshStandardMaterial({color: 0x39ff14, roughness: 0.3, metalness: 0.2, emissive: 0x114400})
-    );
-    this.playerMesh.castShadow = true;
-    this.playerGrp.add(this.playerMesh);
+    // Entity Groups
+    beansGroup: null, chunkGroup: null, particlesGroup: null,
     
-    const tank = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 2.5, 12), new THREE.MeshStandardMaterial({color: 0x444444, metalness: 0.8}));
-    tank.position.set(0, 0.5, -1.2);
-    tank.rotation.x = Math.PI/2;
-    this.playerGrp.add(tank);
+    // Arrays
+    beans: [], chunks: new Map(), particles: [],
     
-    this.scene.add(this.playerGrp);
-
-    this.renderer = new THREE.WebGLRenderer({antialias: true, powerPreference: 'high-performance'});
-    this.renderer.setSize(innerWidth, innerHeight);
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-    this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    cont.appendChild(this.renderer.domElement);
-
-    this.scene.add(new THREE.AmbientLight(0x222233, 0.4));
+    // Materials
+    matBeanNorm: null, matBeanEpic: null, matBeanLeg: null,
+    matGround: null, matSafeZone: null,
     
-    this.sunLight = new THREE.DirectionalLight(0xfff5dd, 1.5);
-    this.sunLight.castShadow = true;
-    this.sunLight.shadow.camera.top = 800;
-    this.sunLight.shadow.camera.bottom = -800;
-    this.sunLight.shadow.camera.left = -800;
-    this.sunLight.shadow.camera.right = 800;
-    this.sunLight.shadow.mapSize.width = 2048;
-    this.sunLight.shadow.mapSize.height = 2048;
-    this.scene.add(this.sunLight);
-
-    this.moonLight = new THREE.DirectionalLight(0x6688ff, 0.2);
-    this.scene.add(this.moonLight);
-
-    this.homeLight = new THREE.PointLight(0x00ffcc, 4.0, C.HOME_RAD * 3.5);
-    this.homeLight.position.set(0, 40, 0);
-    this.scene.add(this.homeLight);
-
-    this.beansGrp = new THREE.Group();
-    this.scene.add(this.beansGrp);
-    
-    this.enemiesGrp = new THREE.Group();
-    this.scene.add(this.enemiesGrp);
-
-    this.initMaterials();
-    this.buildSkybox();
-    this.buildHomeBase();
-    this.buildInitialTerrain();
-    this.initEntities();
-
-    window.addEventListener('resize', ()=>this.onResize());
-    document.addEventListener('keydown', Input.onKeyDown);
-    document.addEventListener('keyup', Input.onKeyUp);
-    document.addEventListener('mousedown', Input.onMouseDown);
-    document.body.addEventListener('click', ()=> { 
-      if(!UI.shopOpen) { document.body.requestPointerLock(); AudioSys.init(); }
-    });
-    document.addEventListener('mousemove', Input.onMouse);
-    document.addEventListener('pointerlockchange', ()=> {
-      UI.shopOpen = document.pointerLockElement !== document.body;
-      if(UI.shopOpen) {
-        document.getElementById('shop-panel').classList.add('open');
-        document.getElementById('controls-hint').classList.add('shop-open');
-        document.getElementById('weather').classList.add('shop-open');
-      } else {
-        document.getElementById('shop-panel').classList.remove('open');
-        document.getElementById('controls-hint').classList.remove('shop-open');
-        document.getElementById('weather').classList.remove('shop-open');
-      }
-    });
-
-    UI.init();
-    this.loop();
-  },
-
-  initMaterials() {
-    const gv = `
-      varying vec2 vUv; varying vec3 vWorldPos; varying vec3 vNormal;
-      void main() {
-        vUv = uv; vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
-        vNormal = normalize(normalMatrix * normal);
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }`;
-    const gf = `
-      varying vec2 vUv; varying vec3 vWorldPos; varying vec3 vNormal;
-      uniform float uTime; uniform vec3 uSunColor; uniform vec3 uSunDir;
-      float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
-      float noise(vec2 p){ vec2 i=floor(p); vec2 f=fract(p); f=f*f*(3.0-2.0*f); return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y); }
-      float fbm(vec2 p) { float v=0.0; float a=0.5; for(int i=0;i<5;i++){ v+=a*noise(p); p*=2.0; a*=0.5; } return v; }
-      void main() {
-        float n = fbm(vWorldPos.xz * 0.015);
-        float n2 = fbm(vWorldPos.xz * 0.05 + uTime*0.02);
-        float height = vWorldPos.y;
+    init() {
+        const container = document.getElementById('webgl-container');
         
-        vec3 rock = mix(vec3(0.1, 0.1, 0.12), vec3(0.2, 0.18, 0.22), n);
-        vec3 grass = mix(vec3(0.04, 0.15, 0.05), vec3(0.1, 0.25, 0.08), n);
-        vec3 snow = vec3(0.8, 0.85, 0.95);
-        vec3 sand = mix(vec3(0.6, 0.5, 0.3), vec3(0.7, 0.6, 0.4), n);
-        vec3 toxic = mix(vec3(0.1, 0.8, 0.2), vec3(0.0, 0.5, 0.1), n2);
+        // Scene & Fog
+        this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color(0x050508);
+        this.scene.fog = new THREE.FogExp2(0x050508, 0.003);
+
+        // Camera
+        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 2000);
+        this.scene.add(this.camera);
+
+        // Renderer
+        this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(this.renderer.domElement);
+
+        // Lights
+        const ambLight = new THREE.AmbientLight(0xffffff, 0.2);
+        this.scene.add(ambLight);
         
-        float slope = 1.0 - max(dot(vNormal, vec3(0,1,0)), 0.0);
-        vec3 col = mix(grass, rock, smoothstep(0.3, 0.6, slope));
-        col = mix(col, sand, 1.0 - smoothstep(2.0, 5.0, height));
-        col = mix(col, snow, smoothstep(40.0, 60.0, height));
+        const dirLight = new THREE.DirectionalLight(0xffaa55, 0.8);
+        dirLight.position.set(100, 200, 50);
+        dirLight.castShadow = true;
+        dirLight.shadow.camera.top = 200;
+        dirLight.shadow.camera.bottom = -200;
+        dirLight.shadow.camera.left = -200;
+        dirLight.shadow.camera.right = 200;
+        this.scene.add(dirLight);
         
-        if(height < 5.0 && slope < 0.1) {
-           float p = fbm(vWorldPos.xz * 0.1);
-           if(p > 0.6) col = mix(col, toxic, (p-0.6)*2.5);
-        }
+        // Home Base Light
+        const pointLight = new THREE.PointLight(0x00ffcc, 2.0, C.HOME_RADIUS * 2);
+        pointLight.position.set(0, 20, 0);
+        this.scene.add(pointLight);
+
+        // Groups
+        this.beansGroup = new THREE.Group();
+        this.scene.add(this.beansGroup);
         
-        float g1 = abs(fract(vWorldPos.x * 0.05) - 0.5) * 2.0;
-        float g2 = abs(fract(vWorldPos.z * 0.05) - 0.5) * 2.0;
-        float gline = 1.0 - smoothstep(0.0, 0.03, min(g1, g2));
-        col += vec3(0.0, 1.0, 0.5) * gline * 0.08;
+        this.chunkGroup = new THREE.Group();
+        this.scene.add(this.chunkGroup);
         
-        float dist = length(vWorldPos.xz);
-        float home = 1.0 - smoothstep(${(C.HOME_RAD-30.0).toFixed(1)}, ${(C.HOME_RAD).toFixed(1)}, dist);
-        col = mix(col, vec3(0.0, 0.4, 0.4), home * 0.5);
+        // Materials Init
+        this.initMaterials();
         
-        float diff = max(dot(vNormal, uSunDir), 0.0);
-        vec3 ambient = vec3(0.05, 0.05, 0.1);
-        col = col * (ambient + diff * uSunColor);
+        // Build Home Base
+        this.buildHomeBase();
+
+        // Initial Beans
+        for(let i=0; i<C.MAX_BEANS; i++) this.spawnBean();
+
+        // Event Listeners
+        window.addEventListener('resize', () => this.onResize());
+        document.addEventListener('keydown', Input.onKeyDown);
+        document.addEventListener('keyup', Input.onKeyUp);
         
-        gl_FragColor = vec4(col, 1.0);
-      }`;
-    
-    this.matGround = new THREE.ShaderMaterial({
-      vertexShader: gv, fragmentShader: gf,
-      uniforms: { 
-        uTime: { value: 0 }, 
-        uSunColor: { value: new THREE.Color(0xffffff) },
-        uSunDir: { value: new THREE.Vector3(0,1,0) }
-      }
-    });
+        // Pointer Lock for FPS controls
+        document.body.addEventListener('click', () => {
+            if(!UI.isShopOpen) document.body.requestPointerLock();
+        });
+        document.addEventListener('mousemove', Input.onMouseMove);
+        document.addEventListener('pointerlockchange', () => {
+            UI.isShopOpen = document.pointerLockElement !== document.body;
+            document.getElementById('crosshair').style.display = UI.isShopOpen ? 'none' : 'block';
+        });
 
-    this.matBeanN = new THREE.MeshStandardMaterial({color: 0xd2691e, roughness: 0.6, metalness: 0.1});
-    this.matBeanE = new THREE.MeshStandardMaterial({color: 0x9b30ff, roughness: 0.2, metalness: 0.8, emissive: 0x4a0082, emissiveIntensity: 0.5});
-    this.matBeanL = new THREE.MeshStandardMaterial({color: 0xffd700, roughness: 0.1, metalness: 1.0, emissive: 0xaa7700, emissiveIntensity: 0.6});
-    this.matBeanM = new THREE.MeshStandardMaterial({color: 0x00ff88, roughness: 0.0, metalness: 0.9, emissive: 0x00aa55, emissiveIntensity: 1.0});
-    
-    this.matEnemy = new THREE.MeshStandardMaterial({color: 0x88ff00, transparent: true, opacity: 0.8, roughness: 0.1, emissive: 0x225500});
-    this.matBoss = new THREE.MeshStandardMaterial({color: 0xff0000, transparent: true, opacity: 0.9, roughness: 0.0, emissive: 0xaa0000});
-  },
-
-  buildSkybox() {
-    this.skyGeo = new THREE.SphereGeometry(4000, 32, 32);
-    this.skyMat = new THREE.ShaderMaterial({
-      vertexShader: `varying vec3 vWorldPosition; void main() { vec4 worldPosition = modelMatrix * vec4(position, 1.0); vWorldPosition = worldPosition.xyz; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-      fragmentShader: `
-        varying vec3 vWorldPosition;
-        uniform vec3 topColor; uniform vec3 bottomColor; uniform float offset; uniform float exponent;
-        void main() {
-          float h = normalize(vWorldPosition + offset).y;
-          gl_FragColor = vec4(mix(bottomColor, topColor, max(pow(max(h, 0.0), exponent), 0.0)), 1.0);
-        }`,
-      uniforms: {
-        topColor: { value: new THREE.Color(0x0077ff) },
-        bottomColor: { value: new THREE.Color(0xffffff) },
-        offset: { value: 33 }, exponent: { value: 0.6 }
-      },
-      side: THREE.BackSide, depthWrite: false
-    });
-    this.scene.add(new THREE.Mesh(this.skyGeo, this.skyMat));
-    
-    const starsGeo = new THREE.BufferGeometry();
-    const scount = 10000;
-    const sverts = new Float32Array(scount*3);
-    for(let i=0; i<scount; i++) {
-      let r = 3500 + Math.random()*400;
-      let theta = Math.random()*Math.PI*2;
-      let phi = Math.acos(2*Math.random()-1);
-      sverts[i*3] = r * Math.sin(phi) * Math.cos(theta);
-      sverts[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
-      sverts[i*3+2] = r * Math.cos(phi);
-    }
-    starsGeo.setAttribute('position', new THREE.BufferAttribute(sverts, 3));
-    this.stars = new THREE.Points(starsGeo, new THREE.PointsMaterial({color: 0xffffff, size: 2.5, transparent: true, opacity: 0.0}));
-    this.scene.add(this.stars);
-  },
-
-  buildHomeBase() {
-    const altar = new THREE.Mesh(new THREE.CylinderGeometry(8, 12, 20, 32), new THREE.MeshStandardMaterial({color: 0x111118, emissive: 0x00ffcc, emissiveIntensity: 0.2, roughness: 0.2, metalness: 0.9}));
-    altar.position.y = 10; altar.castShadow = true; altar.receiveShadow = true;
-    this.scene.add(altar);
-
-    const core = new THREE.Mesh(new THREE.IcosahedronGeometry(4, 1), new THREE.MeshStandardMaterial({color: 0x00ffcc, emissive: 0x00ffcc, emissiveIntensity: 2.5, wireframe: true}));
-    core.position.y = 25;
-    this.scene.add(core);
-
-    const dome = new THREE.Mesh(new THREE.SphereGeometry(C.HOME_RAD, 32, 16, 0, Math.PI*2, 0, Math.PI/2), new THREE.MeshBasicMaterial({color: 0x00ffcc, transparent: true, opacity: 0.05, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending}));
-    this.scene.add(dome);
-
-    this.rings = [];
-    for(let i=0; i<3; i++) {
-      const r = new THREE.Mesh(new THREE.TorusGeometry(C.HOME_RAD*(0.3 + i*0.2), 0.5 + i*0.2, 8, 64), new THREE.MeshStandardMaterial({color: 0x00ffcc, emissive: 0x00ffcc, emissiveIntensity: 0.8 - i*0.2, transparent: true, opacity: 0.6}));
-      r.position.y = 25 + i*15;
-      this.rings.push(r);
-      this.scene.add(r);
-    }
-  },
-
-  buildInitialTerrain() {
-    for(let cx = -5; cx <= 5; cx++) {
-      for(let cz = -5; cz <= 5; cz++) {
-        this.buildChunk(cx, cz);
-      }
-    }
-  },
-
-  buildChunk(cx, cz) {
-    const key = `${cx}_${cz}`;
-    if(this.chunkMap.has(key)) return;
-    const size = C.CHUNK, segs = 40;
-    const geo = new THREE.PlaneGeometry(size, size, segs, segs);
-    geo.rotateX(-Math.PI/2);
-    const pos = geo.attributes.position, wx = cx*size, wz = cz*size;
-    for(let i=0; i<pos.count; i++) {
-      const x = pos.getX(i) + wx, z = pos.getZ(i) + wz;
-      pos.setY(i, getTerrainY(x, z));
-    }
-    pos.needsUpdate = true;
-    geo.computeVertexNormals();
-    const mesh = new THREE.Mesh(geo, this.matGround);
-    mesh.position.set(wx, 0, wz);
-    mesh.receiveShadow = true;
-    this.scene.add(mesh);
-    this.chunkMap.set(key, mesh);
-
-    const rng = new (function(s){this.s=s;this.n=function(){this.s=(this.s*9301+49297)%233280;return this.s/233280;}})(Math.abs(hash2(cx, cz, 777)));
-    const decorCount = 5 + Math.floor(rng.n() * 15);
-    for(let i=0; i<decorCount; i++) {
-      const rx = wx + (rng.n() - 0.5) * size;
-      const rz = wz + (rng.n() - 0.5) * size;
-      if(Math.hypot(rx, rz) < C.HOME_RAD + 20) continue;
-      const ry = getTerrainY(rx, rz);
-      const type = rng.n();
-      
-      if(type < 0.3) {
-        const s = 4 + rng.n() * 12;
-        const m = new THREE.Mesh(new THREE.DodecahedronGeometry(s, 1), new THREE.MeshStandardMaterial({color: 0x333333, roughness: 0.9}));
-        m.position.set(rx, ry + s*0.3, rz);
-        m.rotation.set(rng.n()*3, rng.n()*3, rng.n()*3);
-        m.castShadow = true; m.receiveShadow = true;
-        this.scene.add(m);
-      } else if (type < 0.6) {
-        const h = 10 + rng.n()*30, r = 1 + rng.n()*3;
-        const m = new THREE.Mesh(new THREE.CylinderGeometry(0, r, h, 6), new THREE.MeshStandardMaterial({color: new THREE.Color().setHSL(rng.n()*0.2 + 0.5, 0.8, 0.4), emissive: new THREE.Color().setHSL(rng.n()*0.2 + 0.5, 1, 0.2), roughness: 0.1}));
-        m.position.set(rx, ry + h/2, rz);
-        m.castShadow = true;
-        this.scene.add(m);
-      }
-    }
-  },
-
-  initEntities() {
-    for(let i=0; i<C.MAX_BEANS; i++) this.spawnBean();
-    for(let i=0; i<20; i++) this.spawnEnemy(); 
-  },
-
-  spawnBean() {
-    let x, z, tries = 0;
-    do {
-      x = (Math.random()-0.5) * C.WORLD * 0.8;
-      z = (Math.random()-0.5) * C.WORLD * 0.8;
-      tries++;
-    } while(Math.hypot(x, z) < C.HOME_RAD + 30 && tries < 50);
-    
-    const y = getTerrainY(x, z) + 2.5;
-    const r = Math.random();
-    let tier, mat, val, size;
-    
-    if(r < 0.01) { tier = 4; mat = this.matBeanM; val = 500; size = 4; }
-    else if(r < 0.05) { tier = 3; mat = this.matBeanL; val = 100; size = 3; }
-    else if(r < 0.20) { tier = 2; mat = this.matBeanE; val = 20; size = 2; }
-    else { tier = 1; mat = this.matBeanN; val = 1; size = 1.2; }
-    
-    const mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(size, 1), mat);
-    mesh.position.set(x, y, z);
-    mesh.castShadow = true;
-    mesh.userData = { tier, val, baseY: y, phase: Math.random()*Math.PI*2, rotX: (Math.random()-0.5)*0.05, rotY: (Math.random()-0.5)*0.05 };
-    
-    if(tier >= 2) mesh.add(new THREE.PointLight(tier===4 ? 0x00ff88 : tier===3 ? 0xffd700 : 0x9b30ff, 1.0, size*15));
-    
-    this.beansGrp.add(mesh);
-    this.beans.push(mesh);
-  },
-
-  spawnEnemy() {
-    if(this.enemies.length >= C.MAX_ENEMIES) return;
-    let x = State.pos.x + (Math.random()-0.5) * 800;
-    let z = State.pos.z + (Math.random()-0.5) * 800;
-    if(Math.hypot(x, z) < C.HOME_RAD + 50) return; 
-    
-    const y = getTerrainY(x, z);
-    const size = 3 + Math.random() * 4;
-    const hp = Math.floor(size * 20 * (1 + State.rebirths*0.5));
-    
-    const mesh = new THREE.Mesh(new THREE.SphereGeometry(size, 16, 16), this.matEnemy);
-    mesh.position.set(x, y + size, z);
-    mesh.castShadow = true;
-    mesh.userData = { hp, maxHp: hp, size, speed: 15 + Math.random()*15, vy: 0, isBoss: false };
-    
-    this.enemiesGrp.add(mesh);
-    this.enemies.push(mesh);
-  },
-
-  spawnBoss() {
-    if(this.bossActive) return;
-    let x = State.pos.x + 400 * (Math.random()>0.5?1:-1);
-    let z = State.pos.z + 400 * (Math.random()>0.5?1:-1);
-    const y = getTerrainY(x, z);
-    const size = 25;
-    const hp = 50000 * (1 + State.rebirths*2);
-    
-    const mesh = new THREE.Mesh(new THREE.DodecahedronGeometry(size, 2), this.matBoss);
-    mesh.position.set(x, y + size, z);
-    mesh.castShadow = true;
-    mesh.userData = { hp, maxHp: hp, size, speed: 28, vy: 0, isBoss: true };
-    
-    const light = new THREE.PointLight(0xff0000, 5, 200);
-    mesh.add(light);
-    
-    this.enemiesGrp.add(mesh);
-    this.enemies.push(mesh);
-    this.bossActive = true;
-    
-    document.getElementById('boss-alert').style.display = 'block';
-    setTimeout(()=> document.getElementById('boss-alert').style.display = 'none', 4000);
-    AudioSys.playTone(80, 'sawtooth', 3.0, 1.0, 40);
-  },
-
-  spawnParticles(pos, color, count, speed, life, size) {
-    for(let i=0; i<count; i++) {
-      if(this.particles.length > 5000) break;
-      const m = new THREE.Mesh(new THREE.BoxGeometry(size, size, size), new THREE.MeshBasicMaterial({color, transparent: true, opacity: 1, depthWrite: false, blending: THREE.AdditiveBlending}));
-      m.position.copy(pos);
-      const angle = Math.random() * Math.PI * 2;
-      const elev = (Math.random() - 0.2) * Math.PI;
-      const sp = speed * (0.4 + Math.random() * 0.6);
-      m.userData = { vel: new THREE.Vector3(Math.cos(angle)*Math.cos(elev)*sp, Math.sin(elev)*sp + speed*0.5, Math.sin(angle)*Math.cos(elev)*sp), life, maxLife: life };
-      this.scene.add(m);
-      this.particles.push(m);
-    }
-  },
-
-  bigExplosion(pos, color, count) {
-    this.spawnParticles(pos, color, count, 80, 2.0, 3);
-  },
-
-  onResize() {
-    this.cam.aspect = innerWidth / innerHeight;
-    this.cam.updateProjectionMatrix();
-    this.renderer.setSize(innerWidth, innerHeight);
-  },
-
-  updateTimeOfDay(dt) {
-    State.timeOfDay = (State.timeOfDay + dt * 0.05) % 24; 
-    const timeRatio = State.timeOfDay / 24;
-    const sunAngle = (timeRatio - 0.25) * Math.PI * 2;
-    
-    this.sunLight.position.set(Math.cos(sunAngle)*1000, Math.sin(sunAngle)*1000, Math.sin(sunAngle)*500);
-    this.moonLight.position.set(-Math.cos(sunAngle)*1000, -Math.sin(sunAngle)*1000, -Math.sin(sunAngle)*500);
-    
-    let isDay = Math.sin(sunAngle) > 0;
-    this.sunLight.intensity = isDay ? Math.sin(sunAngle) * 2.0 : 0;
-    this.moonLight.intensity = !isDay ? -Math.sin(sunAngle) * 0.5 : 0;
-    
-    const dayTop = new THREE.Color(0x0077ff); const dayBot = new THREE.Color(0xffffff);
-    const nightTop = new THREE.Color(0x000011); const nightBot = new THREE.Color(0x0a0a2a);
-    const sunsetTop = new THREE.Color(0x5500ff); const sunsetBot = new THREE.Color(0xff5500);
-    
-    let tCol, bCol;
-    if(State.timeOfDay >= 5 && State.timeOfDay < 8) { 
-      let blend = (State.timeOfDay - 5) / 3;
-      tCol = nightTop.clone().lerp(sunsetTop, blend); bCol = nightBot.clone().lerp(sunsetBot, blend);
-    } else if(State.timeOfDay >= 8 && State.timeOfDay < 17) { 
-      let blend = (State.timeOfDay - 8) / 9;
-      tCol = sunsetTop.clone().lerp(dayTop, Math.min(blend*3, 1)); bCol = sunsetBot.clone().lerp(dayBot, Math.min(blend*3, 1));
-    } else if(State.timeOfDay >= 17 && State.timeOfDay < 20) { 
-      let blend = (State.timeOfDay - 17) / 3;
-      tCol = dayTop.clone().lerp(sunsetTop, blend); bCol = dayBot.clone().lerp(sunsetBot, blend);
-    } else { 
-      let blend = (State.timeOfDay >= 20 ? State.timeOfDay - 20 : State.timeOfDay + 4) / 9;
-      tCol = sunsetTop.clone().lerp(nightTop, Math.min(blend*3, 1)); bCol = sunsetBot.clone().lerp(nightBot, Math.min(blend*3, 1));
-    }
-    
-    this.skyMat.uniforms.topColor.value.copy(tCol);
-    this.skyMat.uniforms.bottomColor.value.copy(bCol);
-    this.scene.fog.color.copy(bCol);
-    this.stars.material.opacity = !isDay ? -Math.sin(sunAngle) : 0;
-    
-    if(this.matGround.uniforms) {
-      this.matGround.uniforms.uSunColor.value.copy(isDay ? this.sunLight.color.clone().multiplyScalar(this.sunLight.intensity) : this.moonLight.color.clone().multiplyScalar(this.moonLight.intensity));
-      this.matGround.uniforms.uSunDir.value.copy(isDay ? this.sunLight.position.clone().normalize() : this.moonLight.position.clone().normalize());
-    }
-  },
-
-  loop() {
-    requestAnimationFrame(() => this.loop());
-    const dt = Math.min(this.clock.getDelta(), 0.05);
-    const time = this.clock.getElapsedTime();
-
-    if(!UI.shopOpen && State.hp > 0) {
-      Input.update(dt);
-      Logic.update(dt, time);
-      Logic.updateEnemies(dt);
-    }
-
-    this.updateTimeOfDay(dt);
-
-    if (State.isSprinting) {
-        this.spawnParticles(State.pos.clone().add(new THREE.Vector3(0,-1,0)), 0x39ff14, 1, 0, 0.4, 1.5);
-    }
-
-    const cx = Math.round(State.pos.x / C.CHUNK);
-    const cz = Math.round(State.pos.z / C.CHUNK);
-    for(let i=cx-6; i<=cx+6; i++) {
-      for(let j=cz-6; j<=cz+6; j++) {
-        this.buildChunk(i, j);
-      }
-    }
-
-    this.rings.forEach((r, i) => {
-      r.rotation.y = time * (0.5 + i*0.2);
-      r.rotation.x = Math.sin(time + i) * 0.2;
-    });
-
-    this.beans.forEach(b => {
-      b.rotation.x += b.userData.rotX;
-      b.rotation.y += b.userData.rotY;
-      b.position.y = b.userData.baseY + Math.sin(time*3 + b.userData.phase)*1.5;
-    });
-
-    this.enemies.forEach(e => {
-      e.scale.y = 1.0 + Math.sin(time*8 + e.position.x)*0.1;
-      e.scale.x = 1.0 - Math.sin(time*8 + e.position.x)*0.05;
-      e.scale.z = e.scale.x;
-    });
-
-    for(let i=this.particles.length-1; i>=0; i--) {
-      const p = this.particles[i];
-      p.position.addScaledVector(p.userData.vel, dt);
-      p.userData.vel.y -= 40 * dt; 
-      
-      const ty = getTerrainY(p.position.x, p.position.z);
-      if(p.position.y < ty) {
-        p.position.y = ty;
-        p.userData.vel.y *= -0.5; 
-        p.userData.vel.x *= 0.8;
-        p.userData.vel.z *= 0.8;
-      }
-      
-      p.userData.life -= dt;
-      const lt = p.userData.life / p.userData.maxLife;
-      p.material.opacity = lt;
-      p.scale.setScalar(Math.max(0.01, lt));
-      if(p.userData.life <= 0) {
-        this.scene.remove(p);
-        p.geometry.dispose(); p.material.dispose();
-        this.particles.splice(i, 1);
-      }
-    }
-
-    if(this.matGround) this.matGround.uniforms.uTime.value = time;
-    this.renderer.render(this.scene, this.cam);
-    UI.renderMinimap();
-  }
-};
-
-// ==============================================================================
-// 5. INPUT & MOVEMENT LOGIC
-// ==============================================================================
-const Input = {
-  keys: { w:0, a:0, s:0, d:0, shift:0, space:0 },
-  
-  onKeyDown(e) {
-    if(e.code==='KeyW') Input.keys.w=1; if(e.code==='KeyA') Input.keys.a=1;
-    if(e.code==='KeyS') Input.keys.s=1; if(e.code==='KeyD') Input.keys.d=1;
-    if(e.code==='ShiftLeft') Input.keys.shift=1;
-    if(e.code==='Space') { e.preventDefault(); Input.keys.space=1; }
-    if(e.code==='KeyE' && State.inBase) Logic.digestFart();
-    if(e.code==='KeyF') Logic.megaFart();
-    if(e.code==='Tab') { e.preventDefault(); UI.toggleShop(); }
-  },
-  
-  onKeyUp(e) {
-    if(e.code==='KeyW') Input.keys.w=0; if(e.code==='KeyA') Input.keys.a=0;
-    if(e.code==='KeyS') Input.keys.s=0; if(e.code==='KeyD') Input.keys.d=0;
-    if(e.code==='ShiftLeft') Input.keys.shift=0; if(e.code==='Space') Input.keys.space=0;
-  },
-  
-  onMouseDown(e) {
-    if(document.pointerLockElement === document.body && e.button === 0) {
-      Logic.attack();
-    }
-  },
-  
-  onMouse(e) {
-    if(document.pointerLockElement === document.body) {
-      State.yaw -= e.movementX * 0.0025;
-      State.pitch = Math.max(-0.4, Math.min(1.4, State.pitch + e.movementY * 0.0025));
-    }
-  },
-  
-  update(dt) {
-    const dir = new THREE.Vector3();
-    if(Input.keys.w) dir.z -= 1; if(Input.keys.s) dir.z += 1;
-    if(Input.keys.a) dir.x -= 1; if(Input.keys.d) dir.x += 1;
-    if(dir.lengthSq() > 0) dir.normalize();
-    dir.applyAxisAngle(new THREE.Vector3(0,1,0), State.yaw);
-
-    State.isSprinting = !!Input.keys.shift && State.stamina > 0 && dir.lengthSq() > 0 && State.isGrounded;
-    let speed = State.baseSpeed * State.multSpeed;
-    
-    if(State.isSprinting) {
-      speed *= State.sprintMult;
-      State.stamina -= 30 * dt;
-    } else {
-      State.stamina += 20 * dt;
-    }
-    State.stamina = Math.max(0, Math.min(State.maxStamina, State.stamina));
-
-    State.vel.x = lerp(State.vel.x, dir.x * speed, 10 * dt);
-    State.vel.z = lerp(State.vel.z, dir.z * speed, 10 * dt);
-    
-    if(Input.keys.space) {
-        if(State.isGrounded && State.stamina >= 10) {
-            State.vel.y = State.jumpForce * State.jumpMult;
-            State.stamina -= 10;
-            State.isGrounded = false;
-            Engine.spawnParticles(State.pos.clone().add(new THREE.Vector3(0,-2,0)), 0xffffff, 15, 10, 0.5, 1);
-        } else if (!State.isGrounded && State.stamina > 0.5) { // Jetpack
-            State.vel.y += 65 * dt;
-            State.stamina -= 35 * dt;
-            Engine.spawnParticles(State.pos.clone().add(new THREE.Vector3(0,-1.5,0)), 0xff8800, 2, 5, 0.3, 0.5);
-        }
-    }
-    
-    State.vel.y -= State.gravity * dt;
-    
-    State.pos.addScaledVector(State.vel, dt);
-    
-    const half = C.WORLD/2;
-    State.pos.x = Math.max(-half, Math.min(half, State.pos.x));
-    State.pos.z = Math.max(-half, Math.min(half, State.pos.z));
-    
-    const ty = getTerrainY(State.pos.x, State.pos.z);
-    if(State.pos.y <= ty + 3.5) {
-      State.pos.y = ty + 3.5;
-      State.vel.y = 0;
-      State.isGrounded = true;
-    } else {
-      State.isGrounded = false;
-    }
-    
-    Engine.playerGrp.position.copy(State.pos);
-    if(dir.lengthSq() > 0) {
-      Engine.playerGrp.rotation.y = lerp(Engine.playerGrp.rotation.y, Math.atan2(dir.x, dir.z), 15 * dt);
-    }
-
-    const camDist = 22;
-    const camOffset = new THREE.Vector3(0, 0, camDist);
-    camOffset.applyAxisAngle(new THREE.Vector3(1,0,0), -State.pitch);
-    camOffset.applyAxisAngle(new THREE.Vector3(0,1,0), State.yaw);
-    
-    let targetCamPos = State.pos.clone().add(camOffset).add(new THREE.Vector3(0, 6, 0));
-    const cty = getTerrainY(targetCamPos.x, targetCamPos.z);
-    if(targetCamPos.y < cty + 2) targetCamPos.y = cty + 2;
-    
-    Engine.cam.position.lerp(targetCamPos, 20 * dt);
-    Engine.cam.lookAt(State.pos.x, State.pos.y + 5, State.pos.z);
-  }
-};
-
-// ==============================================================================
-// 6. GAME LOGIC & SYSTEMS
-// ==============================================================================
-const Logic = {
-  megaCooldown: 0,
-  
-  update(dt, time) {
-    this.checkZone();
-    this.processCollection();
-    this.processPassive(dt);
-    this.processCombo(dt);
-    this.processHeat(dt);
-    this.processRegen(dt);
-    this.checkAchievements();
-    this.updateQuests();
-
-    if(State.timeOfDay >= 21 || State.timeOfDay < 4) {
-        if(!State.bossSpawnedThisNight) { 
-            Engine.spawnBoss(); 
-            State.bossSpawnedThisNight = true; 
-        }
-    } else {
-        State.bossSpawnedThisNight = false;
-    }
-    
-    if(Math.floor(time*5) !== Math.floor((time-dt)*5)) UI.updateStats();
-    
-    State.fartsThisSec = State.fartAccum;
-    State.fartAccum = 0;
-    
-    document.getElementById('txt-alt').innerText = Math.floor(getTerrainY(State.pos.x, State.pos.z)) + 'm';
-    const dist = Math.floor(Math.hypot(State.pos.x, State.pos.z));
-    document.getElementById('txt-dist').innerText = dist + 'm';
-    this.progressQuest('dist', dist);
-    
-    const biome = getBiome(State.pos.x, State.pos.z);
-    document.getElementById('txt-biome').innerText = C.BIOMES[biome];
-    document.getElementById('txt-biome').style.color = C.BIOME_COLORS[biome];
-    
-    let h = Math.floor(State.timeOfDay);
-    let m = Math.floor((State.timeOfDay - h) * 60);
-    document.getElementById('txt-time').innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
-  },
-
-  checkZone() {
-    State.inBase = Math.hypot(State.pos.x, State.pos.z) < C.HOME_RAD;
-    const ip = document.getElementById('iprompt');
-    const fx = document.getElementById('fx');
-    if(State.inBase && State.beansInStomach > 0) {
-      ip.style.display = 'block';
-      fx.className = 'fx-heal';
-      State.hp = Math.min(State.maxHp, State.hp + 10);
-      State.stamina = State.maxStamina;
-    } else {
-      ip.style.display = 'none';
-      if(State.isSprinting) fx.className = 'fx-sprint';
-      else if(fx.className !== 'fx-damage' && fx.className !== 'fx-fart') fx.className = '';
-    }
-  },
-
-  processCollection() {
-    if(State.beansInStomach >= State.stomachCap) return;
-    const rad = 10 + (State.multRadius * 3);
-    for(let i=Engine.beans.length-1; i>=0; i--) {
-      const b = Engine.beans[i];
-      if(State.pos.distanceTo(b.position) < rad) {
-        const val = b.userData.val;
-        State.beansInStomach = Math.min(State.stomachCap, State.beansInStomach + val);
-        State.beansEaten += val;
-        this.progressQuest('eat', val);
+        UI.init();
+        this.loop();
         
-        const now = Engine.clock.getElapsedTime();
-        if(now - State.lastFartTime < State.comboDuration) State.comboMult = Math.min(State.comboMult + 0.5, 999);
-        else State.comboMult = 1;
-        State.lastFartTime = now;
-        State.comboTimer = State.comboDuration;
-        this.progressQuest('combo', State.comboMult);
-        
-        AudioSys.playCollect(b.userData.tier);
-        if(b.userData.tier >= 3) {
-          Engine.bigExplosion(b.position.clone(), b.userData.tier===4 ? 0x00ff88 : 0xffd700, 40);
-          UI.toast(`+${val} ${b.userData.tier===4 ? 'MYTHIC' : 'LEGENDARY'} BEAN`, b.userData.tier===4 ? 'var(--tertiary)' : 'var(--gold)');
-        }
-        
-        Engine.beansGrp.remove(b);
-        Engine.beans.splice(i, 1);
-        Engine.spawnBean();
-        if(State.beansInStomach >= State.stomachCap) break;
-      }
-    }
-  },
+        setTimeout(() => {
+            document.getElementById('loading-screen').style.opacity = '0';
+            setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 1000);
+        }, 1500);
+    },
 
-  processPassive(dt) {
-    if(State.autoFart > 0) {
-      const gen = State.autoFart * State.multFart * State.comboMult * dt;
-      State.farts += gen;
-      State.fartAccum += gen;
-      this.progressQuest('fart', gen);
-    }
-  },
-
-  digestFart() {
-    if(!State.inBase || State.beansInStomach <= 0) return;
-    let amt = Math.min(15 * State.multDigest, State.beansInStomach);
-    if(amt > 0) {
-      State.beansInStomach -= amt;
-      State.heat = Math.min(100, State.heat + amt * 0.5);
-      const gen = amt * State.multFart * State.comboMult;
-      State.farts += gen;
-      State.fartAccum += gen;
-      this.progressQuest('fart', gen);
-      
-      AudioSys.playFart(0.5);
-      Engine.spawnParticles(State.pos.clone().add(new THREE.Vector3(0, -1, -2)), 0x39ff14, 12, 20, 1.2, 1.5);
-      
-      const fx = document.getElementById('fx');
-      fx.className = 'fx-fart';
-      setTimeout(()=> { if(fx.className === 'fx-fart') fx.className = ''; }, 200);
-    }
-  },
-
-  megaFart() {
-    if(this.megaCooldown > 0) { UI.toast('MEGA FART COOLING DOWN', 'var(--danger)'); return; }
-    if(State.beansInStomach < State.stomachCap * 0.2) { UI.toast('STOMACH TOO EMPTY!', 'var(--danger)'); return; }
-    
-    const amt = State.beansInStomach;
-    const gen = amt * State.multFart * State.comboMult * 15;
-    State.farts += gen;
-    State.beansInStomach = 0;
-    State.heat = 100;
-    this.megaCooldown = 45;
-    this.progressQuest('fart', gen);
-    
-    AudioSys.playFart(2.0);
-    Engine.bigExplosion(State.pos.clone(), 0x39ff14, 300);
-    Engine.bigExplosion(State.pos.clone(), 0xff8800, 200);
-    
-    Engine.enemies.forEach(e => {
-      if(e.position.distanceTo(State.pos) < 60) {
-        e.userData.hp -= 999999; 
-      }
-    });
-    
-    document.getElementById('fx').style.boxShadow = 'inset 0 0 600px rgba(57,255,20,0.9)';
-    setTimeout(()=> { document.getElementById('fx').style.boxShadow = ''; }, 1000);
-    
-    UI.toast(`MEGA FART! +${UI.fmt(gen)} FARTS`, 'var(--primary)');
-    UI.showCombo(State.comboMult);
-    setTimeout(()=> { this.megaCooldown = 0; }, 45000);
-  },
-
-  attack() {
-    if(State.stamina < 15 || State.inBase) return;
-    State.stamina -= 15;
-    
-    const fwd = new THREE.Vector3(0,0,-1).applyAxisAngle(new THREE.Vector3(0,1,0), State.yaw);
-    const atkPos = State.pos.clone().add(fwd.multiplyScalar(6));
-    
-    Engine.spawnParticles(atkPos, 0xffffff, 10, 30, 0.2, 2);
-    AudioSys.playTone(300, 'sawtooth', 0.1, 0.4, 100);
-    
-    Engine.enemies.forEach(e => {
-      if(e.position.distanceTo(atkPos) < (e.userData.isBoss ? 20 : 8)) {
-        e.userData.hp -= State.attackDmg;
-        Engine.spawnParticles(e.position, e.userData.isBoss ? 0xff0000 : 0x88ff00, 15, 20, 0.5, 1);
-        AudioSys.playHit();
-        
-        if(!e.userData.isBoss) {
-            const kb = e.position.clone().sub(State.pos).normalize().multiplyScalar(40);
-            e.position.add(kb);
-        }
-      }
-    });
-  },
-
-  updateEnemies(dt) {
-    if(State.inBase) return; 
-    
-    for(let i=Engine.enemies.length-1; i>=0; i--) {
-      const e = Engine.enemies[i];
-      
-      if(e.userData.hp <= 0) {
-        if(e.userData.isBoss) {
-            Engine.bigExplosion(e.position, 0xff0000, 500);
-            Engine.bossActive = false;
-            State.tokens += 10;
-            UI.toast("NIGHTMARE SLAIN! +10 ASTRAL TOKENS", "var(--gold)");
-            this.progressQuest('boss', 1);
-        } else {
-            Engine.spawnParticles(e.position, 0x88ff00, 50, 30, 1.5, 2);
-            State.slimesKilled++;
-            this.progressQuest('kill', 1);
-            
-            const dropCount = 1 + Math.floor(Math.random()*3);
-            for(let j=0; j<dropCount; j++) {
-               State.beansEaten += 5; 
-               State.farts += 100 * State.multFart;
+    initMaterials() {
+        // Custom Shader for Grid Ground
+        const groundVert = `
+            varying vec2 vUv;
+            varying vec3 vPos;
+            void main() {
+                vUv = uv;
+                vPos = (modelMatrix * vec4(position, 1.0)).xyz;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
             }
-            setTimeout(()=> Engine.spawnEnemy(), 2000);
-        }
-        Engine.enemiesGrp.remove(e);
-        Engine.enemies.splice(i, 1);
-        continue;
-      }
-      
-      const dist = e.position.distanceTo(State.pos);
-      if(dist < (e.userData.isBoss ? 400 : 150)) {
-        const dir = State.pos.clone().sub(e.position).normalize();
-        e.position.x += dir.x * e.userData.speed * dt;
-        e.position.z += dir.z * e.userData.speed * dt;
+        `;
+        const groundFrag = `
+            varying vec2 vUv;
+            varying vec3 vPos;
+            uniform vec3 color;
+            void main() {
+                float grid1 = abs(fract(vPos.x * 0.05) - 0.5) * 2.0;
+                float grid2 = abs(fract(vPos.z * 0.05) - 0.5) * 2.0;
+                float line = min(grid1, grid2);
+                float glow = 1.0 - smoothstep(0.0, 0.05, line);
+                
+                vec3 baseColor = vec3(0.05, 0.05, 0.08);
+                vec3 gridColor = vec3(0.2, 0.8, 0.2) * glow * 0.5;
+                
+                // Dist to center
+                float dist = length(vPos.xz);
+                float safeZone = 1.0 - smoothstep(${C.HOME_RADIUS - 10.0}, ${C.HOME_RADIUS}, dist);
+                vec3 finalColor = mix(baseColor + gridColor, vec3(0.0, 0.2, 0.2), safeZone * 0.5);
+                
+                gl_FragColor = vec4(finalColor, 1.0);
+            }
+        `;
         
-        const ty = getTerrainY(e.position.x, e.position.z);
-        e.position.y = ty + e.userData.size;
-        
-        if(dist < e.userData.size + 4) {
-          State.hp -= (e.userData.isBoss ? 40 : 15) * dt;
-          document.getElementById('fx').className = 'fx-damage';
-          setTimeout(()=>{ if(document.getElementById('fx').className==='fx-damage') document.getElementById('fx').className='';}, 100);
-          
-          if(State.hp <= 0) {
-            this.handleDeath();
-          }
+        this.matGround = new THREE.ShaderMaterial({
+            vertexShader: groundVert,
+            fragmentShader: groundFrag,
+            uniforms: { color: { value: new THREE.Color(0x111111) } }
+        });
+
+        // Bean Materials
+        this.matBeanNorm = new THREE.MeshStandardMaterial({ color: 0xd2691e, roughness: 0.7, metalness: 0.2 });
+        this.matBeanEpic = new THREE.MeshStandardMaterial({ color: 0x8a2be2, roughness: 0.3, metalness: 0.8, emissive: 0x4a0082 });
+        this.matBeanLeg = new THREE.MeshStandardMaterial({ color: 0xffd700, roughness: 0.1, metalness: 1.0, emissive: 0x886600 });
+    },
+
+    buildHomeBase() {
+        // Huge ground plane
+        const geoPlane = new THREE.PlaneGeometry(C.WORLD_SIZE, C.WORLD_SIZE, 10, 10);
+        geoPlane.rotateX(-Math.PI / 2);
+        const meshPlane = new THREE.Mesh(geoPlane, this.matGround);
+        meshPlane.receiveShadow = true;
+        this.scene.add(meshPlane);
+
+        // Safe Zone Dome
+        const geoDome = new THREE.SphereGeometry(C.HOME_RADIUS, 32, 16, 0, Math.PI*2, 0, Math.PI/2);
+        const matDome = new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.1, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
+        const meshDome = new THREE.Mesh(geoDome, matDome);
+        this.scene.add(meshDome);
+
+        // Center Toilet/Altar
+        const geoAltar = new THREE.CylinderGeometry(5, 5, 10, 16);
+        const matAltar = new THREE.MeshStandardMaterial({ color: 0x333333, emissive: 0x00ffcc, emissiveIntensity: 0.2 });
+        const meshAltar = new THREE.Mesh(geoAltar, matAltar);
+        meshAltar.position.y = 5;
+        meshAltar.castShadow = true;
+        this.scene.add(meshAltar);
+    },
+
+    spawnBean() {
+        let x, z;
+        while(true) {
+            x = (Math.random() - 0.5) * C.WORLD_SIZE * 0.8;
+            z = (Math.random() - 0.5) * C.WORLD_SIZE * 0.8;
+            if (Math.hypot(x, z) > C.HOME_RADIUS + 20) break;
         }
-      }
-    }
-  },
-
-  handleDeath() {
-    UI.toast('YOU DIED. LOST 50% GATHERED BEANS.', 'var(--danger)');
-    State.beansInStomach = Math.floor(State.beansInStomach * 0.5);
-    State.pos.set(0, 15, 0);
-    State.hp = State.maxHp;
-    State.heat = 0;
-    document.getElementById('fx').style.background = 'rgba(255,0,0,0.8)';
-    setTimeout(()=> document.getElementById('fx').style.background = 'transparent', 1000);
-  },
-
-  processCombo(dt) {
-    if(State.comboTimer > 0) {
-      State.comboTimer -= dt;
-      if(State.comboTimer <= 0) { State.comboMult = 1; State.comboTimer = 0; }
-    }
-    document.getElementById('txt-combo').innerText = `x${State.comboMult.toFixed(1)}`;
-  },
-
-  processHeat(dt) {
-    State.heat = Math.max(0, State.heat - 8 * dt);
-    document.getElementById('bf-heat').style.width = State.heat + '%';
-    const status = State.heat > 85 ? 'CRITICAL!' : State.heat > 50 ? 'HOT' : State.heat > 20 ? 'WARM' : 'COOL';
-    document.getElementById('heat-txt').innerText = status;
-    document.getElementById('txt-heat').innerText = status;
-    document.getElementById('txt-heat').style.color = State.heat > 85 ? '#ff0000' : State.heat > 50 ? '#ff4400' : '#888';
-  },
-  
-  processRegen(dt) {
-    if(State.hp < State.maxHp && State.hpRegen > 0) {
-      State.hp = Math.min(State.maxHp, State.hp + State.hpRegen * dt);
-    }
-  },
-
-  checkAchievements() {
-    Achievements.forEach(a => {
-      if(!unlockedAch.has(a.id) && a.check()) {
-        unlockedAch.add(a.id);
-        UI.showAchievement(a.name);
-      }
-    });
-  },
-  
-  updateQuests() {
-    const qList = document.getElementById('quest-list');
-    qList.innerHTML = '';
-    let activeCount = 0;
-    
-    DB.quests.forEach(q => {
-      if(q.done) return;
-      activeCount++;
-      if(activeCount > 3) return;
-      
-      let p = Math.floor((q.prog / q.target) * 100);
-      qList.innerHTML += `
-        <div class="quest-item">
-          <div class="quest-title">${q.title}</div>
-          <div style="font-size:11px;color:#aaa;margin-bottom:4px;">${q.desc}</div>
-          <div class="barwrap" style="height:10px;margin-bottom:0;">
-            <div class="barfill" style="width:${p}%;background:var(--gold);box-shadow:0 0 8px var(--gold-glow);"></div>
-          </div>
-          <div class="quest-prog">${UI.fmt(q.prog)} / ${UI.fmt(q.target)}</div>
-        </div>
-      `;
-    });
-    
-    if(activeCount === 0) qList.innerHTML = '<div style="color:#777;font-size:12px;font-style:italic;">All directives complete. Awaiting new orders...</div>';
-  },
-  
-  progressQuest(type, amount) {
-    DB.quests.forEach(q => {
-      if(!q.done && q.type === type) {
-        if(type === 'combo' || type === 'dist' || type === 'boss') q.prog = Math.max(q.prog, amount); 
-        else q.prog += amount; 
         
-        if(q.prog >= q.target) {
-          q.done = true;
-          UI.toast(`QUEST COMPLETE: ${q.title}`, 'var(--gold)');
-          State.farts += q.target * 1000 * State.multFart; 
+        let y = fbm(x*0.01, z*0.01) * 20 + 2; // Follow terrain pseudo-height
+        
+        let rand = Math.random();
+        let tier = 1, mat = this.matBeanNorm, val = 1, size = 1;
+        if(rand < 0.05) { tier = 3; mat = this.matBeanLeg; val = 50; size = 2.5; }
+        else if(rand < 0.20) { tier = 2; mat = this.matBeanEpic; val = 10; size = 1.8; }
+        
+        const geo = new THREE.IcosahedronGeometry(size, 0);
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(x, y, z);
+        mesh.castShadow = true;
+        
+        mesh.userData = { tier, val, rotSpeed: new THREE.Vector3(Math.random()*0.05, Math.random()*0.05, Math.random()*0.05), baseY: y, phase: Math.random()*Math.PI*2 };
+        
+        this.beansGroup.add(mesh);
+        this.beans.push(mesh);
+    },
+
+    spawnParticle(pos, color, scale, speed, life) {
+        // Simple cube particles for performance
+        const geo = new THREE.BoxGeometry(scale, scale, scale);
+        const mat = new THREE.MeshBasicMaterial({ color: color, transparent: true });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.copy(pos);
+        
+        const angle = Math.random() * Math.PI * 2;
+        const velY = Math.random() * speed;
+        const velX = Math.cos(angle) * speed;
+        const velZ = Math.sin(angle) * speed;
+        
+        mesh.userData = { vel: new THREE.Vector3(velX, velY, velZ), life: life, maxLife: life };
+        this.scene.add(mesh);
+        this.particles.push(mesh);
+    },
+
+    createExplosion(pos, colorHex, count) {
+        for(let i=0; i<count; i++) {
+            this.spawnParticle(pos, colorHex, Math.random()*2+0.5, Math.random()*20+5, Math.random()*1+0.5);
         }
-      }
-    });
-  },
+    },
 
-  recalc() {
-    State.stomachCap = 10; State.maxStamina = 100; State.maxHp = 100;
-    State.multFart = 1; State.multSpeed = 1; State.multRadius = 1; State.multDigest = 1; 
-    State.autoFart = 0; State.hpRegen = 0; State.attackDmg = 10; State.jumpMult = 1; State.comboDuration = 3;
+    onResize() {
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+    },
 
-    DB.prestige.forEach(p => {
-      const c = State.inv[p.id].count; if(!c) return;
-      const v = Math.pow(p.val, c);
-      if(p.type === 'pfart') State.multFart *= v;
-      if(p.type === 'pspeed') State.multSpeed *= v;
-      if(p.type === 'pcap') State.stomachCap *= v;
-      if(p.type === 'pdigest') State.multDigest *= v;
-      if(p.type === 'prad') State.multRadius *= v;
-      if(p.type === 'pstam') State.maxStamina *= v;
-      if(p.type === 'pauto') State.autoFart += 100 * v;
-      if(p.type === 'php') State.maxHp *= v;
-      if(p.type === 'pjump') State.jumpMult *= v;
-      if(p.type === 'pdmg') State.attackDmg *= v;
-      if(p.type === 'pcombo') State.comboDuration += v;
-    });
+    loop() {
+        requestAnimationFrame(() => this.loop());
+        const dt = Math.min(this.clock.getDelta(), 0.1);
+        
+        if(!UI.isShopOpen) {
+            Input.update(dt);
+            Logic.update(dt);
+        }
+        
+        // Animations
+        const time = this.clock.getElapsedTime();
+        this.beans.forEach(b => {
+            b.rotation.x += b.userData.rotSpeed.x;
+            b.rotation.y += b.userData.rotSpeed.y;
+            b.rotation.z += b.userData.rotSpeed.z;
+            b.position.y = b.userData.baseY + Math.sin(time * 2 + b.userData.phase) * 2;
+        });
 
-    DB.upgrades.forEach(u => {
-      const c = State.inv[u.id].count; if(!c) return;
-      if(u.type === 'cap') State.stomachCap += u.val * c;
-      if(u.type === 'fart') State.multFart *= Math.pow(u.val, c);
-      if(u.type === 'stam') State.maxStamina += u.val * c;
-      if(u.type === 'speed') State.multSpeed += u.val * c;
-      if(u.type === 'rad') State.multRadius += u.val * c;
-      if(u.type === 'digest') State.multDigest *= Math.pow(u.val, c);
-      if(u.type === 'auto') State.autoFart += u.val * c;
-      if(u.type === 'hp') State.maxHp += u.val * c;
-      if(u.type === 'dmg') State.attackDmg += u.val * c;
-      if(u.type === 'jump') State.jumpMult *= Math.pow(u.val, c);
-    });
+        // Particles
+        for(let i=this.particles.length-1; i>=0; i--) {
+            let p = this.particles[i];
+            p.position.addScaledVector(p.userData.vel, dt);
+            p.userData.vel.y -= 30 * dt; // gravity
+            p.userData.life -= dt;
+            p.material.opacity = p.userData.life / p.userData.maxLife;
+            p.scale.setScalar(p.userData.life / p.userData.maxLife);
+            if(p.userData.life <= 0) {
+                this.scene.remove(p);
+                p.geometry.dispose();
+                p.material.dispose();
+                this.particles.splice(i, 1);
+            }
+        }
 
-    DB.mutations.forEach(m => {
-      const c = State.inv[m.id].count; if(!c) return;
-      if(m.type === 'fart') State.multFart *= Math.pow(m.val, c);
-      if(m.type === 'auto') State.autoFart += m.val * c;
-      if(m.type === 'combo') State.comboDuration += m.val * c;
-      if(m.type === 'hp_regen') State.hpRegen += m.val * c;
-    });
-
-    UI.updateStats();
-  }
+        this.renderer.render(this.scene, this.camera);
+        UI.renderMinimap();
+    }
 };
 
-// ==============================================================================
-// 7. USER INTERFACE
-// ==============================================================================
+// ==========================================
+// INPUT SYSTEM
+// ==========================================
+const Input = {
+    keys: { w:false, a:false, s:false, d:false, shift:false, space:false },
+    
+    onKeyDown(e) {
+        if(e.code === 'KeyW') Input.keys.w = true;
+        if(e.code === 'KeyA') Input.keys.a = true;
+        if(e.code === 'KeyS') Input.keys.s = true;
+        if(e.code === 'KeyD') Input.keys.d = true;
+        if(e.code === 'ShiftLeft') Input.keys.shift = true;
+        if(e.code === 'Space') Input.keys.space = true;
+        
+        if(e.code === 'Tab') { e.preventDefault(); UI.toggleShop(); }
+    },
+    
+    onKeyUp(e) {
+        if(e.code === 'KeyW') Input.keys.w = false;
+        if(e.code === 'KeyA') Input.keys.a = false;
+        if(e.code === 'KeyS') Input.keys.s = false;
+        if(e.code === 'KeyD') Input.keys.d = false;
+        if(e.code === 'ShiftLeft') Input.keys.shift = false;
+        if(e.code === 'Space') Input.keys.space = false;
+    },
+    
+    onMouseMove(e) {
+        if(document.pointerLockElement === document.body) {
+            const sensitivity = 0.002;
+            State.yaw -= e.movementX * sensitivity;
+            State.pitch -= e.movementY * sensitivity;
+            State.pitch = Math.max(-Math.PI/2, Math.min(Math.PI/2, State.pitch));
+        }
+    },
+    
+    update(dt) {
+        // Look
+        Engine.camera.rotation.set(0,0,0);
+        Engine.camera.rotateY(State.yaw);
+        Engine.camera.rotateX(State.pitch);
+
+        // Move dir
+        const dir = new THREE.Vector3();
+        if(Input.keys.w) dir.z -= 1;
+        if(Input.keys.s) dir.z += 1;
+        if(Input.keys.a) dir.x -= 1;
+        if(Input.keys.d) dir.x += 1;
+        dir.normalize();
+        
+        dir.applyAxisAngle(new THREE.Vector3(0,1,0), State.yaw);
+
+        // Sprint
+        State.isSprinting = Input.keys.shift && State.stamina > 0 && dir.length() > 0;
+        let speed = State.baseSpeed * State.multSpeed;
+        if(State.isSprinting) {
+            speed *= State.sprintMult;
+            State.stamina -= 25 * dt;
+        } else {
+            State.stamina += 15 * dt;
+        }
+        State.stamina = Math.max(0, Math.min(State.maxStamina, State.stamina));
+
+        // Physics
+        const targetVel = dir.multiplyScalar(speed);
+        State.vel.lerp(targetVel, 10 * dt);
+        State.pos.addScaledVector(State.vel, dt);
+        
+        // Bounds constraint
+        const halfSize = C.WORLD_SIZE/2;
+        State.pos.x = Math.max(-halfSize, Math.min(halfSize, State.pos.x));
+        State.pos.z = Math.max(-halfSize, Math.min(halfSize, State.pos.z));
+        
+        // Height constraint
+        let terrainY = fbm(State.pos.x*0.01, State.pos.z*0.01) * 20;
+        State.pos.y = terrainY + 5; // Eye level
+        
+        Engine.camera.position.copy(State.pos);
+
+        // Head bobbing
+        if(State.vel.length() > 1 && !State.inSafeZone) {
+            Engine.camera.position.y += Math.sin(Engine.clock.getElapsedTime() * 10) * 0.5;
+        }
+    }
+};
+
+// ==========================================
+// GAME LOGIC & SYSTEMS
+// ==========================================
+const Logic = {
+    update(dt) {
+        this.checkZones();
+        this.processCollection();
+        this.processFarts(dt);
+        
+        if(Engine.clock.getElapsedTime() % 0.5 < dt) UI.updateStats(); // Throttle UI
+    },
+    
+    checkZones() {
+        const distToCenter = Math.hypot(State.pos.x, State.pos.z);
+        State.inSafeZone = distToCenter < C.HOME_RADIUS;
+        
+        const prompt = document.getElementById('interact-prompt');
+        if(State.inSafeZone && State.beansInStomach > 0) {
+            prompt.style.display = 'block';
+            document.getElementById('fx-overlay').className = 'fx-heal';
+            State.stamina = State.maxStamina; // Instant heal
+        } else {
+            prompt.style.display = 'none';
+            if(State.isSprinting) document.getElementById('fx-overlay').className = 'fx-speed';
+            else document.getElementById('fx-overlay').className = '';
+        }
+    },
+    
+    processCollection() {
+        if(State.beansInStomach >= State.stomachCap) return;
+        
+        const collectRad = 5 + (State.multRadius * 2);
+        
+        for(let i=Engine.beans.length-1; i>=0; i--) {
+            let b = Engine.beans[i];
+            let dist = State.pos.distanceTo(b.position);
+            
+            if(dist < collectRad) {
+                // Collect
+                State.beansInStomach += b.userData.val;
+                State.beansEaten += b.userData.val;
+                if(State.beansInStomach > State.stomachCap) State.beansInStomach = State.stomachCap;
+                
+                UI.spawnToast(`+${b.userData.val} BEAN`, b.userData.tier === 3 ? 'var(--gold)' : 'var(--bean-color)');
+                
+                // Remove & Respawn
+                Engine.beansGroup.remove(b);
+                Engine.beans.splice(i, 1);
+                Engine.spawnBean();
+                
+                if(State.beansInStomach >= State.stomachCap) break;
+            }
+        }
+    },
+    
+    processFarts(dt) {
+        // Auto fart
+        if(State.autoFart > 0) {
+            State.farts += State.autoFart * State.multFart * dt;
+        }
+        
+        // Active Digestion at home
+        if(State.inSafeZone && State.beansInStomach > 0 && Input.keys.space) {
+            let amount = 10 * State.multDigest * dt;
+            amount = Math.min(amount, State.beansInStomach);
+            
+            if(amount > 0) {
+                State.beansInStomach -= amount;
+                let generated = amount * State.multFart;
+                State.farts += generated;
+                
+                // Visual FX
+                if(Math.random() < 0.2) {
+                    Engine.createExplosion(State.pos.clone().add(new THREE.Vector3(0,-2,0)), 0x39ff14, 5);
+                    Engine.camera.position.y += Math.random() * 2; // Screen shake
+                }
+            }
+        }
+    },
+
+    recalculateStats() {
+        // Base reset
+        State.stomachCap = 10;
+        State.maxStamina = 100;
+        State.multFart = 1;
+        State.multSpeed = 1;
+        State.multRadius = 1;
+        State.multDigest = 1;
+        State.autoFart = 0;
+
+        // Prestige applies multiplicatively first
+        DB.prestige.forEach(p => {
+            let c = State.inventory[p.id].count;
+            if(c === 0) return;
+            let val = Math.pow(p.val, c);
+            if(p.type==='pfart') State.multFart *= val;
+            if(p.type==='pspeed') State.multSpeed *= val;
+            if(p.type==='pcap') State.stomachCap *= val;
+            if(p.type==='pdigest') State.multDigest *= val;
+            if(p.type==='prad') State.multRadius *= val;
+            if(p.type==='pstam') State.maxStamina *= val;
+            if(p.type==='pauto') State.autoFart += (10 * val);
+        });
+
+        // Upgrades (additive or multiplicative based on type)
+        DB.upgrades.forEach(u => {
+            let c = State.inventory[u.id].count;
+            if(c === 0) return;
+            if(u.type==='cap') State.stomachCap += (u.val * c);
+            if(u.type==='fart') State.multFart *= Math.pow(u.val, c);
+            if(u.type==='stam') State.maxStamina += (u.val * c);
+            if(u.type==='speed') State.multSpeed += (u.val * c);
+            if(u.type==='rad') State.multRadius += (u.val * c);
+            if(u.type==='digest') State.multDigest *= Math.pow(u.val, c);
+            if(u.type==='auto') State.autoFart += (u.val * c);
+        });
+
+        // Mutations
+        DB.mutations.forEach(m => {
+            let c = State.inventory[m.id].count;
+            if(c === 0) return;
+            if(m.type==='fart') State.multFart *= Math.pow(m.val, c);
+            if(m.type==='auto') State.autoFart += (m.val * c);
+        });
+        
+        UI.updateStats();
+    }
+};
+
+// ==========================================
+// UI MANAGERS
+// ==========================================
 const UI = {
-  shopOpen: false,
-
-  init() {
-    ['upgrades', 'mutations', 'prestige'].forEach(c => this.renderList(c));
-  },
-
-  fmt(n) {
-    if(isNaN(n) || !isFinite(n)) return '0';
-    if(n >= 1e33) return (n/1e33).toFixed(2)+'Dc';
-    if(n >= 1e30) return (n/1e30).toFixed(2)+'No';
-    if(n >= 1e27) return (n/1e27).toFixed(2)+'Oc';
-    if(n >= 1e24) return (n/1e24).toFixed(2)+'Sp';
-    if(n >= 1e21) return (n/1e21).toFixed(2)+'Sx';
-    if(n >= 1e18) return (n/1e18).toFixed(2)+'Qi';
-    if(n >= 1e15) return (n/1e15).toFixed(2)+'Qa';
-    if(n >= 1e12) return (n/1e12).toFixed(2)+'T';
-    if(n >= 1e9)  return (n/1e9).toFixed(2)+'B';
-    if(n >= 1e6)  return (n/1e6).toFixed(2)+'M';
-    if(n >= 1e3)  return (n/1e3).toFixed(1)+'k';
-    return Math.floor(n).toString();
-  },
-
-  updateStats() {
-    document.getElementById('txt-farts').innerText = this.fmt(State.farts);
-    document.getElementById('txt-mult').innerText = 'x' + this.fmt(State.multFart);
-    document.getElementById('txt-auto').innerText = this.fmt(State.autoFart) + '/s';
-    document.getElementById('txt-beans').innerText = this.fmt(State.beansEaten);
-    document.getElementById('txt-fps').innerText = this.fmt(State.fartsThisSec) + '/s';
-    document.getElementById('txt-tokens').innerText = this.fmt(State.tokens);
-    document.getElementById('txt-rebirths').innerText = State.rebirths;
+    isShopOpen: false,
     
-    document.getElementById('bf-stom').style.width = Math.min(100, (State.beansInStomach / State.stomachCap) * 100) + '%';
-    document.getElementById('txt-stom').innerText = this.fmt(State.beansInStomach) + '/' + this.fmt(State.stomachCap);
+    init() {
+        this.renderShopList('upgrades');
+        this.renderShopList('mutations');
+        this.renderShopList('prestige');
+    },
     
-    document.getElementById('bf-stam').style.width = (State.stamina / State.maxStamina) * 100 + '%';
+    formatNum(n) {
+        if(n >= 1e15) return (n/1e15).toFixed(2) + 'Q';
+        if(n >= 1e12) return (n/1e12).toFixed(2) + 'T';
+        if(n >= 1e9) return (n/1e9).toFixed(2) + 'B';
+        if(n >= 1e6) return (n/1e6).toFixed(2) + 'M';
+        if(n >= 1e3) return (n/1e3).toFixed(1) + 'k';
+        return Math.floor(n).toString();
+    },
     
-    document.getElementById('bf-hp').style.width = Math.max(0, (State.hp / State.maxHp) * 100) + '%';
-    document.getElementById('txt-hp').innerText = Math.floor(State.hp) + '/' + Math.floor(State.maxHp);
-    document.getElementById('hp-txt').innerText = State.hp < State.maxHp * 0.3 ? 'CRITICAL' : 'HEALTHY';
-  },
-
-  toggleShop() {
-    if(document.pointerLockElement === document.body) document.exitPointerLock();
-    else document.body.requestPointerLock();
-  },
-
-  switchTab(t) {
-    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-    document.querySelector(`.tab[data-t="${t}"]`).classList.add('active');
-    ['upgrades', 'mutations', 'prestige'].forEach(c => document.getElementById('list-'+c).style.display = c===t ? 'flex' : 'none');
-    this.renderList(t);
-  },
-
-  renderList(cat) {
-    const cont = cat==='prestige' ? document.getElementById('prestige-items') : document.getElementById('list-'+cat);
-    if(!cont) return; 
-    cont.innerHTML = '';
-    const curr = cat==='prestige' ? State.tokens : State.farts;
-    const lbl = cat==='prestige' ? 'Tokens' : 'Farts';
+    updateStats() {
+        document.getElementById('txt-farts').innerText = this.formatNum(State.farts);
+        document.getElementById('txt-mult').innerText = `x${this.formatNum(State.multFart)}`;
+        document.getElementById('txt-beans').innerText = this.formatNum(State.beansEaten);
+        document.getElementById('txt-tokens').innerText = this.formatNum(State.prestigeTokens);
+        
+        let stomStr = `${Math.floor(State.beansInStomach)} / ${this.formatNum(State.stomachCap)}`;
+        document.getElementById('txt-stom').innerText = stomStr;
+        
+        let stomPct = Math.min(100, (State.beansInStomach / State.stomachCap) * 100);
+        document.getElementById('stomach-fill').style.width = `${stomPct}%`;
+        document.getElementById('stomach-pct').innerText = `${stomPct.toFixed(1)}%`;
+        
+        let stamPct = (State.stamina / State.maxStamina) * 100;
+        document.getElementById('stamina-fill').style.width = `${stamPct}%`;
+    },
     
-    let renderedCount = 0;
+    toggleShop() {
+        if(document.pointerLockElement === document.body) {
+            document.exitPointerLock();
+        } else {
+            document.body.requestPointerLock();
+        }
+    },
     
-    DB[cat].forEach(item => {
-      if(renderedCount > 80 && cat === 'upgrades') return; 
-      
-      const inv = State.inv[item.id], isMax = inv.count >= item.max, canAff = curr >= inv.cost;
-      
-      if(cat === 'upgrades' && !canAff && inv.cost > State.farts * 100) return;
-      renderedCount++;
-      
-      const div = document.createElement('div');
-      div.className = `card ${isMax ? 'maxed' : (!canAff ? 'locked' : '')}`;
-      div.onclick = () => Game.buy(item.id, cat);
-      
-      const color = cat==='prestige' ? 'var(--gold)' : cat==='mutations' ? 'var(--secondary)' : '#fff';
-      
-      div.innerHTML = `
-        <div class="cheader">
-          <span class="cname" style="color:${color}">${item.name}</span>
-          <span class="clvl">Lv${inv.count}/${item.max}</span>
-        </div>
-        <div class="cdesc">${item.desc}</div>
-        <div class="cfooter">
-          ${isMax ? `<span class="ccost">✦ MAXED</span>` : `<span class="ccost ${cat==='prestige'?'goldcost':''}">${this.fmt(inv.cost)} ${lbl}</span>`}
-        </div>`;
-      cont.appendChild(div);
-    });
-  },
-
-  toast(msg, color='var(--primary)') {
-    const el = document.createElement('div');
-    el.className = 'toast';
-    el.style.borderColor = color;
-    el.style.boxShadow = `0 0 25px ${color}`;
-    el.innerText = msg;
-    document.getElementById('alerts').appendChild(el);
-    setTimeout(() => el.remove(), 2500);
-  },
-
-  showCombo(mult) {
-    const el = document.getElementById('combo');
-    document.getElementById('combo-val').innerText = mult.toFixed(1) + 'x';
-    el.style.opacity = '1';
-    el.style.transition = 'opacity 0.1s';
-    setTimeout(() => { el.style.transition = 'opacity 1s'; el.style.opacity = '0'; }, 1500);
-  },
-
-  showAchievement(name) {
-    const el = document.getElementById('achievement');
-    document.getElementById('ach-text').innerText = name;
-    el.classList.add('show');
-    AudioSys.playCollect(4); 
-    setTimeout(() => el.classList.remove('show'), 4000);
-  },
-
-  renderMinimap() {
-    const canvas = document.getElementById('minimap-canvas');
-    const ctx = canvas.getContext('2d');
-    const w = canvas.width = 240, h = canvas.height = 240;
-    const scale = w / 400; 
-    const cx = w / 2, cy = h / 2;
-
-    ctx.fillStyle = 'rgba(0, 10, 25, 0.95)';
-    ctx.beginPath(); ctx.arc(cx, cy, w/2, 0, Math.PI*2); ctx.fill();
+    switchTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`.tab-btn[data-target="${tab}"]`).classList.add('active');
+        
+        document.getElementById('list-upgrades').style.display = tab === 'upgrades' ? 'flex' : 'none';
+        document.getElementById('list-mutations').style.display = tab === 'mutations' ? 'flex' : 'none';
+        document.getElementById('list-prestige').style.display = tab === 'prestige' ? 'flex' : 'none';
+        
+        this.renderShopList(tab);
+    },
     
-    ctx.strokeStyle = 'rgba(0, 255, 204, 0.15)'; ctx.lineWidth = 1;
-    for(let i=0; i<10; i++) {
-      let offset = (i*40 - (State.pos.x%40)) * scale;
-      ctx.beginPath(); ctx.moveTo(offset, 0); ctx.lineTo(offset, h); ctx.stroke();
-      let offsetZ = (i*40 - (State.pos.z%40)) * scale;
-      ctx.beginPath(); ctx.moveTo(0, offsetZ); ctx.lineTo(w, offsetZ); ctx.stroke();
+    renderShopList(cat) {
+        const container = cat === 'prestige' ? document.getElementById('prestige-items') : document.getElementById(`list-${cat}`);
+        container.innerHTML = '';
+        
+        const currencyStr = cat === 'prestige' ? 'Tokens' : 'Farts';
+        const currAmount = cat === 'prestige' ? State.prestigeTokens : State.farts;
+        
+        DB[cat].forEach(item => {
+            const inv = State.inventory[item.id];
+            const isMax = inv.count >= item.max;
+            const canAfford = currAmount >= inv.currentCost;
+            
+            const div = document.createElement('div');
+            div.className = `upgrade-card ${isMax ? 'maxed' : (!canAfford ? 'locked' : '')}`;
+            div.onclick = () => Game.buyItem(item.id, cat);
+            
+            let costHtml = isMax ? `<span class="uc-cost">MAXED</span>` : `<span class="uc-cost ${cat==='prestige'?'prestige-cost':''}">${this.formatNum(inv.currentCost)} ${currencyStr}</span>`;
+            
+            div.innerHTML = `
+                <div class="uc-header">
+                    <span class="uc-name" style="color:${cat==='prestige'?'var(--gold)':(cat==='mutations'?'var(--secondary)':'#fff')}">${item.name}</span>
+                    <span class="uc-level">Lv.${inv.count}/${item.max}</span>
+                </div>
+                <div class="uc-desc">${item.desc}</div>
+                <div class="uc-footer">${costHtml}</div>
+            `;
+            container.appendChild(div);
+        });
+    },
+    
+    spawnToast(msg, color) {
+        const container = document.getElementById('alert-container');
+        const el = document.createElement('div');
+        el.className = 'alert-toast';
+        el.style.borderColor = color;
+        el.style.boxShadow = `0 0 20px ${color}`;
+        el.innerText = msg;
+        container.appendChild(el);
+        setTimeout(() => el.remove(), 2000);
+    },
+    
+    renderMinimap() {
+        const canvas = document.getElementById('minimap-canvas');
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width = 250, h = canvas.height = 250;
+        
+        ctx.clearRect(0,0,w,h);
+        const scale = w / C.WORLD_SIZE;
+        const cx = w/2, cy = h/2;
+        
+        // Draw Home
+        ctx.fillStyle = 'rgba(0, 255, 204, 0.3)';
+        ctx.beginPath(); ctx.arc(cx, cy, C.HOME_RADIUS * scale, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = '#00ffcc'; ctx.lineWidth = 2; ctx.stroke();
+        
+        // Draw Player
+        const px = cx + (State.pos.x * scale);
+        const py = cy + (State.pos.z * scale);
+        
+        // Beans (only close ones for perf)
+        ctx.fillStyle = '#d2691e';
+        Engine.beans.forEach(b => {
+            let bx = cx + (b.position.x * scale);
+            let by = cy + (b.position.z * scale);
+            if(Math.hypot(bx-px, by-py) < 50) { // Culling on minimap
+                ctx.fillRect(bx, by, 2, 2);
+            }
+        });
+        
+        // Player marker
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.rotate(-State.yaw);
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.moveTo(0, -6); ctx.lineTo(4, 4); ctx.lineTo(-4, 4); ctx.fill();
+        ctx.restore();
     }
-    
-    const hx = cx - State.pos.x * scale;
-    const hz = cy - State.pos.z * scale;
-    ctx.fillStyle = 'rgba(0, 255, 204, 0.2)';
-    ctx.beginPath(); ctx.arc(hx, hz, C.HOME_RAD*scale, 0, Math.PI*2); ctx.fill();
-    ctx.strokeStyle = 'rgba(0, 255, 204, 0.9)'; ctx.lineWidth = 2; ctx.stroke();
-
-    Engine.beans.forEach(b => {
-      const dx = b.position.x - State.pos.x, dz = b.position.z - State.pos.z;
-      if(Math.hypot(dx, dz) > 200) return;
-      const t = b.userData.tier;
-      ctx.fillStyle = t===4 ? '#00ff88' : t===3 ? '#ffd700' : t===2 ? '#9b30ff' : '#d2691e';
-      ctx.beginPath(); ctx.arc(cx + dx*scale, cy + dz*scale, t>=2 ? 4 : 2, 0, Math.PI*2); ctx.fill();
-    });
-    
-    Engine.enemies.forEach(e => {
-      const dx = e.position.x - State.pos.x, dz = e.position.z - State.pos.z;
-      if(Math.hypot(dx, dz) > 200) return;
-      ctx.fillStyle = e.userData.isBoss ? '#ff0000' : '#88ff00';
-      ctx.beginPath(); ctx.arc(cx + dx*scale, cy + dz*scale, e.userData.isBoss ? 6 : 3, 0, Math.PI*2); ctx.fill();
-    });
-
-    ctx.save(); ctx.translate(cx, cy); ctx.rotate(-State.yaw);
-    const grad = ctx.createLinearGradient(0, 0, 0, -40);
-    grad.addColorStop(0, 'rgba(255,255,255,0.4)');
-    grad.addColorStop(1, 'rgba(255,255,255,0.0)');
-    ctx.fillStyle = grad;
-    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(-20, -50); ctx.lineTo(20, -50); ctx.fill();
-    
-    ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.moveTo(0, -8); ctx.lineTo(6, 6); ctx.lineTo(0, 3); ctx.lineTo(-6, 6); ctx.fill();
-    ctx.restore();
-
-    ctx.globalCompositeOperation = 'destination-in';
-    ctx.beginPath(); ctx.arc(cx, cy, w/2, 0, Math.PI*2); ctx.fill();
-    ctx.globalCompositeOperation = 'source-over';
-    
-    ctx.strokeStyle = '#555'; ctx.lineWidth = 4;
-    ctx.beginPath(); ctx.arc(cx, cy, w/2-2, 0, Math.PI*2); ctx.stroke();
-  }
 };
 
-// ==============================================================================
-// 8. GAME FLOW CONTROLLER
-// ==============================================================================
+// ==========================================
+// GAME CORE CONTROLLER
+// ==========================================
 const Game = {
-  buy(id, cat) {
-    const item = DB[cat].find(x => x.id === id), inv = State.inv[id];
-    if(inv.count >= item.max) return;
-    const curr = cat==='prestige' ? State.tokens : State.farts;
-    
-    if(curr < inv.cost) { UI.toast('INSUFFICIENT FUNDS!', 'var(--danger)'); return; }
-    
-    if(cat==='prestige') State.tokens -= inv.cost;
-    else State.farts -= inv.cost;
-    
-    inv.count++;
-    inv.cost = Math.floor(inv.cost * item.mult);
-    
-    Logic.recalc();
-    UI.renderList(cat);
-    UI.toast(`✦ ACQUIRED: ${item.name}`, 'var(--primary)');
-    AudioSys.playCollect(3);
-  },
+    buyItem(id, cat) {
+        const itemData = DB[cat].find(i => i.id === id);
+        const inv = State.inventory[id];
+        
+        let currency = cat === 'prestige' ? State.prestigeTokens : State.farts;
+        if(inv.count >= itemData.max) return;
+        if(currency < inv.currentCost) {
+            UI.spawnToast("INSUFFICIENT FUNDS", "var(--danger)");
+            return;
+        }
 
-  calcRebirth() {
-    return Math.floor(Math.pow(State.farts / 1000000, 0.6));
-  },
+        if(cat === 'prestige') State.prestigeTokens -= inv.currentCost;
+        else State.farts -= inv.currentCost;
 
-  showRebirthModal() {
-    const gain = this.calcRebirth();
-    if(gain < 1) { UI.toast('NEED MINIMUM 1,000,000 FARTS', 'var(--danger)'); return; }
-    document.getElementById('rebirth-amt').innerText = UI.fmt(gain);
-    document.getElementById('rebirth-overlay').style.display = 'flex';
-    document.exitPointerLock();
-  },
+        inv.count++;
+        inv.currentCost = Math.floor(inv.currentCost * itemData.mult);
 
-  executeRebirth() {
-    const gain = this.calcRebirth();
-    State.tokens += gain; 
-    State.rebirths++;
-    State.farts = 0; 
-    State.beansInStomach = 0; 
-    State.comboMult = 1;
-    State.hp = State.maxHp;
-    State.heat = 0;
+        Logic.recalculateStats();
+        UI.renderShopList(cat);
+        UI.spawnToast(`ACQUIRED: ${itemData.name}`, "var(--primary)");
+    },
     
-    DB.upgrades.forEach(u => { State.inv[u.id].count = 0; State.inv[u.id].cost = u.cost; });
-    DB.mutations.forEach(m => { State.inv[m.id].count = 0; State.inv[m.id].cost = m.cost; });
+    calcRebirthGain() {
+        // Gain 1 token per 1 Million farts (scaling non-linearly)
+        return Math.floor(Math.pow(State.farts / 1000000, 0.6));
+    },
     
-    DB.quests.forEach(q => { q.prog = 0; q.done = false; });
+    showRebirthModal() {
+        const gain = this.calcRebirthGain();
+        if(gain < 1) {
+            UI.spawnToast("REQUIRE MIN 1,000,000 FARTS", "var(--danger)");
+            return;
+        }
+        document.getElementById('rebirth-amt').innerText = UI.formatNum(gain);
+        document.getElementById('rebirth-overlay').style.display = 'flex';
+        document.exitPointerLock();
+    },
     
-    State.pos.set(0, 15, 0); 
-    State.vel.set(0, 0, 0);
-    
-    document.getElementById('rebirth-overlay').style.display = 'none';
-    document.getElementById('row-tokens').style.display = 'flex';
-    document.getElementById('row-rebirths').style.display = 'flex';
-    
-    Logic.recalc();
-    UI.switchTab('upgrades');
-    
-    AudioSys.playAscend();
-    Engine.bigExplosion(new THREE.Vector3(0, 15, 0), 0xffd700, 1000);
-    Engine.bigExplosion(new THREE.Vector3(0, 15, 0), 0xffffff, 500);
-    
-    const fx = document.getElementById('fx');
-    fx.style.boxShadow = 'inset 0 0 800px rgba(255,215,0,1)';
-    fx.style.background = 'rgba(255,215,0,0.5)';
-    setTimeout(() => { 
-      fx.style.boxShadow = ''; 
-      fx.style.background = 'transparent';
-    }, 4000);
-    
-    UI.toast(`ASCENSION COMPLETE! +${UI.fmt(gain)} TOKENS`, 'var(--gold)');
-    UI.showAchievement('Ascended Being');
-    document.body.requestPointerLock();
-  }
+    executeRebirth() {
+        const gain = this.calcRebirthGain();
+        State.prestigeTokens += gain;
+        State.rebirths++;
+        
+        // Reset Currencies
+        State.farts = 0;
+        State.beansInStomach = 0;
+        
+        // Reset Upgrades/Mutations
+        DB.upgrades.forEach(u => { State.inventory[u.id].count = 0; State.inventory[u.id].currentCost = u.cost; });
+        DB.mutations.forEach(m => { State.inventory[m.id].count = 0; State.inventory[m.id].currentCost = m.cost; });
+        
+        // Teleport Home
+        State.pos.set(0, 5, 0);
+        State.vel.set(0, 0, 0);
+        
+        document.getElementById('rebirth-overlay').style.display = 'none';
+        document.getElementById('row-prestige').style.display = 'flex';
+        
+        Logic.recalculateStats();
+        UI.switchTab('upgrades');
+        
+        Engine.createExplosion(new THREE.Vector3(0,5,0), 0xffd700, 500);
+        document.getElementById('fx-overlay').style.boxShadow = "inset 0 0 500px rgba(255, 215, 0, 1)";
+        setTimeout(()=> document.getElementById('fx-overlay').style.boxShadow = "none", 2000);
+        
+        UI.spawnToast(`ASCENSION COMPLETE. +${UI.formatNum(gain)} TOKENS`, "var(--gold)");
+        document.body.requestPointerLock();
+    }
 };
 
-window.onload = () => {
-    Engine.init(); 
-    Engine.onResize(); // Fixes the black screen scale
-    Engine.cam.position.set(0, 50, 50); // Moves camera out of the floor
-    
-    // Audio Wakeup
-    document.addEventListener('mousedown', () => { 
-        AudioSys.init(); 
-        if(AudioSys.ctx && AudioSys.ctx.state === 'suspended') AudioSys.ctx.resume(); 
-    }, {once: true});
-};
+// ==========================================
+// BOOTSTRAP
+// ==========================================
+window.onload = () => Engine.init();
+
 </script>
 </body>
 </html>
