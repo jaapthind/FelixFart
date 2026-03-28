@@ -422,6 +422,7 @@ const AudioSys = {
   ctx: null, master: null, enabled: false,
   
   init() {
+      if (this.ctx && this.ctx.state === 'suspended') { this.ctx.resume(); return; }
     try {
       window.AudioContext = window.AudioContext || window.webkitAudioContext;
       this.ctx = new AudioContext();
