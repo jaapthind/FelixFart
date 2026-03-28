@@ -1232,6 +1232,8 @@ const State = {
     isSprinting: false, 
     inventory: {}
 };
+      const bgMusic = new Audio('relax.mp3'); bgMusic.loop = true; bgMusic.volume = 0.4;
+
 
 [...DB.upgrades, ...DB.mutations, ...DB.prestige].forEach(item => { 
     State.inventory[item.id] = { count: 0, currentCost: item.cost }; 
@@ -1535,6 +1537,7 @@ const Engine = {
             if(!UI.isShopOpen) { 
                 document.body.requestPointerLock(); 
                 if(!AudioSys.enabled) AudioSys.init(); 
+               if(bgMusic.paused) bgMusic.play();
             }
         });
         
@@ -1861,6 +1864,15 @@ const Engine = {
         }
         
         const time = this.clock.getElapsedTime();
+        document.getElementById('txt-farts').style.color = `hsl(${(time * 100) % 360}, 100%, 50%)`;
+        if(bgMusic) bgMusic.playbackRate = State.isSprinting ? 1.25 : 1.0;
+
+       // Rainbow Home Base Pulse
+         const rainbow = new THREE.Color(`hsl(${(time * 50) % 360}, 80%, 50%)`);
+         if(this.scene.children.find(c => c.geometry?.type === 'SphereGeometry')) {
+             this.scene.children.find(c => c.geometry.type === 'SphereGeometry').material.color.copy(rainbow);
+             pointLight.color.copy(rainbow);
+         }
         
         // Update Beans
         this.beans.forEach(b => {
