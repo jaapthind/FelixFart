@@ -1288,11 +1288,11 @@ const AudioSys = {
         this.playTone(Math.random() * 40 + 20, 'square', dur*1.3, 0.3);
     },
 
-    playFootstep() {
-        if(!this.enabled) return;
-        this.playTone(150, 'triangle', 0.05, 0.05, Math.random()*100);
-        this.playTone(80, 'sine', 0.1, 0.08);
-    },
+       playFootstep() {
+       if(!this.enabled) return;
+       this.playTone(60 + Math.random() * 20, 'sine', 0.08, 0.05); // Low thump
+       this.playTone(100, 'square', 0.02, 0.02); // Tiny crunch
+   },
 
     playAscend() {
         this.playTone(200, 'sine', 2.0, 0.4); 
