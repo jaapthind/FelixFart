@@ -345,7 +345,9 @@ body, html {
 /* Massive Shop Panel */
 #shop-panel { 
     top: 20px; 
-    right: 20px; 
+    right: 20px;
+    z-index: 2000 !important; /* Make sure the whole shop is on top */
+    pointer-events: auto;
     width: 550px; 
     bottom: 20px; 
     display: flex; 
@@ -432,9 +434,8 @@ body, html {
     border-radius: 12px;
     padding: 15px;
     cursor: pointer;
-    position: relative;
-    z-index: 50; /* Higher z-index to ensure it is clickable */
-    pointer-events: auto; /* Force pointer events to work */
+   pointer-events: auto !important;
+   z-index: 2100 !important;/* Higher z-index to ensure it is clickable */
     transition: var(--transition);
 }
 
@@ -1381,6 +1382,7 @@ const WeatherSys = {
             }
         }
         this.geo.attributes.position.needsUpdate = true;
+       const angle = Math.atan2(State.pos.x, State.pos.z) + State.yaw; document.getElementById('gps-arrow').style.transform = `rotate(${angle}rad) translateY(-10px)`; document.getElementById('gps').style.opacity = State.inSafeZone ? 0 : 1;
     }
 };
 
@@ -1579,24 +1581,22 @@ const Engine = {
         
         document.addEventListener('mousemove', Input.onMouseMove);
         
-        document.addEventListener('pointerlockchange', () => {
-            const isLocked = document.pointerLockElement === document.body;
-            UI.isShopOpen = !isLocked;
-            
-            // Show HUD overlays based on lock status
-            if(!isLocked && document.getElementById('shop-panel').style.display === 'none') {
-                document.getElementById('pause-overlay').style.display = 'flex';
-            } else {
-                document.getElementById('pause-overlay').style.display = 'none';
-            }
-            
-            if(isLocked) {
-                document.getElementById('shop-panel').style.display = 'none';
-                document.getElementById('crosshair').style.display = 'block';
-            } else if (UI.isShopOpen) {
-                document.getElementById('crosshair').style.display = 'none';
-            }
-        });
+              document.addEventListener('pointerlockchange', () => {
+          const isLocked = document.pointerLockElement === document.body;
+          UI.isShopOpen = !isLocked;
+          
+          if(!isLocked) {
+              // MOUSE IS FREE: Show shop, hide crosshair
+              document.getElementById('shop-panel').style.display = 'flex';
+              document.getElementById('crosshair').style.display = 'none';
+              UI.renderShopList('upgrades'); // Force refresh so buttons work
+          } else {
+              // MOUSE IS LOCKED: Hide shop, show crosshair
+              document.getElementById('shop-panel').style.display = 'none';
+              document.getElementById('crosshair').style.display = 'block';
+              document.getElementById('pause-overlay').style.display = 'none';
+          }
+      });
 
         UI.init(); 
         this.loop();
@@ -2367,10 +2367,11 @@ const UI = {
                 
                 const div = document.createElement('div'); 
                 div.className = `upgrade-card ${isMax ? 'maxed' : (!canAfford ? 'locked' : '')}`;
-                  div.onclick = (e) => { 
-                      e.stopPropagation(); // Stops the click from being ignored by the shop panel
-                      Game.buyItem(item.id, cat); 
-                  };                
+                div.onmousedown = (e) => { 
+                   e.preventDefault();
+                   e.stopPropagation();
+                   Game.buyItem(item.id, cat); 
+               };                
                                   div.innerHTML = `
                       <div class="uc-header" style="margin-bottom: 5px;">
                           <span class="uc-name" style="font-size: 18px; color:${cat==='prestige'?'var(--gold)':(cat==='mutations'?'var(--secondary)':'#fff')}">${item.name}</span>
@@ -2515,6 +2516,7 @@ window.onload = () => Engine.init();
 
 </script>
 
+   <div id="gps" style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:40px; height:40px; border:3px solid #00ffcc; border-radius:50%; z-index:100; pointer-events:none; display:flex; align-items:center; justify-content:center; color:#00ffcc; font-weight:bold; font-size:12px;">🏠<div id="gps-arrow" style="position:absolute; width:0; height:0; border-left:10px solid transparent; border-right:10px solid transparent; border-bottom:15px solid #00ffcc; top:-25px;"></div></div>
    <button class="tab-btn" id="btn-weather" onclick="WeatherSys.cycle()" style="position:absolute; bottom:20px; right:20px; z-index:100; font-size:24px;">☀️</button>
 </body>
 </html>
