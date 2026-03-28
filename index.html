@@ -918,7 +918,7 @@ const Engine = {
     },
 
     loop() {
-        if(Engine.scene){const d=Engine.scene.children.find(c=>c.geometry?.type==="SphereGeometry"&&c.material?.transparent);if(d){d.material.color.setHex(0x050505);d.material.emissive.setHSL((Date.now()*0.0001)%1,1,0.2);d.material.opacity=0.99;}}     
+        if(Engine.scene){const d=Engine.scene.children.find(c=>c.geometry?.type==='SphereGeometry');if(d&&d.material){d.material.color.setHex(0x050505);d.material.emissive.setHSL((Date.now()*0.0001)%1,1,0.1);d.material.opacity=0.99;d.material.transparent=true;}}
         const time = this.clock.getElapsedTime();
         
         EnvSys.update(dt, this.scene);
