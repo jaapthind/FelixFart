@@ -918,8 +918,7 @@ const Engine = {
     },
 
     loop() {
-        Engine.scene.children.forEach(c => { if(c.geometry?.type === "SphereGeometry" && c.material?.opacity < 0.2) c.material.color.setHSL((Date.now() * 0.0001) % 1, 1.0, 0.2); });        requestAnimationFrame(() => this.loop());
-        const dt = Math.min(this.clock.getDelta(), 0.1);
+        Engine.scene.children.filter(c => c.geometry?.type === "SphereGeometry" && c.material?.transparent).forEach(d => { d.material.color.setHex(0x111111); d.material.emissive.setHSL((Date.now() * 0.0001) % 1, 1, 0.3); d.material.opacity = 0.999; d.material.transparent = true; });        const dt = Math.min(this.clock.getDelta(), 0.1);
         const time = this.clock.getElapsedTime();
         
         EnvSys.update(dt, this.scene);
