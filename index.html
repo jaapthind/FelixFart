@@ -3,13 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>FelixFart 3D: Ascended Tycoon V3 (Expanded Engine)</title>
+<title>FelixFart 3D: Ascended Tycoon V4 (Omega Engine)</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💨</text></svg>">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
-/* ==========================================================================
-   EXPANDED UI STYLES - FULL HUD, SHOP SYSTEM, & NEW OVERLAYS
-   ========================================================================== */
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap');
 
 :root {
@@ -19,8 +16,8 @@
     --secondary-glow: rgba(255, 0, 255, 0.6);
     --tertiary: #00ffff;
     --tertiary-glow: rgba(0, 255, 255, 0.6);
-    --bg-dark: #0a0a0f;
-    --bg-panel: rgba(10, 10, 15, 0.9);
+    --bg-dark: #050508;
+    --bg-panel: rgba(10, 10, 15, 0.92);
     --text-main: #e0e0e0;
     --text-dim: #888888;
     --bean-color: #d2691e;
@@ -30,1232 +27,522 @@
     --gold: #ffd700;
     --gold-glow: rgba(255, 215, 0, 0.6);
     --border-radius: 12px;
-    --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    --transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-* { 
-    box-sizing: border-box; 
-    user-select: none; 
-    margin: 0; 
-    padding: 0; 
-}
+* { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
+body, html { width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Rajdhani', sans-serif; color: var(--text-main); }
+#webgl-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; cursor: crosshair; }
 
-body, html { 
-    width: 100%; 
-    height: 100%; 
-    overflow: hidden; 
-    background-color: #000; 
-    font-family: 'Rajdhani', sans-serif; 
-    color: var(--text-main); 
-}
+/* Overlays */
+.fullscreen-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 900; display: none; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(10px); }
+.fullscreen-overlay h1 { font-family: 'Orbitron', sans-serif; color: var(--tertiary); text-shadow: 0 0 30px var(--tertiary-glow); font-size: 56px; margin-bottom: 20px; letter-spacing: 5px; text-transform: uppercase; }
+.btn-resume { font-size: 24px; color: #fff; cursor: pointer; background: rgba(255,255,255,0.05); padding: 20px 50px; border-radius: 40px; border: 2px solid var(--tertiary); transition: var(--transition); font-family: 'Orbitron', sans-serif; font-weight: bold; letter-spacing: 2px; }
+.btn-resume:hover { background: var(--tertiary); color: #000; box-shadow: 0 0 40px var(--tertiary-glow); transform: scale(1.05); }
 
-#webgl-container { 
-    position: absolute; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%; 
-    z-index: 1; 
-    cursor: crosshair;
-}
+/* Core HUD */
+.hud-element { position: absolute; z-index: 10; background: var(--bg-panel); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--border-radius); backdrop-filter: blur(20px); box-shadow: 0 15px 50px rgba(0,0,0,0.9); transition: var(--transition); }
+.glitch-text { font-family: 'Orbitron', sans-serif; position: relative; display: inline-block; }
+.glitch-text::before, .glitch-text::after { content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.8; }
+.glitch-text::before { left: 2px; text-shadow: -1px 0 var(--danger); animation: glitch-anim-1 2s infinite linear alternate-reverse; }
+.glitch-text::after { left: -2px; text-shadow: -1px 0 var(--tertiary); animation: glitch-anim-2 3s infinite linear alternate-reverse; }
 
-/* Pause Overlay for Pointer Lock Recovery */
-#pause-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    z-index: 900;
-    display: none;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    backdrop-filter: blur(5px);
-}
+@keyframes glitch-anim-1 { 0% { clip-path: inset(20% 0 80% 0); } 20% { clip-path: inset(60% 0 10% 0); } 40% { clip-path: inset(40% 0 50% 0); } 60% { clip-path: inset(80% 0 5% 0); } 80% { clip-path: inset(10% 0 70% 0); } 100% { clip-path: inset(30% 0 20% 0); } }
+@keyframes glitch-anim-2 { 0% { clip-path: inset(10% 0 60% 0); } 20% { clip-path: inset(30% 0 20% 0); } 40% { clip-path: inset(70% 0 10% 0); } 60% { clip-path: inset(20% 0 50% 0); } 80% { clip-path: inset(50% 0 30% 0); } 100% { clip-path: inset(5% 0 80% 0); } }
 
-#pause-overlay h1 {
-    font-family: 'Orbitron', sans-serif;
-    color: var(--tertiary);
-    text-shadow: 0 0 20px var(--tertiary-glow);
-    font-size: 48px;
-    margin-bottom: 20px;
-}
+/* Expanded Stats Panel */
+#stats-panel { top: 20px; left: 20px; width: 420px; padding: 25px; border-top: 5px solid var(--primary); display: flex; flex-direction: column; gap: 10px; }
+#stats-panel h1 { margin: 0 0 15px 0; font-family: 'Orbitron', sans-serif; font-size: 32px; color: var(--primary); text-shadow: 0 0 20px var(--primary-glow); text-transform: uppercase; letter-spacing: 2px; border-bottom: 2px solid rgba(57,255,20,0.2); padding-bottom: 10px; }
+.stat-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 18px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 8px; }
+.stat-label { color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; font-size: 14px; font-weight: bold; }
+.stat-val { font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 20px; }
+.val-fart { color: var(--primary); text-shadow: 0 0 10px var(--primary-glow); }
+.val-bean { color: var(--bean-color); text-shadow: 0 0 10px var(--bean-glow); }
+.val-mult { color: var(--secondary); text-shadow: 0 0 10px var(--secondary-glow); }
 
-#pause-overlay p {
-    font-size: 24px;
-    color: #fff;
-    cursor: pointer;
-    background: rgba(255,255,255,0.1);
-    padding: 15px 40px;
-    border-radius: 30px;
-    border: 2px solid var(--tertiary);
-    transition: var(--transition);
-}
-
-#pause-overlay p:hover {
-    background: var(--tertiary);
-    color: #000;
-    box-shadow: 0 0 30px var(--tertiary-glow);
-}
-
-.hud-element { 
-    position: absolute; 
-    z-index: 10; 
-    background: var(--bg-panel); 
-    border: 2px solid rgba(255,255,255,0.1); 
-    border-radius: var(--border-radius); 
-    backdrop-filter: blur(15px); 
-    box-shadow: 0 10px 40px rgba(0,0,0,0.8); 
-    transition: var(--transition); 
-}
-
-.glitch-text { 
-    font-family: 'Orbitron', sans-serif; 
-    position: relative; 
-    display: inline-block; 
-}
-
-.glitch-text::before, .glitch-text::after { 
-    content: attr(data-text); 
-    position: absolute; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%; 
-    opacity: 0.8; 
-}
-
-.glitch-text::before { 
-    left: 2px; 
-    text-shadow: -1px 0 var(--danger); 
-    animation: glitch-anim-1 2s infinite linear alternate-reverse; 
-}
-
-.glitch-text::after { 
-    left: -2px; 
-    text-shadow: -1px 0 var(--tertiary); 
-    animation: glitch-anim-2 3s infinite linear alternate-reverse; 
-}
-
-@keyframes glitch-anim-1 { 
-    0% { clip-path: inset(20% 0 80% 0); } 
-    20% { clip-path: inset(60% 0 10% 0); } 
-    40% { clip-path: inset(40% 0 50% 0); } 
-    60% { clip-path: inset(80% 0 5% 0); } 
-    80% { clip-path: inset(10% 0 70% 0); } 
-    100% { clip-path: inset(30% 0 20% 0); } 
-}
-
-@keyframes glitch-anim-2 { 
-    0% { clip-path: inset(10% 0 60% 0); } 
-    20% { clip-path: inset(30% 0 20% 0); } 
-    40% { clip-path: inset(70% 0 10% 0); } 
-    60% { clip-path: inset(20% 0 50% 0); } 
-    80% { clip-path: inset(50% 0 30% 0); } 
-    100% { clip-path: inset(5% 0 80% 0); } 
-}
-
-/* Stats Panel */
-#stats-panel { 
-    top: 20px; 
-    left: 20px; 
-    width: 380px; 
-    padding: 25px; 
-    border-top: 5px solid var(--primary); 
-    display: flex; 
-    flex-direction: column; 
-    gap: 8px; 
-}
-
-#stats-panel h1 { 
-    margin: 0 0 15px 0; 
-    font-family: 'Orbitron', sans-serif; 
-    font-size: 30px; 
-    color: var(--primary); 
-    text-shadow: 0 0 20px var(--primary-glow); 
-    text-transform: uppercase; 
-    letter-spacing: 2px; 
-}
-
-.stat-row { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    margin-bottom: 10px; 
-    font-size: 18px; 
-    border-bottom: 1px solid rgba(255,255,255,0.08); 
-    padding-bottom: 8px; 
-}
-
-.stat-label { 
-    color: var(--text-dim); 
-    text-transform: uppercase; 
-    letter-spacing: 1.5px; 
-    font-size: 15px; 
-    font-weight: bold; 
-}
-
-.stat-val { 
-    font-family: 'Orbitron', sans-serif; 
-    font-weight: 900; 
-    font-size: 22px; 
-}
-
-.val-fart { color: var(--primary); text-shadow: 0 0 12px var(--primary-glow); }
-.val-bean { color: var(--bean-color); text-shadow: 0 0 12px var(--bean-glow); }
-.val-mult { color: var(--secondary); text-shadow: 0 0 12px var(--secondary-glow); }
-
-/* Distance Ticker */
-#distance-ticker { 
-    top: 20px; 
-    left: 800px; 
-    padding: 15px 30px; 
-    border: 2px solid var(--tertiary); 
-    display: flex; 
-    align-items: center; 
-    gap: 15px; 
-    background: rgba(0, 0, 0, 0.75); 
-}
-
-#distance-ticker .label { 
-    font-size: 14px; 
-    color: var(--text-dim); 
-    text-transform: uppercase; 
-    font-family: 'Rajdhani', sans-serif; 
-    font-weight: bold; 
-    letter-spacing: 2px; 
-}
-
-#distance-ticker .val { 
-    font-family: 'Orbitron', sans-serif; 
-    font-size: 24px; 
-    color: var(--tertiary); 
-    text-shadow: 0 0 15px var(--tertiary-glow); 
-    font-weight: bold; 
-}
+#distance-ticker { top: 20px; left: 460px; padding: 15px 30px; border: 1px solid var(--tertiary); border-bottom: 4px solid var(--tertiary); display: flex; align-items: center; gap: 15px; }
+#distance-ticker .label { font-size: 14px; color: var(--text-dim); text-transform: uppercase; font-weight: bold; letter-spacing: 2px; }
+#distance-ticker .val { font-family: 'Orbitron', sans-serif; font-size: 26px; color: var(--tertiary); text-shadow: 0 0 15px var(--tertiary-glow); font-weight: bold; }
 
 /* Progress Bars */
-.bar-container { 
-    width: 100%; 
-    height: 25px; 
-    background: rgba(0,0,0,0.6); 
-    border-radius: 12px; 
-    margin-top: 5px; 
-    position: relative; 
-    overflow: hidden; 
-    border: 1px solid rgba(255,255,255,0.15); 
-    box-shadow: inset 0 3px 8px rgba(0,0,0,0.9); 
-}
-
-.bar-fill { 
-    height: 100%; 
-    width: 0%; 
-    transition: width 0.15s linear; 
-    position: relative; 
-}
-
-.bar-fill::after { 
-    content: ''; 
-    position: absolute; 
-    top: 0; 
-    left: 0; 
-    right: 0; 
-    bottom: 0; 
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); 
-    animation: shimmer 2s infinite; 
-}
-
-@keyframes shimmer { 
-    0% { transform: translateX(-100%); } 
-    100% { transform: translateX(100%); } 
-}
-
-#stomach-fill { 
-    background: linear-gradient(90deg, #8a5a2b, var(--bean-color)); 
-    box-shadow: 0 0 15px var(--bean-glow); 
-}
-
-#stamina-fill { 
-    background: linear-gradient(90deg, #0055ff, var(--tertiary)); 
-    box-shadow: 0 0 15px var(--tertiary-glow); 
-}
-
-.bar-text { 
-    position: absolute; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    font-size: 14px; 
-    font-weight: bold; 
-    text-shadow: 1px 1px 3px #000, -1px -1px 3px #000; 
-    letter-spacing: 1px; 
-    font-family: 'Orbitron', sans-serif; 
-}
+.bar-container { width: 100%; height: 28px; background: rgba(0,0,0,0.8); border-radius: 6px; margin-top: 5px; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); box-shadow: inset 0 3px 8px rgba(0,0,0,0.9); }
+.bar-fill { height: 100%; width: 0%; transition: width 0.1s linear; position: relative; }
+.bar-fill::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: shimmer 2s infinite; }
+@keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+#stomach-fill { background: linear-gradient(90deg, #5c3a21, var(--bean-color), #f4a460); box-shadow: 0 0 15px var(--bean-glow); }
+#stamina-fill { background: linear-gradient(90deg, #0033aa, var(--tertiary), #ffffff); box-shadow: 0 0 15px var(--tertiary-glow); }
+.bar-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900; text-shadow: 1px 1px 2px #000, -1px -1px 2px #000; letter-spacing: 2px; font-family: 'Orbitron', sans-serif; color: #fff; z-index: 2; }
 
 /* Minimap */
-#minimap-container { 
-    position: absolute; 
-    bottom: 30px; 
-    left: 30px; 
-    width: 250px; 
-    height: 250px; 
-    background: rgba(0,0,0,0.85); 
-    border: 3px solid var(--tertiary); 
-    border-radius: 50%; 
-    overflow: hidden; 
-    z-index: 10; 
-    box-shadow: 0 0 30px rgba(0,255,255,0.25); 
-}
+#minimap-container { position: absolute; bottom: 30px; left: 30px; width: 280px; height: 280px; background: rgba(0,0,0,0.9); border: 4px solid var(--tertiary); border-radius: 50%; overflow: hidden; z-index: 10; box-shadow: 0 0 40px rgba(0,255,255,0.3), inset 0 0 50px rgba(0,0,0,1); }
+#minimap-canvas { width: 100%; height: 100%; }
+.minimap-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%; box-shadow: inset 0 0 40px rgba(0,0,0,1); pointer-events: none; background: radial-gradient(circle at center, transparent 40%, rgba(0,255,255,0.1) 100%); }
+.minimap-overlay::after { content: ''; position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; background: var(--primary); border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 15px var(--primary); border: 1px solid #fff; }
 
-#minimap-canvas { 
-    width: 100%; 
-    height: 100%; 
-}
+/* Mega Shop Panel */
+#shop-panel { top: 20px; right: 20px; width: 650px; bottom: 20px; display: flex; flex-direction: column; padding: 25px; border-right: 6px solid var(--secondary); background: rgba(5, 5, 8, 0.96); border-top-left-radius: 20px; border-bottom-left-radius: 20px; transform: translateX(110%); opacity: 0; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s; pointer-events: none; }
+#shop-panel.open { transform: translateX(0); opacity: 1; pointer-events: auto; }
 
-.minimap-overlay { 
-    position: absolute; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%; 
-    border-radius: 50%; 
-    box-shadow: inset 0 0 30px rgba(0,0,0,1); 
-    pointer-events: none; 
-}
+.shop-header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid rgba(255,255,255,0.1); }
+.shop-title { font-family: 'Orbitron', sans-serif; font-size: 28px; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.5); font-weight: 900; letter-spacing: 2px; }
 
-.minimap-overlay::after { 
-    content: ''; 
-    position: absolute; 
-    top: 50%; 
-    left: 50%; 
-    width: 6px; 
-    height: 6px; 
-    background: var(--primary); 
-    border-radius: 50%; 
-    transform: translate(-50%, -50%); 
-    box-shadow: 0 0 12px var(--primary); 
-}
+/* Multiplier Toggles */
+.multiplier-controls { display: flex; gap: 5px; background: rgba(0,0,0,0.5); padding: 5px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
+.mult-btn { background: transparent; border: 1px solid transparent; color: #888; font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: bold; padding: 5px 10px; border-radius: 4px; cursor: pointer; transition: all 0.2s; }
+.mult-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
+.mult-btn.active { background: var(--secondary); color: #000; box-shadow: 0 0 10px var(--secondary-glow); border-color: var(--secondary); }
 
-/* Massive Shop Panel */
-#shop-panel { 
-    top: 20px; 
-    right: 20px; 
-    width: 550px; 
-    bottom: 20px; 
-    display: flex; 
-    flex-direction: column; 
-    padding: 25px; 
-    border-right: 5px solid var(--secondary); 
-    background: rgba(10, 10, 15, 0.95); 
-}
+.shop-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.tab-btn { flex: 1; padding: 12px 0; background: rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: var(--text-dim); font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 900; text-transform: uppercase; cursor: pointer; transition: var(--transition); letter-spacing: 1px; }
+.tab-btn:hover { background: rgba(255,255,255,0.1); color: #fff; transform: translateY(-2px); }
+.tab-btn.active { background: var(--secondary); color: #000; border-color: var(--secondary); box-shadow: 0 0 20px var(--secondary-glow); transform: scale(1.03); z-index: 2; }
+.tab-btn[data-target="prestige"].active { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 20px var(--gold-glow); }
+.tab-btn-sys { background: rgba(0, 150, 255, 0.1); border-color: #0096ff; color: #0096ff; }
+.tab-btn-sys.active { background: #0096ff; color: #000; box-shadow: 0 0 20px rgba(0,150,255,0.6); }
+.tab-btn-close { flex: 1; min-width: 100%; margin-top: 10px; background: rgba(255, 51, 51, 0.1); border-color: var(--danger); color: var(--danger); font-size: 18px; padding: 15px; }
+.tab-btn-close:hover { background: var(--danger); color: #000; box-shadow: 0 0 20px var(--danger-glow); }
 
-.shop-tabs { 
-    display: flex; 
-    gap: 10px; 
-    margin-bottom: 25px; 
-    flex-wrap: wrap; 
-}
+.shop-content { flex: 1; display: flex; flex-direction: column; gap: 12px; padding-right: 15px; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: var(--secondary) rgba(0,0,0,0.5); }
+.shop-content::-webkit-scrollbar { width: 8px; }
+.shop-content::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); border-radius: 4px; }
+.shop-content::-webkit-scrollbar-thumb { background: var(--secondary); border-radius: 4px; }
 
-.tab-btn { 
-    flex: 1; 
-    padding: 15px 0; 
-    background: rgba(0,0,0,0.8); 
-    border: 2px solid rgba(255,255,255,0.15); 
-    border-radius: 10px; 
-    color: var(--text-dim); 
-    font-family: 'Orbitron', sans-serif; 
-    font-size: 16px; 
-    font-weight: bold; 
-    text-transform: uppercase; 
-    cursor: pointer; 
-    transition: var(--transition); 
-    letter-spacing: 1.5px; 
-}
+/* Enhanced Upgrade Cards */
+.upgrade-card { background: rgba(20, 20, 30, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 18px; cursor: pointer; position: relative; transition: var(--transition); overflow: hidden; display: flex; flex-direction: column; }
+.upgrade-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--primary); transition: var(--transition); }
+.upgrade-card::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, rgba(255,255,255,0.05), transparent); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+.upgrade-card:hover:not(.locked) { transform: translateX(-5px) scale(1.01); border-color: var(--primary); background: rgba(30, 40, 30, 0.9); box-shadow: 0 10px 25px rgba(0,0,0,0.9), inset 0 0 20px rgba(57, 255, 20, 0.05); }
+.upgrade-card:hover:not(.locked)::before { width: 100%; opacity: 0.1; }
+.upgrade-card:hover:not(.locked)::after { opacity: 1; }
 
-.tab-btn:hover { 
-    background: rgba(255,255,255,0.15); 
-    color: #fff; 
-    transform: translateY(-2px); 
-}
+.upgrade-card.locked { opacity: 0.5; filter: grayscale(100%); cursor: not-allowed; border-color: #333; }
+.upgrade-card.locked::before { background: #444; }
+.upgrade-card.maxed { border-color: var(--gold); background: rgba(40, 35, 10, 0.9); }
+.upgrade-card.maxed::before { background: var(--gold); }
+.upgrade-card.maxed:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,215,0,0.2); }
 
-.tab-btn.active { 
-    background: var(--secondary); 
-    color: #000; 
-    border-color: var(--secondary); 
-    box-shadow: 0 0 25px var(--secondary-glow); 
-    transform: scale(1.05); 
-    z-index: 2; 
-}
+.uc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; pointer-events: none; }
+.uc-name { font-family: 'Orbitron', sans-serif; font-size: 20px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 1px; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
+.uc-level { background: rgba(0,0,0,0.8); padding: 4px 10px; border-radius: 12px; font-size: 13px; color: var(--tertiary); font-family: 'Orbitron', sans-serif; border: 1px solid var(--tertiary); box-shadow: 0 0 8px rgba(0,255,255,0.3); font-weight: bold; }
 
-.tab-btn[data-target="prestige"].active { 
-    background: var(--gold); 
-    border-color: var(--gold); 
-    box-shadow: 0 0 25px var(--gold-glow); 
-}
+.uc-desc { font-size: 14px; color: #aaa; margin-bottom: 10px; line-height: 1.4; font-style: italic; pointer-events: none; }
+.uc-effect { font-size: 15px; color: var(--primary); margin-bottom: 15px; font-weight: bold; background: rgba(0,0,0,0.6); padding: 6px 12px; border-radius: 6px; display: inline-block; pointer-events: none; border-left: 3px solid var(--primary); }
 
-/* Explicit Close Button for Shop */
-.tab-btn-close {
-    flex: 1;
-    min-width: 100%;
-    margin-top: 10px;
-    background: rgba(255, 51, 51, 0.2);
-    border-color: var(--danger);
-    color: var(--danger);
-}
-.tab-btn-close:hover {
-    background: var(--danger);
-    color: #000;
-    box-shadow: 0 0 20px var(--danger-glow);
-}
-
-.shop-content { 
-    flex: 1; 
-    display: flex; 
-    flex-direction: column; 
-    gap: 15px; 
-    padding-right: 10px;
-    height: 60vh; /* Fixed height */
-    overflow-y: auto; /* Enable scrolling */
-    overflow-x: hidden;
-}
-
-/* Bigger Upgrade Cards */
-.upgrade-card { 
-    background: rgba(255, 255, 255, 0.05);
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 15px;
-    cursor: pointer;
-    position: relative;
-    z-index: 50; /* Higher z-index to ensure it is clickable */
-    pointer-events: auto; /* Force pointer events to work */
-    transition: var(--transition);
-}
-
-.upgrade-card:hover:not(.locked) {
-    background: rgba(57, 255, 20, 0.1);
-    border-color: var(--primary);
-}
-
-.upgrade-card::before { 
-    content: ''; 
-    position: absolute; 
-    top: 0; 
-    left: 0; 
-    width: 6px; 
-    height: 100%; 
-    background: var(--primary); 
-    transition: var(--transition); 
-}
-
-.upgrade-card:hover { 
-    transform: translateX(-10px) scale(1.02); 
-    border-color: var(--primary); 
-    box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 25px rgba(57, 255, 20, 0.15); 
-    z-index: 5; 
-}
-
-.upgrade-card:hover::before { 
-    width: 100%; 
-    opacity: 0.15; 
-}
-
-.upgrade-card.locked { 
-    opacity: 0.6; 
-    filter: grayscale(80%); 
-    cursor: not-allowed; 
-}
-
-.upgrade-card.locked:hover { 
-    transform: none; 
-    border-color: rgba(255,255,255,0.1); 
-    box-shadow: none; 
-}
-
-.upgrade-card.locked::before { 
-    background: #555; 
-}
-
-.upgrade-card.maxed { 
-    border-color: var(--gold); 
-}
-
-.upgrade-card.maxed::before { 
-    background: var(--gold); 
-}
-
-.uc-header { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: flex-start; 
-    margin-bottom: 12px; 
-    position: relative; 
-    z-index: 2; 
-}
-
-.uc-name { 
-    font-family: 'Orbitron', sans-serif; 
-    font-size: 22px; 
-    font-weight: 900; 
-    color: #fff; 
-    text-transform: uppercase; 
-    letter-spacing: 1px; 
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.8); 
-}
-
-.uc-level { 
-    background: rgba(0,0,0,0.9); 
-    padding: 5px 12px; 
-    border-radius: 15px; 
-    font-size: 14px; 
-    color: var(--tertiary); 
-    font-family: 'Orbitron', sans-serif; 
-    border: 2px solid var(--tertiary); 
-    box-shadow: 0 0 10px var(--tertiary-glow); 
-}
-
-.uc-desc { 
-    font-size: 16px; 
-    color: #bbb; 
-    margin-bottom: 8px; 
-    line-height: 1.5; 
-    position: relative; 
-    z-index: 2; 
-    font-style: italic; 
-}
-
-.uc-effect { 
-    font-size: 18px; 
-    color: var(--primary); 
-    margin-bottom: 15px; 
-    line-height: 1.5; 
-    position: relative; 
-    z-index: 2; 
-    font-weight: bold; 
-    background: rgba(0,0,0,0.5); 
-    padding: 5px 10px; 
-    border-radius: 5px; 
-    display: inline-block; 
-}
-
-.uc-footer { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    position: relative; 
-    z-index: 2; 
-    margin-top: auto; 
-    border-top: 1px solid rgba(255,255,255,0.1); 
-    padding-top: 15px; 
-}
-
-.uc-cost { 
-    font-family: 'Orbitron', sans-serif; 
-    font-size: 20px; 
-    font-weight: 900; 
-    color: var(--primary); 
-    text-shadow: 0 0 10px var(--primary-glow); 
-    background: rgba(0,0,0,0.8); 
-    padding: 8px 15px; 
-    border-radius: 8px; 
-    border: 1px solid var(--primary); 
-}
-
-.uc-cost.prestige-cost { 
-    color: var(--gold); 
-    text-shadow: 0 0 10px var(--gold-glow); 
-    border-color: var(--gold); 
-}
+.uc-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px; pointer-events: none; }
+.uc-cost { font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 900; color: var(--primary); text-shadow: 0 0 8px rgba(57,255,20,0.4); background: rgba(0,0,0,0.7); padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(57,255,20,0.3); }
+.uc-cost.prestige-cost { color: var(--gold); text-shadow: 0 0 8px rgba(255,215,0,0.4); border-color: rgba(255,215,0,0.3); }
+.locked .uc-cost { color: var(--danger); text-shadow: none; border-color: var(--danger); }
 
 /* Pagination Controls */
-.pagination-controls { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    margin-top: auto; 
-    padding-top: 20px; 
-    border-top: 2px solid rgba(255,255,255,0.2); 
-}
+.pagination-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 2px solid rgba(255,255,255,0.1); }
+.page-btn { background: #111; color: var(--secondary); border: 2px solid var(--secondary); padding: 12px 25px; font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 900; cursor: pointer; border-radius: 8px; transition: var(--transition); text-transform: uppercase; letter-spacing: 2px; }
+.page-btn:hover:not(:disabled) { background: var(--secondary); color: #000; box-shadow: 0 0 20px var(--secondary-glow); transform: scale(1.05); }
+.page-btn:disabled { border-color: #333; color: #555; cursor: not-allowed; background: transparent; }
+.page-info { color: #fff; font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: bold; letter-spacing: 3px; background: rgba(0,0,0,0.5); padding: 8px 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); }
 
-.page-btn { 
-    background: var(--secondary); 
-    color: #000; 
-    border: none; 
-    padding: 15px 30px; 
-    font-family: 'Orbitron', sans-serif; 
-    font-size: 18px; 
-    font-weight: 900; 
-    cursor: pointer; 
-    border-radius: 8px; 
-    transition: var(--transition); 
-    box-shadow: 0 0 15px var(--secondary-glow); 
-    text-transform: uppercase; 
-}
+/* System/Save Tab Specifics */
+.sys-panel { background: rgba(0,0,0,0.6); border: 1px solid #333; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+.sys-panel h3 { color: #0096ff; font-family: 'Orbitron', sans-serif; margin-bottom: 15px; font-size: 20px; border-bottom: 1px solid rgba(0,150,255,0.3); padding-bottom: 10px; }
+.sys-btn-group { display: flex; gap: 15px; flex-wrap: wrap; }
+.sys-btn { flex: 1; min-width: 45%; padding: 15px; background: #111; border: 2px solid #555; color: #ddd; font-family: 'Orbitron', sans-serif; font-weight: bold; font-size: 16px; cursor: pointer; transition: all 0.2s; border-radius: 8px; text-transform: uppercase; }
+.sys-btn:hover { background: #222; border-color: #fff; color: #fff; transform: translateY(-2px); }
+.sys-btn.btn-save { border-color: #39ff14; color: #39ff14; }
+.sys-btn.btn-save:hover { background: #39ff14; color: #000; box-shadow: 0 0 20px rgba(57,255,20,0.5); }
+.sys-btn.btn-wipe { border-color: #ff3333; color: #ff3333; }
+.sys-btn.btn-wipe:hover { background: #ff3333; color: #000; box-shadow: 0 0 20px rgba(255,51,51,0.5); }
+.save-textarea { width: 100%; height: 80px; background: #000; border: 1px solid #444; color: #00ffcc; font-family: monospace; padding: 10px; margin-bottom: 10px; resize: none; border-radius: 5px; }
 
-.page-btn:hover { 
-    background: #fff; 
-    box-shadow: 0 0 30px #fff; 
-    transform: scale(1.05); 
-}
+/* Logs & FX */
+.floating-text { position: absolute; font-family: 'Orbitron', sans-serif; font-weight: 900; pointer-events: none; z-index: 1000; text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 0 0 15px currentColor; animation: floatUpFade 1.8s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+@keyframes floatUpFade { 0% { opacity: 0; transform: translateY(0) scale(0.5); } 15% { opacity: 1; transform: translateY(-20px) scale(1.2); } 100% { opacity: 0; transform: translateY(-120px) scale(0.8); filter: blur(2px); } }
 
-.page-btn:disabled { 
-    background: #333; 
-    color: #666; 
-    cursor: not-allowed; 
-    box-shadow: none; 
-    transform: none; 
-}
+#notification-log { position: absolute; bottom: 20px; right: 20px; width: 350px; display: flex; flex-direction: column-reverse; gap: 10px; pointer-events: none; z-index: 100; }
+.log-entry { background: rgba(0,0,0,0.85); border-left: 4px solid var(--primary); padding: 12px 20px; border-radius: 6px; color: #fff; font-family: 'Rajdhani', sans-serif; font-size: 16px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); animation: slideInLog 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; opacity: 1; transition: opacity 0.5s; }
+.log-entry.fade-out { opacity: 0; }
+.log-entry.achievement { border-color: var(--gold); background: linear-gradient(90deg, rgba(40,30,0,0.95), rgba(0,0,0,0.85)); }
+@keyframes slideInLog { 0% { transform: translateX(120%); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
 
-.page-info { 
-    color: #fff; 
-    font-family: 'Orbitron', sans-serif; 
-    font-size: 20px; 
-    font-weight: bold; 
-    letter-spacing: 2px; 
-}
+#fx-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; transition: box-shadow 0.3s; }
+.fx-damage { box-shadow: inset 0 0 300px rgba(255, 0, 0, 0.8); }
+.fx-heal { box-shadow: inset 0 0 250px rgba(0, 255, 204, 0.4); }
+.fx-speed { box-shadow: inset 0 0 200px rgba(0, 85, 255, 0.2); }
 
-/* Floating Text FX */
-.floating-text { 
-    position: absolute; 
-    font-family: 'Orbitron', sans-serif; 
-    font-weight: 900; 
-    pointer-events: none; 
-    z-index: 1000; 
-    text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 0 0 20px currentColor; 
-    animation: floatUpFade 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; 
-}
+#time-panel { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); border: 2px solid var(--tertiary); padding: 12px 30px; border-radius: 30px; font-family: 'Orbitron', sans-serif; color: var(--tertiary); z-index: 10; font-size: 20px; box-shadow: 0 0 30px rgba(0,255,255,0.2), inset 0 0 10px rgba(0,255,255,0.1); display: flex; align-items: center; gap: 15px; font-weight: bold; border-bottom: 4px solid var(--tertiary); }
+#time-icon { font-size: 24px; }
 
-@keyframes floatUpFade { 
-    0% { opacity: 0; transform: translateY(0) scale(0.5); } 
-    20% { opacity: 1; transform: translateY(-30px) scale(1.5); } 
-    100% { opacity: 0; transform: translateY(-100px) scale(1); } 
-}
+#crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 24px; height: 24px; pointer-events: none; z-index: 50; transition: transform 0.1s; }
+#crosshair.active { transform: translate(-50%, -50%) scale(1.5); }
+#crosshair::before, #crosshair::after { content: ''; position: absolute; background: rgba(255,255,255,0.9); box-shadow: 0 0 6px #000; }
+#crosshair::before { top: 11px; left: 0; width: 24px; height: 2px; }
+#crosshair::after { top: 0; left: 11px; width: 2px; height: 24px; }
 
-/* Center Alerts */
-#alert-container { 
-    position: absolute; 
-    top: 15%; 
-    left: 50%; 
-    transform: translateX(-50%); 
-    z-index: 100; 
-    pointer-events: none; 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    gap: 15px; 
-}
+.interact-prompt { position: absolute; top: 58%; left: 50%; transform: translateX(-50%); font-size: 22px; font-weight: 900; font-family: 'Orbitron', sans-serif; color: var(--gold); text-shadow: 0 0 15px var(--gold-glow); display: none; z-index: 50; pointer-events: none; background: rgba(0,0,0,0.85); padding: 12px 35px; border-radius: 30px; border: 2px solid var(--gold); letter-spacing: 3px; animation: pulsePrompt 1.5s infinite alternate; }
+@keyframes pulsePrompt { 0% { transform: translateX(-50%) scale(1); box-shadow: 0 0 10px rgba(255,215,0,0.2); } 100% { transform: translateX(-50%) scale(1.08); box-shadow: 0 0 30px rgba(255,215,0,0.6); } }
 
-.alert-toast { 
-    background: rgba(0,0,0,0.95); 
-    border: 3px solid var(--primary); 
-    padding: 20px 40px; 
-    border-radius: 12px; 
-    color: #fff; 
-    font-family: 'Orbitron', sans-serif; 
-    font-size: 24px; 
-    font-weight: 900; 
-    text-transform: uppercase; 
-    letter-spacing: 3px; 
-    box-shadow: 0 0 30px var(--primary-glow); 
-    animation: slideInFade 2s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-}
+#loading-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #020202; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--primary); font-family: 'Orbitron', sans-serif; transition: opacity 1.5s ease-out; }
+.spinner { width: 120px; height: 120px; border: 8px solid rgba(57, 255, 20, 0.1); border-top-color: var(--primary); border-bottom-color: var(--secondary); border-radius: 50%; animation: spin 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite; margin-bottom: 40px; box-shadow: 0 0 50px rgba(57,255,20,0.3); }
+@keyframes spin { 100% { transform: rotate(360deg); } }
 
-.achievement-toast { 
-    background: linear-gradient(45deg, #000, #222); 
-    border: 3px solid var(--gold); 
-    padding: 20px 35px; 
-    border-radius: 12px; 
-    color: var(--gold); 
-    font-family: 'Orbitron', sans-serif; 
-    box-shadow: 0 0 40px var(--gold-glow); 
-    animation: dropInFade 5s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-    display: flex; 
-    align-items: center; 
-    gap: 20px; 
-}
-
-.achievement-toast .icon { 
-    font-size: 40px; 
-    text-shadow: 0 0 20px var(--gold); 
-}
-
-.achievement-toast .details h4 { 
-    margin: 0 0 8px 0; 
-    font-size: 20px; 
-    text-transform: uppercase; 
-    letter-spacing: 2px; 
-    color: #fff; 
-}
-
-.achievement-toast .details p { 
-    margin: 0; 
-    font-size: 16px; 
-    color: #ccc; 
-    font-family: 'Rajdhani', sans-serif; 
-}
-
-/* Environment Time UI */
-#time-panel { 
-    position: absolute; 
-    top: 20px; 
-    left: 50%; 
-    transform: translateX(-50%); 
-    background: rgba(0,0,0,0.85); 
-    border: 2px solid var(--tertiary); 
-    padding: 15px 30px; 
-    border-radius: 30px; 
-    font-family: 'Orbitron', sans-serif; 
-    color: var(--tertiary); 
-    z-index: 10; 
-    font-size: 20px; 
-    box-shadow: 0 0 25px rgba(0,255,255,0.4); 
-    backdrop-filter: blur(10px); 
-    display: flex; 
-    align-items: center; 
-    gap: 15px; 
-    font-weight: bold; 
-}
-
-#time-icon { font-size: 26px; }
-
-/* Crosshair & Interaction */
-#crosshair { 
-    position: absolute; 
-    top: 50%; 
-    left: 50%; 
-    transform: translate(-50%, -50%); 
-    width: 24px; 
-    height: 24px; 
-    pointer-events: none; 
-    z-index: 50; 
-}
-
-#crosshair::before, #crosshair::after { 
-    content: ''; 
-    position: absolute; 
-    background: rgba(255,255,255,0.9); 
-    box-shadow: 0 0 8px #000; 
-}
-
-#crosshair::before { top: 11px; left: 0; width: 24px; height: 3px; }
-#crosshair::after { top: 0; left: 11px; width: 3px; height: 24px; }
-
-.interact-prompt { 
-    position: absolute; 
-    top: 55%; 
-    left: 50%; 
-    transform: translateX(-50%); 
-    font-size: 24px; 
-    font-weight: 900; 
-    font-family: 'Orbitron', sans-serif; 
-    color: var(--gold); 
-    text-shadow: 0 0 20px var(--gold-glow); 
-    display: none; 
-    z-index: 50; 
-    pointer-events: none; 
-    background: rgba(0,0,0,0.8); 
-    padding: 15px 30px; 
-    border-radius: 30px; 
-    border: 2px solid var(--gold); 
-    letter-spacing: 2px; 
-    animation: pulse 1s infinite alternate; 
-}
-
-@keyframes pulse { 
-    0% { transform: translateX(-50%) scale(1); } 
-    100% { transform: translateX(-50%) scale(1.05); } 
-}
-
-/* Rebirth Screen */
-#rebirth-overlay { 
-    position: absolute; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%; 
-    background: rgba(0,0,0,0.98); 
-    z-index: 1000; 
-    display: none; 
-    flex-direction: column; 
-    justify-content: center; 
-    align-items: center; 
-    backdrop-filter: blur(30px); 
-}
-
-.rebirth-box { 
-    background: #050505; 
-    border: 4px solid var(--gold); 
-    padding: 60px; 
-    border-radius: 30px; 
-    text-align: center; 
-    max-width: 800px; 
-    box-shadow: 0 0 80px var(--gold-glow), inset 0 0 50px rgba(255, 215, 0, 0.3); 
-    animation: pulseBox 2s infinite alternate; 
-}
-
-@keyframes pulseBox { 
-    0% { box-shadow: 0 0 50px var(--gold-glow); } 
-    100% { box-shadow: 0 0 100px var(--gold-glow); } 
-}
-
-.rebirth-box h2 { 
-    font-family: 'Orbitron', sans-serif; 
-    color: var(--gold); 
-    font-size: 50px; 
-    margin: 0 0 30px 0; 
-    text-shadow: 0 0 30px var(--gold-glow); 
-    text-transform: uppercase; 
-    letter-spacing: 8px; 
-}
-
-.rebirth-box p { 
-    font-size: 22px; 
-    color: #ddd; 
-    margin-bottom: 25px; 
-    line-height: 1.8; 
-}
-
-.rebirth-gain { 
-    font-family: 'Orbitron', sans-serif; 
-    font-size: 60px; 
-    color: var(--gold); 
-    font-weight: 900; 
-    margin: 40px 0; 
-    display: block; 
-    text-shadow: 0 0 40px var(--gold-glow); 
-}
-
-.btn-ascend { 
-    background: rgba(255,215,0,0.1); 
-    border: 4px solid var(--gold); 
-    color: var(--gold); 
-    padding: 25px 70px; 
-    font-size: 30px; 
-    font-family: 'Orbitron', sans-serif; 
-    font-weight: 900; 
-    text-transform: uppercase; 
-    cursor: pointer; 
-    transition: var(--transition); 
-    border-radius: 15px; 
-    letter-spacing: 4px; 
-}
-
-.btn-ascend:hover { 
-    background: var(--gold); 
-    color: #000; 
-    box-shadow: 0 0 60px var(--gold-glow); 
-    transform: scale(1.1); 
-}
-
-.btn-cancel { 
-    background: transparent; 
-    border: none; 
-    color: #888; 
-    font-family: 'Rajdhani', sans-serif; 
-    font-size: 22px; 
-    margin-top: 30px; 
-    cursor: pointer; 
-    text-decoration: underline; 
-    transition: color 0.2s; 
-    font-weight: bold; 
-}
-
+/* Rebirth Screen styling */
+.rebirth-box { background: #030303; border: 4px solid var(--gold); padding: 50px 70px; border-radius: 20px; text-align: center; max-width: 850px; box-shadow: 0 0 100px rgba(255, 215, 0, 0.4), inset 0 0 60px rgba(255, 215, 0, 0.2); animation: floatBox 4s infinite ease-in-out; }
+@keyframes floatBox { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+.rebirth-box h2 { font-family: 'Orbitron', sans-serif; color: var(--gold); font-size: 55px; margin: 0 0 25px 0; text-shadow: 0 0 30px var(--gold-glow); text-transform: uppercase; letter-spacing: 10px; border-bottom: 2px solid rgba(255,215,0,0.3); padding-bottom: 15px; }
+.rebirth-box p { font-size: 20px; color: #ccc; margin-bottom: 20px; line-height: 1.6; font-family: 'Rajdhani', sans-serif; }
+.rebirth-gain { font-family: 'Orbitron', sans-serif; font-size: 70px; color: var(--gold); font-weight: 900; margin: 30px 0; display: block; text-shadow: 0 0 50px var(--gold-glow); }
+.btn-ascend { background: rgba(255,215,0,0.05); border: 3px solid var(--gold); color: var(--gold); padding: 25px 80px; font-size: 28px; font-family: 'Orbitron', sans-serif; font-weight: 900; text-transform: uppercase; cursor: pointer; transition: var(--transition); border-radius: 12px; letter-spacing: 5px; position: relative; overflow: hidden; }
+.btn-ascend::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent); transform: rotate(45deg); transition: 0.5s; opacity: 0; }
+.btn-ascend:hover { background: var(--gold); color: #000; box-shadow: 0 0 80px var(--gold-glow); transform: scale(1.05); }
+.btn-ascend:hover::after { opacity: 1; left: 100%; }
+.btn-cancel { background: transparent; border: none; color: #666; font-family: 'Rajdhani', sans-serif; font-size: 20px; margin-top: 25px; cursor: pointer; text-decoration: underline; transition: color 0.2s; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; }
 .btn-cancel:hover { color: #fff; }
-
-/* Screen FX */
-#fx-overlay { 
-    position: absolute; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%; 
-    pointer-events: none; 
-    z-index: 5; 
-    transition: box-shadow 0.2s; 
-}
-
-.fx-damage { box-shadow: inset 0 0 250px rgba(255, 0, 0, 0.9); }
-.fx-heal { box-shadow: inset 0 0 200px rgba(0, 255, 204, 0.6); }
-.fx-speed { box-shadow: inset 0 0 150px rgba(0, 85, 255, 0.4); }
-
-/* Loading Screen */
-#loading-screen { 
-    position: absolute; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%; 
-    background: #000; 
-    z-index: 9999; 
-    display: flex; 
-    flex-direction: column; 
-    justify-content: center; 
-    align-items: center; 
-    color: var(--primary); 
-    font-family: 'Orbitron', sans-serif; 
-    transition: opacity 1s; 
-}
-
-.spinner { 
-    width: 100px; 
-    height: 100px; 
-    border: 8px solid rgba(57, 255, 20, 0.2); 
-    border-top-color: var(--primary); 
-    border-radius: 50%; 
-    animation: spin 1s linear infinite; 
-    margin-bottom: 30px; 
-    box-shadow: 0 0 30px var(--primary-glow); 
-}
-
-@keyframes spin { 
-    100% { transform: rotate(360deg); } 
-}
 </style>
 </head>
 <body>
 
 <div id="loading-screen">
     <div class="spinner"></div>
-    <h2 class="glitch-text" data-text="GENERATING INFINITE UNIVERSE...">GENERATING INFINITE UNIVERSE...</h2>
-    <p style="margin-top: 25px; color: #888; font-family: 'Rajdhani', sans-serif; font-size: 20px;">Synthesizing 80,000+ Flora Entities & Audio Matrices...</p>
+    <h2 class="glitch-text" data-text="INITIALIZING OMEGA ENGINE...">INITIALIZING OMEGA ENGINE...</h2>
+    <p style="margin-top: 25px; color: #666; font-family: 'Rajdhani', sans-serif; font-size: 22px; letter-spacing: 2px;">Synthesizing 250,000+ Biomes & Audio Matrices...</p>
 </div>
 
 <div id="webgl-container"></div>
 <div id="fx-overlay"></div>
 <div id="crosshair"></div>
-<div id="interact-prompt" class="interact-prompt">[SPACE] TO DIGEST MASS</div>
+<div id="interact-prompt" class="interact-prompt">[SPACE] PURGE BIOMASS</div>
 
-<div id="pause-overlay">
+<div id="pause-overlay" class="fullscreen-overlay">
     <h1>SIMULATION PAUSED</h1>
-    <p onclick="document.body.requestPointerLock()">CLICK TO RESUME</p>
+    <div class="btn-resume" onclick="document.body.requestPointerLock()">ENGAGE LINK</div>
+</div>
+
+<div id="rebirth-overlay" class="fullscreen-overlay">
+    <div class="rebirth-box">
+        <h2>ASCENSION PROTOCOL</h2>
+        <p>WARNING: Initiating will permanently obliterate your current physical form.</p>
+        <p>All Mass, Biowaste, Upgrades, and Genetic Anomalies will be purged.</p>
+        <p>Your residual energy will crystallize into Astral Tokens.</p>
+        <span class="rebirth-gain">+<span id="rebirth-amt">0</span> TOKENS</span>
+        <button class="btn-ascend" onclick="Game.executeRebirth()">TRANSCEND</button><br>
+        <button class="btn-cancel" onclick="document.getElementById('rebirth-overlay').style.display='none'">ABORT SEQUENCE</button>
+    </div>
 </div>
 
 <div id="time-panel">
     <span id="time-icon">☀️</span>
     <span id="time-text">12:00</span>
-    <span style="font-size: 16px; margin-left: 15px; color: #ccc;">CYCLE <span id="time-day">1</span></span>
+    <span style="font-size: 15px; margin-left: 10px; color: #aaa; padding-left:15px; border-left:2px solid rgba(255,255,255,0.2);">CYCLE <span id="time-day" style="color:#fff;">1</span></span>
 </div>
 
 <div id="distance-ticker" class="hud-element">
-    <span class="label">Odometer:</span>
+    <span class="label">ODOMETER:</span>
     <span class="val"><span id="txt-dist">0</span>m</span>
 </div>
 
-
+<div id="minimap-container">
+    <canvas id="minimap-canvas"></canvas>
     <div class="minimap-overlay"></div>
 </div>
 
 <div id="stats-panel" class="hud-element">
-    <h1 class="glitch-text" data-text="FELIXFART 3D">FELIXFART 3D</h1>
+    <h1 class="glitch-text" data-text="FELIXFART V4">FELIXFART V4</h1>
+    
     <div class="stat-row">
         <span class="stat-label">Total Expulsions</span>
         <span id="txt-farts" class="stat-val val-fart">0</span>
     </div>
     <div class="stat-row">
-        <span class="stat-label">Mass Multiplier</span>
+        <span class="stat-label">Output Multiplier</span>
         <span id="txt-mult" class="stat-val val-mult">x1.00</span>
     </div>
     <div class="stat-row">
-        <span class="stat-label">Beans Assimilated</span>
+        <span class="stat-label">Auto-Generation</span>
+        <span class="stat-val" style="color:#aaa;"><span id="txt-auto">0</span>/s</span>
+    </div>
+    <div class="stat-row">
+        <span class="stat-label">Biomass Absorbed</span>
         <span id="txt-beans" class="stat-val val-bean">0</span>
     </div>
-    <div class="stat-row" id="row-prestige" style="display:none;">
+    <div class="stat-row" id="row-prestige" style="display:none; border-color:rgba(255,215,0,0.3);">
         <span class="stat-label" style="color:var(--gold)">Astral Tokens</span>
         <span id="txt-tokens" class="stat-val" style="color:var(--gold); text-shadow:0 0 15px var(--gold-glow)">0</span>
     </div>
     
-    <div style="margin-top: 20px;">
+    <div style="margin-top: 15px;">
         <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
             <span class="stat-label" style="color:#fff;">Gastric Capacity</span>
-            <span id="txt-stom" style="font-family:'Orbitron',sans-serif; font-size:16px; font-weight:900;">0 / 10</span>
+            <span id="txt-stom" style="font-family:'Orbitron',sans-serif; font-size:15px; font-weight:900;">0 / 10</span>
         </div>
         <div class="bar-container"><div id="stomach-fill" class="bar-fill"></div><div id="stomach-pct" class="bar-text">0%</div></div>
     </div>
 
-    <div style="margin-top: 15px;">
+    <div style="margin-top: 12px;">
         <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-            <span class="stat-label" style="color:#fff;">Kinetic Stamina (SHIFT)</span>
+            <span class="stat-label" style="color:#fff;">Kinetic Stamina [SHIFT]</span>
         </div>
         <div class="bar-container"><div id="stamina-fill" class="bar-fill" style="width:100%;"></div><div class="bar-text">MAXIMUM</div></div>
     </div>
 
-    <div style="margin-top: 25px; font-size: 14px; color: #888; text-align: center; font-family: 'Rajdhani', sans-serif; letter-spacing: 1.5px; border-top: 2px solid rgba(255,255,255,0.1); padding-top: 15px; font-weight: bold;">
-        WASD/ARROWS: Move | TAB: Upgrade Shop | MOUSE: Look | SHIFT: Sprint<br>Assimilate Beans -> Return to Core -> [SPACE] Let out farts
+    <div style="margin-top: 20px; font-size: 13px; color: #777; text-align: center; font-family: 'Rajdhani', sans-serif; letter-spacing: 1.5px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px; line-height:1.4;">
+        [W,A,S,D] Move | [MOUSE] Look | [SHIFT] Sprint<br>[TAB] Open Terminal | Return to Core & press [SPACE]
     </div>
 </div>
 
-<div id="shop-panel" class="hud-element" style="display: none;">
+<div id="shop-panel" class="hud-element">
+    <div class="shop-header-area">
+        <span class="shop-title glitch-text" data-text="TERMINAL UPLINK">TERMINAL UPLINK</span>
+        <div class="multiplier-controls">
+            <button class="mult-btn active" onclick="UI.setBuyMode(1)" id="btn-buy-1">x1</button>
+            <button class="mult-btn" onclick="UI.setBuyMode(10)" id="btn-buy-10">x10</button>
+            <button class="mult-btn" onclick="UI.setBuyMode('max')" id="btn-buy-max">MAX</button>
+        </div>
+    </div>
+
     <div class="shop-tabs">
-        <button class="tab-btn active" data-target="upgrades" onclick="UI.switchTab('upgrades')">Upgrades</button>
-        <button class="tab-btn" data-target="mutations" onclick="UI.switchTab('mutations')">Mutations</button>
+        <button class="tab-btn active" data-target="upgrades" onclick="UI.switchTab('upgrades')">Tech</button>
+        <button class="tab-btn" data-target="mutations" onclick="UI.switchTab('mutations')">Biology</button>
         <button class="tab-btn" data-target="prestige" onclick="UI.switchTab('prestige')">Astral</button>
         <button class="tab-btn" data-target="achievements" onclick="UI.switchTab('achievements')">Trophies</button>
-        <button class="tab-btn tab-btn-close" onclick="document.body.requestPointerLock()">[ RESUME GAME ]</button>
+        <button class="tab-btn tab-btn-sys" data-target="system" onclick="UI.switchTab('system')">System</button>
+        <button class="tab-btn tab-btn-close" onclick="document.body.requestPointerLock()">[ CLOSE TERMINAL ]</button>
     </div>
     
     <div id="list-upgrades" class="shop-content"></div>
     <div id="list-mutations" class="shop-content" style="display:none;"></div>
-    <div id="list-achievements" class="shop-content" style="display:none;"></div>
     <div id="list-prestige" class="shop-content" style="display:none;"></div>
-</div>
-
-<div id="alert-container"></div>
-
-<div id="rebirth-overlay">
-    <div class="rebirth-box">
-        <h2>ASCENSION PROTOCOL</h2>
-        <p>Warning: Initiating ascension will permanently obliterate your current physical form. You will lose all accumulated Farts, Beans, Upgrades, and Biological Mutations.</p>
-        <p>Your essence will be crystallized into Astral Tokens, unlocking reality-bending permanent multipliers across all future timelines.</p>
-        <span class="rebirth-gain">+<span id="rebirth-amt">0</span> TOKENS</span>
-        <button class="btn-ascend" onclick="Game.executeRebirth()">TRANSCEND REALITY</button><br>
-        <button class="btn-cancel" onclick="document.getElementById('rebirth-overlay').style.display='none'">ABORT SEQUENCE</button>
+    <div id="list-achievements" class="shop-content" style="display:none;"></div>
+    <div id="list-system" class="shop-content" style="display:none;">
+        <div class="sys-panel">
+            <h3>SAVE MANAGEMENT</h3>
+            <p style="color:#aaa; font-size:14px; margin-bottom:15px;">The simulation auto-saves every 10 seconds, but manual backups are advised.</p>
+            <div class="sys-btn-group">
+                <button class="sys-btn btn-save" onclick="SaveSys.save(true)">FORCE SAVE</button>
+                <button class="sys-btn btn-wipe" onclick="SaveSys.hardReset()">WIPE DATA</button>
+            </div>
+        </div>
+        <div class="sys-panel">
+            <h3>IMPORT / EXPORT</h3>
+            <p style="color:#aaa; font-size:14px; margin-bottom:10px;">Copy this string to backup your timeline, or paste one to overwrite.</p>
+            <textarea id="save-string" class="save-textarea" onclick="this.select()"></textarea>
+            <div class="sys-btn-group">
+                <button class="sys-btn" onclick="SaveSys.export()">GENERATE STRING</button>
+                <button class="sys-btn" onclick="SaveSys.import()">LOAD STRING</button>
+            </div>
+        </div>
+        <div class="sys-panel">
+            <h3>ENVIRONMENT OVERRIDES</h3>
+            <div class="sys-btn-group" style="margin-top:10px;">
+                <button class="sys-btn" id="btn-weather" onclick="WeatherSys.cycle()">CYCLE WEATHER: ☀️</button>
+            </div>
+        </div>
     </div>
 </div>
 
+<div id="notification-log"></div>
+
 <script>
 /**
- * FELIXFART 3D: ASCENDED TYCOON V3 ENGINE
- * Expanded Codebase containing 1.5x length, intricate procedural texturing for colored terrain,
- * comprehensive pointer-lock event fixing, and robust ambient entity systems.
+ * FELIXFART 3D: ASCENDED TYCOON V4 (OMEGA ENGINE)
+ * MASSIVELY EXPANDED VERSION
+ * - Deep Database Generation (600+ items)
+ * - Save/Load System (LocalStorage + Base64 Import/Export)
+ * - Notification Log System
+ * - Buy Multipliers (x1, x10, Max)
+ * - Safe Event Delegation for UI
+ * - Robust Weather and Particle Systems
  */
 
-const DB = { 
-    upgrades: [], 
-    mutations: [], 
-    prestige: [], 
-    achievements: [] 
-};
-
 // ==========================================
-// DATABASE GENERATION
+// DATABASE GENERATION (MASSIVE EXPANSION)
 // ==========================================
-const upgradeAdjectives = ["Elastic", "Reinforced", "Titanium", "Quantum", "Nuclear", "Cosmic", "Galactic", "Divine", "Abyssal", "Infinite", "Celestial", "Ethereal", "Void", "Astral", "Hyper", "Mega", "Giga", "Tera", "Peta", "Exa", "Zetta", "Yotta", "Chronos", "Aether", "Omni"];
-const upgradeNouns = ["Stomach", "Intestines", "Lungs", "Shoes", "Tractor Beam", "Digester", "Valve", "Compressor", "Sphincter", "Aura", "Core", "Engine", "Reactor", "Matrix", "Nexus", "Portal", "Vortex", "Singularity", "Quasar", "Pulsar", "Monolith", "Tesseract", "Drive", "Construct", "Array"];
+const DB = { upgrades: [], mutations: [], prestige: [], achievements: [] };
 
-for(let i=0; i<300; i++) {
-    let tier = Math.floor(i / 10);
-    let typeIndex = i % 10;
-    let typeMap = ['cap', 'fart', 'stam', 'speed', 'rad', 'digest', 'auto', 'fart', 'cap', 'rad'];
-    let type = typeMap[typeIndex];
-    let baseCost = 10 * Math.pow(2.9, tier) * (typeIndex + 1);
-    let name = `${upgradeAdjectives[tier % upgradeAdjectives.length]} ${upgradeNouns[typeIndex % upgradeNouns.length]} Mk.${(i%5)+1}`;
+const uPfx = ["Basic", "Reinforced", "Tuned", "Super", "Hyper", "Mega", "Ultra", "Quantum", "Atomic", "Nuclear", "Cosmic", "Galactic", "Universal", "Dimensional", "Ethereal", "Astral", "Void", "Abyssal", "Infinite", "Omni", "Celestial", "Divine", "Eldritch", "Transcendent", "Absolute"];
+const uRoot = ["Valve", "Piston", "Compressor", "Chamber", "Turbine", "Reactor", "Core", "Matrix", "Nexus", "Engine"];
+const uSfx = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta", "Omega", "Prime", "Apex", "Zenith"];
+
+let uId = 0;
+// Generate 500 Upgrades (10 per tier, 50 tiers)
+for(let tier=0; tier<50; tier++) {
+    const types = ['cap', 'fart', 'stam', 'speed', 'rad', 'digest', 'auto', 'fart', 'cap', 'rad'];
+    for(let j=0; j<10; j++) {
+        let type = types[j];
+        let pfx = uPfx[Math.min(tier, uPfx.length-1)];
+        let root = uRoot[j];
+        let sfx = uSfx[tier % uSfx.length];
+        
+        let baseCost = 10 * Math.pow(3.1, tier) * (j + 1);
+        let maxLvl = 15 + (tier * 2);
+        let mult = 1.15 + (tier * 0.02);
+        
+        let val, desc, effectDesc;
+        switch(type) {
+            case 'cap': val = 10 * Math.pow(2.8, tier); desc = `Expands physical stomach dimensions.`; effectDesc = `Capacity: +${val.toLocaleString()}`; break;
+            case 'fart': val = 1.3 + (tier * 0.4); desc = `Increases mass generated per unit.`; effectDesc = `Output: x${val.toFixed(2)}`; break;
+            case 'stam': val = 30 * (tier + 1); desc = `Cardiovascular nano-enhancement.`; effectDesc = `Max Stamina: +${val.toLocaleString()}`; break;
+            case 'speed': val = 0.05 + (tier * 0.03); desc = `Optimizes bipedal locomotion.`; effectDesc = `Speed: +${(val*100).toFixed(0)}%`; break;
+            case 'rad': val = 8 + (tier * 5); desc = `Extends biological magnetic pull.`; effectDesc = `Radius: +${val.toLocaleString()}m`; break;
+            case 'digest': val = 1.8 + (tier * 0.8); desc = `Accelerates breakdown via heat.`; effectDesc = `Digestion: x${val.toFixed(2)}`; break;
+            case 'auto': val = 5 * Math.pow(8, tier); desc = `Passive internal generation protocols.`; effectDesc = `Passive Gen: +${val.toLocaleString()}/s`; break;
+        }
+
+        DB.upgrades.push({
+            id: `u_${uId++}`, name: `${pfx} ${root} ${sfx}`, desc: desc, effectDesc: effectDesc,
+            cost: Math.floor(baseCost), mult: mult, max: maxLvl, type: type, val: val
+        });
+    }
+}
+
+// Generate 200 Mutations
+const mPfx = ["Toxic", "Feral", "Mutated", "Sentient", "Parasitic", "Symbiotic", "Necrotic", "Psionic", "Cybernetic", "Demonic", "Angelic", "Crystalline", "Plasma", "Shadow", "Light"];
+let mId = 0;
+for(let tier=0; tier<20; tier++) {
+    for(let j=0; j<10; j++) {
+        let type = j % 2 === 0 ? 'auto' : 'fart';
+        let baseCost = 5000 * Math.pow(5.5, tier) * (j+1);
+        let val = type === 'auto' ? Math.pow(15, tier+1) : Math.pow(3.0, tier+1);
+        let effectDesc = type === 'auto' ? `Passive Gen: +${val.toLocaleString()}/s` : `Output Multiplier: x${val.toLocaleString()}`;
+        
+        DB.mutations.push({
+            id: `m_${mId++}`, name: `${mPfx[tier % mPfx.length]} Strain ${j+1}`, desc: `Radically alters DNA structure.`,
+            effectDesc: effectDesc, cost: Math.floor(baseCost), mult: 2.5, max: 10, type: type, val: val
+        });
+    }
+}
+
+// Generate 40 Prestige Items
+const pNames = ["Golden Wind", "Astral Lungs", "Divine Digestion", "Omni Radius", "Temporal Stride", "Void Capacity", "Creator Core", "Singularity", "Nebula Aura", "Galactic Breath"];
+for(let i=0; i<40; i++) {
+    let pTypes = ['pfart', 'pcap', 'pdigest', 'prad', 'pspeed', 'pstam', 'pauto'];
+    let type = pTypes[i % pTypes.length];
+    let val = (type === 'pauto') ? Math.pow(10, Math.floor(i/7)+1) : (2.5 + i*0.5);
+    let effectDesc = type === 'pauto' ? `Passive base generation +${val.toLocaleString()}/lvl` : `Base stat multiplied x${val.toLocaleString()}/lvl`;
     
-    let val, desc, effectDesc;
-    switch(type) {
-        case 'cap': 
-            val = 10 * Math.pow(2.6, tier); 
-            desc = `Drastically expands interdimensional physical storage limits.`; 
-            effectDesc = `Stomach Capacity: +${val.toLocaleString()}`; 
-            break;
-        case 'fart': 
-            val = 1.25 + (tier * 0.35); 
-            desc = `Refines the raw biological output mechanism to absolute perfection.`; 
-            effectDesc = `Expulsion Multiplier: x${val.toFixed(2)}`; 
-            break;
-        case 'stam': 
-            val = 25 * (tier + 1); 
-            desc = `Strengthens the cardiovascular system with nanite injections.`; 
-            effectDesc = `Max Stamina: +${val.toLocaleString()}`; 
-            break;
-        case 'speed': 
-            val = 0.06 + (tier * 0.04); 
-            desc = `Optimizes biomechanical locomotion for near light-speed travel.`; 
-            effectDesc = `Movement Speed: +${(val*100).toFixed(0)}%`; 
-            break;
-        case 'rad': 
-            val = 6 + (tier * 4); 
-            desc = `Amplifies localized gravitational pull on all nearby bean matter.`; 
-            effectDesc = `Magnetic Radius: +${val.toLocaleString()}m`; 
-            break;
-        case 'digest': 
-            val = 1.6 + (tier * 0.7); 
-            desc = `Accelerates internal metabolic breakdown via fusion heat.`; 
-            effectDesc = `Digestion Speed: x${val.toFixed(2)}`; 
-            break;
-        case 'auto': 
-            val = 2 * Math.pow(7, tier); 
-            desc = `Initiates continuous autonomous mass generation protocols.`; 
-            effectDesc = `Passive Generation: +${val.toLocaleString()}/sec`; 
-            break;
-    }
-    DB.upgrades.push({ 
-        id: `u_${i}`, 
-        name: name, 
-        desc: desc, 
-        effectDesc: effectDesc, 
-        cost: Math.floor(baseCost), 
-        mult: 1.18 + (tier * 0.06), 
-        max: 15 + (tier * 5), 
-        type: type, 
-        val: val 
+    DB.prestige.push({
+        id: `p_${i}`, name: `${pNames[i%pNames.length]} Mk.${Math.floor(i/pNames.length)+1}`, desc: `Rewrites fundamental reality laws.`,
+        effectDesc: effectDesc, cost: 1 * Math.pow(4.5, i), mult: 3.2, max: 999, type: type, val: val
     });
 }
 
-const mutAdj = ["Toxic", "Radioactive", "Biohazard", "Corrosive", "Mutated", "Sentient", "Parasitic", "Symbiotic", "Necrotic", "Psionic", "Cybernetic", "Demonic", "Angelic", "Eldritch", "Crystalline"];
-for(let i=0; i<150; i++) {
-    let tier = Math.floor(i/10);
-    let type = i % 2 === 0 ? 'auto' : 'fart';
-    let baseCost = 6000 * Math.pow(4.8, tier);
-    let val = type === 'auto' ? Math.pow(14, tier+1) : Math.pow(2.8, tier+1);
-    let effectDesc = type === 'auto' ? `Passive Generation: +${val.toLocaleString()}/sec` : `Massive Output Multiplier: x${val.toLocaleString()}`;
-    DB.mutations.push({ 
-        id: `m_${i}`, 
-        name: `${mutAdj[tier % mutAdj.length]} Anomaly ${i+1}`, 
-        desc: `Radically alters genetic structure on a subatomic level.`, 
-        effectDesc: effectDesc, 
-        cost: Math.floor(baseCost), 
-        mult: 2.35, 
-        max: 10, 
-        type: type, 
-        val: val 
-    });
-}
-
-const presNames = ["Golden Bean", "God Speed", "Astral Capacity", "Divine Digestion", "Omnipotent Radius", "Ethereal Lungs", "Creator's Valve", "Void Compression", "Celestial Aura", "The Ultimate Fart", "Cosmic Resonance", "Temporal Shift", "Quantum Entanglement", "Dimensional Rift", "Singularity Core", "Nebula Breath", "Stellar Forge", "Galactic Wind", "Universal Will", "Alpha & Omega"];
-const presTypes = ['pfart', 'pspeed', 'pcap', 'pdigest', 'prad', 'pstam', 'pauto', 'pfart', 'prad', 'pfart', 'pauto', 'pspeed', 'pcap', 'pdigest', 'pfart', 'pstam', 'pauto', 'prad', 'pfart', 'pauto'];
-for(let i=0; i<20; i++) {
-    let val = i === 19 ? 5000 : (2.5 + i*1.2);
-    let effectDesc = `Base stat permanently multiplied by x${val.toLocaleString()} per level.`;
-    if(presTypes[i] === 'pauto') effectDesc = `Adds +${(val * 100).toLocaleString()} passive base generation per level.`;
-    DB.prestige.push({ 
-        id: `p_${i}`, 
-        name: presNames[i], 
-        desc: `Permanently rewrites reality across all existing timelines.`, 
-        effectDesc: effectDesc, 
-        cost: 1 * Math.pow(4.2, i), 
-        mult: 3.0, 
-        max: 999, 
-        type: presTypes[i], 
-        val: val 
-    });
-}
-
-const achievementData = [
-    { id: 'a_1', name: "First Wind", desc: "Generate your first 100 expulsions.", req: { type: 'farts', val: 100 } },
-    { id: 'a_2', name: "Bean Eater", desc: "Devour 50 biological beans.", req: { type: 'beans', val: 50 } },
-    { id: 'a_3', name: "Hurricane Warning", desc: "Reach 1,000,000 total mass expulsions.", req: { type: 'farts', val: 1000000 } },
-    { id: 'a_4', name: "Marathon Runner", desc: "Travel 10,000 physical units.", req: { type: 'dist', val: 10000 } },
-    { id: 'a_5', name: "Ascended Being", desc: "Perform your first Rebirth sequence.", req: { type: 'rebirth', val: 1 } },
-    { id: 'a_6', name: "Insatiable Hunger", desc: "Reach 10,000 Gastric Capacity.", req: { type: 'cap', val: 10000 } },
-    { id: 'a_7', name: "Global Warming", desc: "Reach 1,000,000,000 total mass expulsions.", req: { type: 'farts', val: 1000000000 } },
-    { id: 'a_8', name: "Bean Hoarder", desc: "Devour 5,000 biological beans.", req: { type: 'beans', val: 5000 } },
-    { id: 'a_9', name: "Multi-Dimensional", desc: "Perform 10 consecutive Rebirths.", req: { type: 'rebirth', val: 10 } },
-    { id: 'a_10', name: "Speed Demon", desc: "Travel an astonishing 100,000 units.", req: { type: 'dist', val: 100000 } }
+// Achievements
+const achData = [
+    { id: 'a_1', name: "First Wind", desc: "Generate 100 total expulsions.", req: { type: 'farts', val: 100 } },
+    { id: 'a_2', name: "Scavenger", desc: "Devour 50 biomass beans.", req: { type: 'beans', val: 50 } },
+    { id: 'a_3', name: "Marathon", desc: "Travel 10,000 meters.", req: { type: 'dist', val: 10000 } },
+    { id: 'a_4', name: "Hurricane", desc: "Generate 1,000,000 expulsions.", req: { type: 'farts', val: 1000000 } },
+    { id: 'a_5', name: "Bottomless", desc: "Reach 5,000 capacity.", req: { type: 'cap', val: 5000 } },
+    { id: 'a_6', name: "Ascension", desc: "Perform 1 Rebirth.", req: { type: 'rebirth', val: 1 } },
+    { id: 'a_7', name: "Devourer", desc: "Devour 5,000 biomass beans.", req: { type: 'beans', val: 5000 } },
+    { id: 'a_8', name: "Global Warming", desc: "Generate 1 Billion expulsions.", req: { type: 'farts', val: 1e9 } },
+    { id: 'a_9', name: "Flash", desc: "Travel 100,000 meters.", req: { type: 'dist', val: 100000 } },
+    { id: 'a_10', name: "Godhood", desc: "Perform 10 Rebirths.", req: { type: 'rebirth', val: 10 } },
+    { id: 'a_11', name: "Black Hole", desc: "Reach 1,000,000 capacity.", req: { type: 'cap', val: 1000000 } },
+    { id: 'a_12', name: "Universal Catastrophe", desc: "Generate 1 Trillion expulsions.", req: { type: 'farts', val: 1e12 } }
 ];
-DB.achievements = achievementData.map(a => ({ ...a, unlocked: false }));
-
+DB.achievements = achData.map(a => ({ ...a, unlocked: false }));
 
 // ==========================================
-// PRNG AND NOISE GENERATION
+// STATE & SAVE SYSTEM
 // ==========================================
-class PRNG { 
-    constructor(seed) { 
-        this.seed = seed; 
-    } 
-    next() { 
-        this.seed = (this.seed * 9301 + 49297) % 233280; 
-        return this.seed / 233280; 
-    } 
-}
-
-function hash(x, y, seed) { 
-    let h = seed + x * 374761393 + y * 668265263; 
-    h = (h ^ (h >> 13)) * 1274126177; 
-    return h ^ (h >> 16); 
-}
-
-function smoothStep(t) { 
-    return t * t * (3 - 2 * t); 
-}
-
-function lerp(a, b, t) { 
-    return a + t * (b - a); 
-}
-
-function noise2D(x, y, seed = 12345) {
-    let xi = Math.floor(x), yi = Math.floor(y);
-    let xf = x - xi, yf = y - yi;
-    let u = smoothStep(xf), v = smoothStep(yf);
-    let a = hash(xi, yi, seed) % 256 / 256; 
-    let b = hash(xi+1, yi, seed) % 256 / 256;
-    let c = hash(xi, yi+1, seed) % 256 / 256; 
-    let d = hash(xi+1, yi+1, seed) % 256 / 256;
-    return lerp(lerp(a, b, u), lerp(c, d, u), v);
-}
-
-// Expanded Fractional Brownian Motion for rougher, bumpy terrain
-function fbm(x, y, octaves = 6) {
-    let v = 0, a = 0.5, f = 1.0;
-    for(let i=0; i<octaves; i++) { 
-        v += a * noise2D(x * f, y * f); 
-        f *= 2.0; 
-        a *= 0.5; 
-    }
-    return v;
-}
-
-const C = { 
-    WORLD_SIZE: 10000, 
-    HOME_RADIUS: 150, 
-    MAX_BEANS: 2500, 
-    MAX_PARTICLES: 8000, 
-    GRASS_COUNT: 100000, 
-    TREE_COUNT: 4000 
-};
-
 const State = {
-    farts: 0, 
-    beansEaten: 0, 
-    beansInStomach: 0, 
-    prestigeTokens: 0, 
-    rebirths: 0, 
-    distanceTraveled: 0,
-    stomachCap: 10, 
-    maxStamina: 100, 
-    stamina: 100, 
-    multFart: 1, 
-    multSpeed: 1, 
-    multRadius: 1, 
-    multDigest: 1, 
-    autoFart: 0,
-    pos: new THREE.Vector3(0, 5, 0), 
-    vel: new THREE.Vector3(0, 0, 0), 
-    baseSpeed: 50, 
-    sprintMult: 2.2, 
-    yaw: 0, 
-    pitch: 0,
-    inSafeZone: true, 
-    isSprinting: false, 
-    inventory: {}
+    version: 4.0,
+    farts: 0, beansEaten: 0, beansInStomach: 0, prestigeTokens: 0, rebirths: 0, distanceTraveled: 0,
+    stomachCap: 10, maxStamina: 100, stamina: 100, multFart: 1, multSpeed: 1, multRadius: 1, multDigest: 1, autoFart: 0,
+    pos: new THREE.Vector3(0, 5, 0), vel: new THREE.Vector3(0, 0, 0), baseSpeed: 55, sprintMult: 2.4, yaw: 0, pitch: 0,
+    inSafeZone: true, isSprinting: false,
+    inventory: {}, achievementsData: {}
 };
 
-[...DB.upgrades, ...DB.mutations, ...DB.prestige].forEach(item => { 
-    State.inventory[item.id] = { count: 0, currentCost: item.cost }; 
-});
+// Initialize inventory
+[...DB.upgrades, ...DB.mutations, ...DB.prestige].forEach(item => { State.inventory[item.id] = { count: 0, currentCost: item.cost }; });
+DB.achievements.forEach(a => { State.achievementsData[a.id] = false; });
+
+const SaveSys = {
+    saveKey: 'felixfart_v4_save',
+    save(manual = false) {
+        const saveData = {
+            farts: State.farts, beansEaten: State.beansEaten, prestigeTokens: State.prestigeTokens,
+            rebirths: State.rebirths, distanceTraveled: State.distanceTraveled,
+            inv: State.inventory, ach: State.achievementsData
+        };
+        localStorage.setItem(this.saveKey, JSON.stringify(saveData));
+        if(manual) UI.spawnLog("TIMELINE SAVED SECURELY", "var(--primary)");
+    },
+    load() {
+        try {
+            const dataStr = localStorage.getItem(this.saveKey);
+            if(!dataStr) return false;
+            const data = JSON.parse(dataStr);
+            
+            State.farts = data.farts || 0;
+            State.beansEaten = data.beansEaten || 0;
+            State.prestigeTokens = data.prestigeTokens || 0;
+            State.rebirths = data.rebirths || 0;
+            State.distanceTraveled = data.distanceTraveled || 0;
+            
+            if(data.inv) {
+                for(let key in data.inv) {
+                    if(State.inventory[key]) {
+                        State.inventory[key].count = data.inv[key].count;
+                        State.inventory[key].currentCost = data.inv[key].currentCost;
+                    }
+                }
+            }
+            if(data.ach) {
+                for(let key in data.ach) {
+                    State.achievementsData[key] = data.ach[key];
+                    let dbMatch = DB.achievements.find(a => a.id === key);
+                    if(dbMatch) dbMatch.unlocked = data.ach[key];
+                }
+            }
+            Logic.recalculateStats();
+            if(State.rebirths > 0) document.getElementById('row-prestige').style.display = 'flex';
+            console.log("Save loaded successfully.");
+            return true;
+        } catch(e) {
+            console.error("Save load failed", e);
+            return false;
+        }
+    },
+    hardReset() {
+        if(confirm("CRITICAL WARNING: This will permanently delete your save file. Are you sure?")) {
+            localStorage.removeItem(this.saveKey);
+            location.reload();
+        }
+    },
+    export() {
+        this.save();
+        const str = btoa(localStorage.getItem(this.saveKey));
+        document.getElementById('save-string').value = str;
+        UI.spawnLog("SAVE EXPORTED TO CLIPBOARD", "var(--tertiary)");
+    },
+    import() {
+        try {
+            const str = document.getElementById('save-string').value;
+            const decoded = atob(str);
+            JSON.parse(decoded); // Validate JSON
+            localStorage.setItem(this.saveKey, decoded);
+            location.reload();
+        } catch(e) {
+            UI.spawnLog("INVALID SAVE STRING", "var(--danger)");
+        }
+    }
+};
 
 // ==========================================
 // AUDIO SYSTEM
 // ==========================================
 const AudioSys = {
-    ctx: null, 
-    enabled: false,
-
+    ctx: null, enabled: false, bgMusic: null,
     init() { 
         try { 
             window.AudioContext = window.AudioContext || window.webkitAudioContext; 
             this.ctx = new AudioContext(); 
             this.enabled = true; 
-        } catch(e) {
-            console.error("Audio failed to initialize.");
-        } 
+            this.bgMusic = new Audio();
+            this.bgMusic.loop = true;
+            this.bgMusic.volume = 0.3;
+        } catch(e) {} 
     },
-
     playTone(freq, type, duration, vol, detune=0) {
         if(!this.enabled || this.ctx.state === 'suspended') return;
         const osc = this.ctx.createOscillator(); 
@@ -1265,119 +552,90 @@ const AudioSys = {
         osc.detune.setValueAtTime(detune, this.ctx.currentTime);
         gain.gain.setValueAtTime(vol, this.ctx.currentTime); 
         gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
-        osc.connect(gain); 
-        gain.connect(this.ctx.destination); 
-        osc.start(); 
-        osc.stop(this.ctx.currentTime + duration);
+        osc.connect(gain); gain.connect(this.ctx.destination); 
+        osc.start(); osc.stop(this.ctx.currentTime + duration);
     },
-
     playCollect(tier) {
-        if(tier === 1) this.playTone(600, 'sine', 0.1, 0.15);
-        if(tier === 2) { 
-            this.playTone(600, 'sine', 0.1, 0.15); 
-            setTimeout(()=>this.playTone(850, 'sine', 0.15, 0.15), 50); 
-        }
-        if(tier === 3) { 
-            this.playTone(800, 'square', 0.1, 0.15); 
-            setTimeout(()=>this.playTone(1300, 'square', 0.3, 0.15), 50); 
-        }
+        if(tier === 1) this.playTone(600, 'sine', 0.1, 0.1);
+        if(tier === 2) { this.playTone(600, 'sine', 0.1, 0.1); setTimeout(()=>this.playTone(850, 'sine', 0.15, 0.1), 50); }
+        if(tier === 3) { this.playTone(800, 'square', 0.1, 0.1); setTimeout(()=>this.playTone(1300, 'square', 0.3, 0.1), 50); }
     },
-
     playFart() {
         if(!this.enabled) return;
         const dur = Math.random() * 0.4 + 0.2;
-        this.playTone(Math.random() * 60 + 30, 'sawtooth', dur, 0.4, Math.random()*300 - 150);
-        this.playTone(Math.random() * 40 + 20, 'square', dur*1.3, 0.3);
+        this.playTone(Math.random() * 50 + 30, 'sawtooth', dur, 0.3, Math.random()*200 - 100);
+        this.playTone(Math.random() * 40 + 20, 'square', dur*1.2, 0.2);
     },
-
-       playFootstep() {
-       if(!this.enabled) return;
-       this.playTone(60 + Math.random() * 20, 'sine', 0.08, 0.05); // Low thump
-       this.playTone(100, 'square', 0.02, 0.02); // Tiny crunch
-   },
-
+    playFootstep() {
+        if(!this.enabled) return;
+        this.playTone(70 + Math.random() * 15, 'sine', 0.08, 0.03);
+    },
     playAscend() {
         this.playTone(200, 'sine', 2.0, 0.4); 
         setTimeout(()=>this.playTone(400, 'sine', 1.8, 0.4), 200);
         setTimeout(()=>this.playTone(800, 'sine', 1.5, 0.4), 400); 
         setTimeout(()=>this.playTone(1600, 'triangle', 1.0, 0.4), 600);
     },
-
     playBuy() {
-        this.playTone(1200, 'sine', 0.1, 0.2); 
-        setTimeout(()=>this.playTone(1800, 'sine', 0.2, 0.2), 60);
+        this.playTone(1200, 'sine', 0.1, 0.15); 
+        setTimeout(()=>this.playTone(1800, 'sine', 0.2, 0.15), 50);
+    },
+    playError() {
+        this.playTone(150, 'sawtooth', 0.2, 0.2);
     }
 };
 
 // ==========================================
-// WEATHER & ENTITY SYSTEM
+// WEATHER & PARTICLE SYSTEM
 // ==========================================
 const WeatherSys = {
-    particles: null, count: 5000, geo: null, mat: null, speeds: [],
-    wMode: 0,
-    wTypes: ['☀️','🌧️','❄️','🌫️','☣️'],
-
+    particles: null, count: 6000, geo: null, mat: null, speeds: [], wMode: 0,
+    wTypes: ['☀️ CLEAR','🌧️ RAIN','❄️ SNOW','🌫️ FOG','☣️ ACID'],
     init(scene) {
         this.geo = new THREE.BufferGeometry();
         const pos = new Float32Array(this.count * 3);
         for(let i=0; i<this.count; i++) {
             pos[i*3] = (Math.random()-0.5) * C.WORLD_SIZE;
-            pos[i*3+1] = Math.random() * 500;
+            pos[i*3+1] = Math.random() * 800;
             pos[i*3+2] = (Math.random()-0.5) * C.WORLD_SIZE;
-            this.speeds.push(Math.random() * 100 + 100);
+            this.speeds.push(Math.random() * 120 + 80);
         }
         this.geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-        this.mat = new THREE.PointsMaterial({ color: 0xffffff, size: 1.5, transparent: true, opacity: 0 });
+        this.mat = new THREE.PointsMaterial({ color: 0xffffff, size: 2.0, transparent: true, opacity: 0, depthWrite: false });
         this.particles = new THREE.Points(this.geo, this.mat);
         scene.add(this.particles);
     },
-
     cycle() {
         this.wMode = (this.wMode + 1) % 5;
-        document.getElementById('btn-weather').innerText = this.wTypes[this.wMode];
-
-       if(AudioSys.bgMusic) AudioSys.bgMusic.pause();
-        // 1. SAFE Music Switcher (Creates the audio player if it's missing)
-        if (!AudioSys.bgMusic) AudioSys.bgMusic = new Audio();
-        const songs = ['sunny.mp3', 'relax.mp3', 'snow.mp3', 'relax.mp3', 'chase.mp3'];
-        AudioSys.bgMusic.src = songs[this.wMode];
-        AudioSys.bgMusic.play().catch(e => console.log("Click screen first to allow audio"));
-
-        // 2. Update Particles
-        const colors = [0, 0x6688aa, 0xffffff, 0, 0x39ff14];
+        document.getElementById('btn-weather').innerText = `CYCLE WEATHER: ${this.wTypes[this.wMode]}`;
+        
+        const colors = [0, 0x6688cc, 0xffffff, 0, 0x39ff14];
         this.mat.color.setHex(colors[this.wMode]);
         this.mat.opacity = (this.wMode === 1 || this.wMode === 2 || this.wMode === 4) ? 0.6 : 0;
         
-        // 3. Update Environment (Fog & Ground)
-        Engine.scene.fog.density = this.wMode === 3 ? 0.01 : 0.0015;
-        if(Engine.matGround) Engine.matGround.color.setHex(this.wMode === 2 ? 0xeeeeee : 0x88aa77);
+        Engine.scene.fog.density = this.wMode === 3 ? 0.008 : 0.0015;
+        if(Engine.matGround) Engine.matGround.color.setHex(this.wMode === 2 ? 0xdddddd : 0x779966);
         
-        // 4. Update Sun
         const isSun = this.wMode === 0;
-        Engine.scene.fog.color.setHex(isSun ? 0x5ca2cf : 0x222222);
-        if(EnvSys.sunLight) EnvSys.sunLight.intensity = isSun ? 1.8 : 0.6;
+        if(EnvSys.sunLight) EnvSys.sunLight.intensity = isSun ? 1.5 : 0.5;
 
-        if(this.wMode === 4) UI.spawnToast("ACID STORM DETECTED", "#39ff14");
+        if(this.wMode === 4) UI.spawnLog("WARNING: ACID STORM INBOUND", "var(--danger)");
     },
-
     update(dt) {
-        // Lightning One-Liner for Acid Rain
         if(this.wMode === 4 && Math.random() < 0.005) { 
-            document.getElementById('fx-overlay').style.boxShadow = "inset 0 0 500px #39ff14"; 
+            document.getElementById('fx-overlay').style.boxShadow = "inset 0 0 400px rgba(57,255,20,0.8)"; 
             setTimeout(()=>document.getElementById('fx-overlay').style.boxShadow="none", 100); 
-            AudioSys.playTone(40,'sawtooth',1,0.3); 
+            AudioSys.playTone(40,'sawtooth',1,0.2); 
         }
-
         if(this.mat.opacity === 0) return;
-
         const pos = this.geo.attributes.position.array;
         for(let i=0; i<this.count; i++) {
-            let speedMult = (this.wMode === 2) ? 0.3 : 1.0;
+            let speedMult = (this.wMode === 2) ? 0.25 : 1.0;
             pos[i*3+1] -= this.speeds[i] * dt * speedMult;
             if(pos[i*3+1] < 0) {
-                pos[i*3+1] = 500;
-                pos[i*3] = State.pos.x + (Math.random()-0.5) * 600;
-                pos[i*3+2] = State.pos.z + (Math.random()-0.5) * 600;
+                pos[i*3+1] = 800;
+                pos[i*3] = State.pos.x + (Math.random()-0.5) * 800;
+                pos[i*3+2] = State.pos.z + (Math.random()-0.5) * 800;
             }
         }
         this.geo.attributes.position.needsUpdate = true;
@@ -1385,133 +643,84 @@ const WeatherSys = {
 };
 
 const EnvSys = {
-    time: 12.0, 
-    day: 1, 
-    timeSpeed: 0.03, 
-    sunLight: null, 
-    ambLight: null, 
-    skyColor: new THREE.Color(), 
-    fogColor: new THREE.Color(),
+    time: 12.0, day: 1, timeSpeed: 0.025, sunLight: null, ambLight: null, skyColor: new THREE.Color(), fogColor: new THREE.Color(),
     colors: {
-        daySky: new THREE.Color(0x5ca2cf), 
-        dayFog: new THREE.Color(0x5ca2cf), 
-        dayLight: new THREE.Color(0xffffff),
-        duskSky: new THREE.Color(0xd96843), 
-        duskFog: new THREE.Color(0xa34426), 
-        duskLight: new THREE.Color(0xff8c42),
-        nightSky: new THREE.Color(0x050714), 
-        nightFog: new THREE.Color(0x03040a), 
-        nightLight: new THREE.Color(0x2a2a6b),
-        dawnSky: new THREE.Color(0xcc7a9c), 
-        dawnFog: new THREE.Color(0x8f4d6b), 
-        dawnLight: new THREE.Color(0xffa17a)
+        daySky: new THREE.Color(0x4a82a6), dayFog: new THREE.Color(0x4a82a6), dayLight: new THREE.Color(0xffffff),
+        duskSky: new THREE.Color(0xcc6644), duskFog: new THREE.Color(0x994433), duskLight: new THREE.Color(0xffaa66),
+        nightSky: new THREE.Color(0x04050a), nightFog: new THREE.Color(0x020306), nightLight: new THREE.Color(0x3333aa),
+        dawnSky: new THREE.Color(0xba6a8c), dawnFog: new THREE.Color(0x8a4a66), dawnLight: new THREE.Color(0xffbb88)
     },
     update(dt, scene) {
         this.time += this.timeSpeed * dt;
-        if(this.time >= 24.0) { 
-            this.time -= 24.0; 
-            this.day++; 
-            document.getElementById('time-day').innerText = this.day; 
-        }
-
+        if(this.time >= 24.0) { this.time -= 24.0; this.day++; document.getElementById('time-day').innerText = this.day; }
+        
         let h = Math.floor(this.time); 
         let m = Math.floor((this.time - h) * 60);
         document.getElementById('time-text').innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
 
-        let blend = 0; 
-        let cSky1, cSky2, cFog1, cFog2, cLight1, cLight2, int1, int2;
+        let blend = 0, cSky1, cSky2, cFog1, cFog2, cLight1, cLight2, int1, int2, icon;
         
         if(this.time >= 6 && this.time < 17) {
-            blend = (this.time - 6) / 11; 
-            cSky1 = this.colors.dawnSky; 
-            cSky2 = this.colors.daySky; 
-            cFog1 = this.colors.dawnFog; 
-            cFog2 = this.colors.dayFog;
-            cLight1 = this.colors.dawnLight; 
-            cLight2 = this.colors.dayLight; 
-            int1 = 0.6; 
-            int2 = 1.2; 
-            document.getElementById('time-icon').innerText = '☀️';
+            blend = (this.time - 6) / 11; cSky1 = this.colors.dawnSky; cSky2 = this.colors.daySky; cFog1 = this.colors.dawnFog; cFog2 = this.colors.dayFog;
+            cLight1 = this.colors.dawnLight; cLight2 = this.colors.dayLight; int1 = 0.5; int2 = 1.0; icon = '☀️';
         } else if(this.time >= 17 && this.time < 20) {
-            blend = (this.time - 17) / 3; 
-            cSky1 = this.colors.daySky; 
-            cSky2 = this.colors.duskSky; 
-            cFog1 = this.colors.dayFog; 
-            cFog2 = this.colors.duskFog;
-            cLight1 = this.colors.dayLight; 
-            cLight2 = this.colors.duskLight; 
-            int1 = 1.2; 
-            int2 = 0.7; 
-            document.getElementById('time-icon').innerText = '🌇';
+            blend = (this.time - 17) / 3; cSky1 = this.colors.daySky; cSky2 = this.colors.duskSky; cFog1 = this.colors.dayFog; cFog2 = this.colors.duskFog;
+            cLight1 = this.colors.dayLight; cLight2 = this.colors.duskLight; int1 = 1.0; int2 = 0.6; icon = '🌇';
         } else if(this.time >= 20 || this.time < 5) {
-            let t = this.time >= 20 ? (this.time - 20) : (this.time + 4); 
-            blend = t / 9;
-            cSky1 = this.colors.duskSky; 
-            cSky2 = this.colors.nightSky; 
-            cFog1 = this.colors.duskFog; 
-            cFog2 = this.colors.nightFog;
-            cLight1 = this.colors.duskLight; 
-            cLight2 = this.colors.nightLight; 
-            int1 = 0.7; 
-            int2 = 0.15; 
-            document.getElementById('time-icon').innerText = '🌙';
+            let t = this.time >= 20 ? (this.time - 20) : (this.time + 4); blend = t / 9;
+            cSky1 = this.colors.duskSky; cSky2 = this.colors.nightSky; cFog1 = this.colors.duskFog; cFog2 = this.colors.nightFog;
+            cLight1 = this.colors.duskLight; cLight2 = this.colors.nightLight; int1 = 0.6; int2 = 0.1; icon = '🌙';
         } else {
-            blend = (this.time - 5) / 1; 
-            cSky1 = this.colors.nightSky; 
-            cSky2 = this.colors.dawnSky; 
-            cFog1 = this.colors.nightFog; 
-            cFog2 = this.colors.dawnFog;
-            cLight1 = this.colors.nightLight; 
-            cLight2 = this.colors.dawnLight; 
-            int1 = 0.15; 
-            int2 = 0.6; 
-            document.getElementById('time-icon').innerText = '🌅';
+            blend = (this.time - 5) / 1; cSky1 = this.colors.nightSky; cSky2 = this.colors.dawnSky; cFog1 = this.colors.nightFog; cFog2 = this.colors.dawnFog;
+            cLight1 = this.colors.nightLight; cLight2 = this.colors.dawnLight; int1 = 0.1; int2 = 0.5; icon = '🌅';
         }
 
+        document.getElementById('time-icon').innerText = icon;
         this.skyColor.copy(cSky1).lerp(cSky2, blend); 
         this.fogColor.copy(cFog1).lerp(cFog2, blend);
-        
-        scene.background = this.skyColor; 
-        scene.fog.color = this.fogColor;
+        scene.background = this.skyColor; scene.fog.color = this.fogColor;
         
         if(this.sunLight) {
             this.sunLight.color.copy(cLight1).lerp(cLight2, blend); 
-            this.sunLight.intensity = lerp(int1, int2, blend);
+            if(WeatherSys.wMode === 0) this.sunLight.intensity = lerp(int1, int2, blend);
             let angle = (this.time / 24) * Math.PI * 2 - Math.PI/2;
-            this.sunLight.position.set(Math.cos(angle)*800, Math.sin(angle)*800, 200);
+            this.sunLight.position.set(Math.cos(angle)*1000, Math.sin(angle)*1000, 300);
         }
     }
 };
 
 // ==========================================
-// RENDERER & SCENE GENERATION
+// RENDERER & 3D ENGINE
 // ==========================================
-const Engine = {
-    scene: null, 
-    camera: null, 
-    renderer: null, 
-    clock: new THREE.Clock(),
-    beansGroup: null, 
-    chunkGroup: null, 
-    particlesGroup: null, 
-    beans: [], 
-    particles: [],
-    wisps: [],
-    matBeanNorm: null, 
-    matBeanEpic: null, 
-    matBeanLeg: null, 
-    matGround: null,
-    grassMesh: null, 
-    treeTrunkMesh: null, 
-    treeLeavesMesh: null, 
-    rockMesh: null,
+class PRNG { constructor(seed) { this.seed = seed; } next() { this.seed = (this.seed * 9301 + 49297) % 233280; return this.seed / 233280; } }
+function hash(x, y, seed) { let h = seed + x * 374761393 + y * 668265263; h = (h ^ (h >> 13)) * 1274126177; return h ^ (h >> 16); }
+function smoothStep(t) { return t * t * (3 - 2 * t); }
+function lerp(a, b, t) { return a + t * (b - a); }
+function noise2D(x, y, seed = 12345) {
+    let xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi, u = smoothStep(xf), v = smoothStep(yf);
+    let a = hash(xi, yi, seed) % 256 / 256, b = hash(xi+1, yi, seed) % 256 / 256, c = hash(xi, yi+1, seed) % 256 / 256, d = hash(xi+1, yi+1, seed) % 256 / 256;
+    return lerp(lerp(a, b, u), lerp(c, d, u), v);
+}
+function fbm(x, y, octaves = 6) {
+    let v = 0, a = 0.5, f = 1.0;
+    for(let i=0; i<octaves; i++) { v += a * noise2D(x * f, y * f); f *= 2.0; a *= 0.5; }
+    return v;
+}
 
+const C = { WORLD_SIZE: 12000, HOME_RADIUS: 180, MAX_BEANS: 3000, MAX_PARTICLES: 10000, GRASS_COUNT: 120000, TREE_COUNT: 5000 };
+
+const Engine = {
+    scene: null, camera: null, renderer: null, clock: new THREE.Clock(),
+    beansGroup: null, particlesGroup: null,
+    beans: [], particles: [], wisps: [],
+    matBeanNorm: null, matBeanEpic: null, matBeanLeg: null, matGround: null,
+    
     init() {
         const container = document.getElementById('webgl-container');
         this.scene = new THREE.Scene();
-        this.scene.fog = new THREE.FogExp2(0x5ca2cf, 0.0015);
+        this.scene.fog = new THREE.FogExp2(0x4a82a6, 0.0015);
 
-        this.camera = new THREE.PerspectiveCamera(80, window.innerWidth/window.innerHeight, 0.1, 4000);
+        this.camera = new THREE.PerspectiveCamera(85, window.innerWidth/window.innerHeight, 0.1, 5000);
         this.scene.add(this.camera);
 
         this.renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
@@ -1521,362 +730,214 @@ const Engine = {
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         container.appendChild(this.renderer.domElement);
 
-        EnvSys.ambLight = new THREE.AmbientLight(0xffffff, 0.35); 
+        EnvSys.ambLight = new THREE.AmbientLight(0xffffff, 0.3); 
         this.scene.add(EnvSys.ambLight);
         
-        EnvSys.sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        EnvSys.sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
         EnvSys.sunLight.castShadow = true;
-        EnvSys.sunLight.shadow.camera.top = 400; 
-        EnvSys.sunLight.shadow.camera.bottom = -400;
-        EnvSys.sunLight.shadow.camera.left = -400; 
-        EnvSys.sunLight.shadow.camera.right = 400;
-        EnvSys.sunLight.shadow.mapSize.width = 2048; 
-        EnvSys.sunLight.shadow.mapSize.height = 2048;
+        const d = 500;
+        EnvSys.sunLight.shadow.camera.left = -d; EnvSys.sunLight.shadow.camera.right = d;
+        EnvSys.sunLight.shadow.camera.top = d; EnvSys.sunLight.shadow.camera.bottom = -d;
+        EnvSys.sunLight.shadow.mapSize.width = 2048; EnvSys.sunLight.shadow.mapSize.height = 2048;
         this.scene.add(EnvSys.sunLight);
         
         const pointLight = new THREE.PointLight(0x00ffcc, 2.5, C.HOME_RADIUS * 2.5);
-        pointLight.position.set(0, 25, 0);
+        pointLight.position.set(0, 30, 0);
         this.scene.add(pointLight);
 
-        this.beansGroup = new THREE.Group(); 
-        this.scene.add(this.beansGroup);
-        
-        this.chunkGroup = new THREE.Group(); 
-        this.scene.add(this.chunkGroup);
+        this.beansGroup = new THREE.Group(); this.scene.add(this.beansGroup);
         
         this.initMaterials(); 
         this.buildHomeBase(); 
         this.buildNature();
-        
         WeatherSys.init(this.scene);
 
-        for(let i=0; i<C.MAX_BEANS; i++) {
-            this.spawnBean();
-        }
-
-        // Add wandering wisps
-        for(let i=0; i<50; i++) {
-            this.spawnWisp();
-        }
+        for(let i=0; i<C.MAX_BEANS; i++) this.spawnBean();
+        for(let i=0; i<60; i++) this.spawnWisp();
 
         window.addEventListener('resize', () => this.onResize());
-        
         document.addEventListener('keydown', Input.onKeyDown); 
         document.addEventListener('keyup', Input.onKeyUp);
         
-        // Critical Fix: Explicit target binding for pointer lock to avoid Shop UI conflicts
-                 document.getElementById('webgl-container').addEventListener('click', () => { 
-             if(!UI.isShopOpen) { 
-                 document.body.requestPointerLock(); 
-                 if(!AudioSys.enabled) { 
-                     AudioSys.init(); 
-                     // This one-liner picks the song based on the starting weather (0)
-                     AudioSys.bgMusic.src = ['sunny.mp3', 'relax.mp3', 'snow.mp3', 'relax.mp3', 'chase.mp3'][WeatherSys.wMode];
-                     AudioSys.bgMusic.play(); 
-                 }
-             }
-         });
+        // Safe Pointer Lock Binding
+        container.addEventListener('click', () => { 
+            if(!UI.isShopOpen) { 
+                document.body.requestPointerLock(); 
+                if(!AudioSys.enabled) AudioSys.init(); 
+            }
+        });
         
         document.addEventListener('mousemove', Input.onMouseMove);
-        
         document.addEventListener('pointerlockchange', () => {
             const isLocked = document.pointerLockElement === document.body;
             UI.isShopOpen = !isLocked;
             
-            // Show HUD overlays based on lock status
-            if(!isLocked && document.getElementById('shop-panel').style.display === 'none') {
+            if(!isLocked && document.getElementById('shop-panel').className !== 'hud-element open') {
                 document.getElementById('pause-overlay').style.display = 'flex';
             } else {
                 document.getElementById('pause-overlay').style.display = 'none';
             }
             
             if(isLocked) {
-                document.getElementById('shop-panel').style.display = 'none';
+                document.getElementById('shop-panel').classList.remove('open');
                 document.getElementById('crosshair').style.display = 'block';
             } else if (UI.isShopOpen) {
                 document.getElementById('crosshair').style.display = 'none';
             }
         });
 
+        // Initialize Game Systems
+        SaveSys.load();
         UI.init(); 
+        Minimap.init();
+        
         this.loop();
         
         setTimeout(() => {
             document.getElementById('loading-screen').style.opacity = '0';
-            setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 1000);
+            setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 1500);
         }, 2000);
+        
+        setInterval(() => SaveSys.save(), 10000); // Auto-save
     },
 
-    // Procedural Texture Generation for Terrain
     generateTerrainTexture() {
-        const canvas = document.createElement('canvas');
-        canvas.width = 512;
-        canvas.height = 512;
-        const ctx = canvas.getContext('2d');
-
-        // Fill base dark brown/green
-        ctx.fillStyle = "#2e4a22";
-        ctx.fillRect(0, 0, 512, 512);
-
-        // Draw procedural noisy grid pattern for bumps
-        for(let i=0; i<5000; i++) {
-            let x = Math.random() * 512;
-            let y = Math.random() * 512;
-            let r = Math.random() * 3;
-            let val = Math.random() * 50;
-            ctx.fillStyle = `rgba(${50+val}, ${100+val}, ${50}, 0.5)`;
-            ctx.beginPath();
-            ctx.arc(x, y, r, 0, Math.PI * 2);
-            ctx.fill();
+        const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512; const ctx = canvas.getContext('2d');
+        ctx.fillStyle = "#223311"; ctx.fillRect(0, 0, 512, 512);
+        for(let i=0; i<8000; i++) {
+            let val = Math.random() * 40;
+            ctx.fillStyle = `rgba(${40+val}, ${80+val}, ${40}, 0.6)`;
+            ctx.beginPath(); ctx.arc(Math.random()*512, Math.random()*512, Math.random()*2+1, 0, Math.PI*2); ctx.fill();
         }
-
-        // Draw sweeping curves to simulate texture lenses
-        ctx.lineWidth = 2;
-        for(let i=0; i<20; i++) {
-            ctx.strokeStyle = `rgba(0,0,0,0.15)`;
-            ctx.beginPath();
-            ctx.moveTo(Math.random()*512, Math.random()*512);
-            ctx.bezierCurveTo(Math.random()*512, Math.random()*512, Math.random()*512, Math.random()*512, Math.random()*512, Math.random()*512);
-            ctx.stroke();
-        }
-
         const tex = new THREE.CanvasTexture(canvas);
-        tex.wrapS = THREE.RepeatWrapping;
-        tex.wrapT = THREE.RepeatWrapping;
-        tex.repeat.set(50, 50); // Repeat across massive world
+        tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(60, 60);
         return tex;
     },
 
     initMaterials() {
-        const tex = this.generateTerrainTexture();
-        // Explicitly colored textured terrain with displacement support built into the geometry
-        this.matGround = new THREE.MeshStandardMaterial({ 
-            map: tex, 
-            roughness: 0.9, 
-            metalness: 0.0,
-            color: 0x88aa77 // Tinting the procedural canvas texture
-        });
-        
-        this.matBeanNorm = new THREE.MeshStandardMaterial({ color: 0xd2691e, roughness: 0.6, metalness: 0.3 });
-        this.matBeanEpic = new THREE.MeshStandardMaterial({ color: 0x9d00ff, roughness: 0.2, metalness: 0.9, emissive: 0x4a0082 });
-        this.matBeanLeg = new THREE.MeshStandardMaterial({ color: 0xffea00, roughness: 0.05, metalness: 1.0, emissive: 0xaa7700 });
+        this.matGround = new THREE.MeshStandardMaterial({ map: this.generateTerrainTexture(), roughness: 1.0, metalness: 0.0, color: 0x779966 });
+        this.matBeanNorm = new THREE.MeshStandardMaterial({ color: 0xd2691e, roughness: 0.7, metalness: 0.1 });
+        this.matBeanEpic = new THREE.MeshStandardMaterial({ color: 0x9d00ff, roughness: 0.2, metalness: 0.8, emissive: 0x330066 });
+        this.matBeanLeg = new THREE.MeshStandardMaterial({ color: 0xffea00, roughness: 0.1, metalness: 1.0, emissive: 0xaa7700 });
     },
 
     buildHomeBase() {
-        // High density geometry to allow smooth curves and bumps in the terrain
-        const geoPlane = new THREE.PlaneGeometry(C.WORLD_SIZE, C.WORLD_SIZE, 150, 150); 
+        const geoPlane = new THREE.PlaneGeometry(C.WORLD_SIZE, C.WORLD_SIZE, 180, 180); 
         geoPlane.rotateX(-Math.PI / 2);
-        
         const posAttr = geoPlane.attributes.position;
         for(let i=0; i<posAttr.count; i++) {
-            let x = posAttr.getX(i);
-            let z = posAttr.getZ(i);
-            
-            // Multiple octaves for rich bumps and curves
-            let y = fbm(x*0.008, z*0.008, 6) * 55;
-            
+            let x = posAttr.getX(i), z = posAttr.getZ(i);
+            let y = fbm(x*0.006, z*0.006, 6) * 65;
             let dist = Math.hypot(x, z);
-            if(dist < C.HOME_RADIUS) {
-                y = lerp(0, y, dist/C.HOME_RADIUS); // Smooth flat zone for base
-            }
+            if(dist < C.HOME_RADIUS) y = lerp(0, y, dist/C.HOME_RADIUS);
             posAttr.setY(i, y);
         }
         geoPlane.computeVertexNormals();
-        
         const meshPlane = new THREE.Mesh(geoPlane, this.matGround); 
         meshPlane.receiveShadow = true; 
         this.scene.add(meshPlane);
 
         const geoDome = new THREE.SphereGeometry(C.HOME_RADIUS, 32, 16, 0, Math.PI*2, 0, Math.PI/2);
-        const matDome = new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.12, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
-        const meshDome = new THREE.Mesh(geoDome, matDome); 
-        this.scene.add(meshDome);
+        const matDome = new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.1, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
+        this.scene.add(new THREE.Mesh(geoDome, matDome));
 
-        const geoAltar = new THREE.CylinderGeometry(8, 12, 12, 24);
-        const matAltar = new THREE.MeshStandardMaterial({ color: 0x111111, emissive: 0x00ffcc, emissiveIntensity: 0.4, metalness: 0.9, roughness: 0.1 });
+        const geoAltar = new THREE.CylinderGeometry(10, 15, 12, 32);
+        const matAltar = new THREE.MeshStandardMaterial({ color: 0x111115, emissive: 0x005544, metalness: 0.9, roughness: 0.2 });
         const meshAltar = new THREE.Mesh(geoAltar, matAltar); 
-        meshAltar.position.y = 6; 
-        meshAltar.castShadow = true; 
+        meshAltar.position.y = 6; meshAltar.castShadow = true; 
         this.scene.add(meshAltar);
+        
+        // Core energy crystal
+        const geoCrystal = new THREE.OctahedronGeometry(4, 0);
+        const matCrystal = new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x00aaaa, wireframe: true });
+        const meshCrystal = new THREE.Mesh(geoCrystal, matCrystal);
+        meshCrystal.position.y = 18;
+        
+        // Add rotation animation to the crystal in loop
+        this.coreCrystal = meshCrystal;
+        this.scene.add(meshCrystal);
     },
 
     buildNature() {
-        const grassGeo = new THREE.ConeGeometry(0.35, 1.8, 3); 
-        grassGeo.translate(0, 0.9, 0);
-        const grassMat = new THREE.MeshStandardMaterial({ color: 0x228b22, roughness: 0.9, side: THREE.DoubleSide });
-        this.grassMesh = new THREE.InstancedMesh(grassGeo, grassMat, C.GRASS_COUNT); 
-        this.grassMesh.receiveShadow = true;
+        const grassGeo = new THREE.ConeGeometry(0.4, 2.0, 3); grassGeo.translate(0, 1.0, 0);
+        const grassMat = new THREE.MeshStandardMaterial({ color: 0x1a661a, roughness: 1.0 });
+        this.grassMesh = new THREE.InstancedMesh(grassGeo, grassMat, C.GRASS_COUNT);
 
-        const trunkGeo = new THREE.CylinderGeometry(0.6, 1.0, 6, 6); 
-        trunkGeo.translate(0, 3.0, 0);
-        const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4a2e15, roughness: 1.0 });
-        this.treeTrunkMesh = new THREE.InstancedMesh(trunkGeo, trunkMat, C.TREE_COUNT); 
-        this.treeTrunkMesh.castShadow = true;
+        const trunkGeo = new THREE.CylinderGeometry(0.7, 1.2, 7, 6); trunkGeo.translate(0, 3.5, 0);
+        const trunkMat = new THREE.MeshStandardMaterial({ color: 0x3a2311, roughness: 1.0 });
+        this.treeTrunkMesh = new THREE.InstancedMesh(trunkGeo, trunkMat, C.TREE_COUNT);
 
-        const leavesGeo = new THREE.IcosahedronGeometry(3.0, 1); 
-        leavesGeo.translate(0, 6.5, 0);
-        const leavesMat = new THREE.MeshStandardMaterial({ color: 0x185e1b, roughness: 0.8 });
-        this.treeLeavesMesh = new THREE.InstancedMesh(leavesGeo, leavesMat, C.TREE_COUNT); 
-        this.treeLeavesMesh.castShadow = true; 
-        this.treeLeavesMesh.receiveShadow = true;
-
-        const rockGeo = new THREE.DodecahedronGeometry(2.5, 0); 
-        rockGeo.translate(0, 1.25, 0);
-        const rockMat = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.9, metalness: 0.2 });
-        this.rockMesh = new THREE.InstancedMesh(rockGeo, rockMat, C.TREE_COUNT / 2); 
-        this.rockMesh.castShadow = true;
+        const leavesGeo = new THREE.IcosahedronGeometry(3.5, 1); leavesGeo.translate(0, 7.5, 0);
+        const leavesMat = new THREE.MeshStandardMaterial({ color: 0x144a16, roughness: 0.9 });
+        this.treeLeavesMesh = new THREE.InstancedMesh(leavesGeo, leavesMat, C.TREE_COUNT);
 
         const dummy = new THREE.Object3D();
         
         for(let i=0; i<C.GRASS_COUNT; i++) {
-            let x = (Math.random() - 0.5) * C.WORLD_SIZE; 
-            let z = (Math.random() - 0.5) * C.WORLD_SIZE;
-            let dist = Math.hypot(x,z); 
-            if(dist < C.HOME_RADIUS) continue;
-            
-            let y = fbm(x*0.008, z*0.008, 6) * 55; 
+            let x = (Math.random() - 0.5) * C.WORLD_SIZE, z = (Math.random() - 0.5) * C.WORLD_SIZE;
+            if(Math.hypot(x,z) < C.HOME_RADIUS) continue;
+            let y = fbm(x*0.006, z*0.006, 6) * 65; 
             dummy.position.set(x, y, z);
             
             const d = 0.1; 
-            const hL = fbm((x-d)*0.008, z*0.008, 6)*55; 
-            const hR = fbm((x+d)*0.008, z*0.008, 6)*55;
-            const hD = fbm(x*0.008, (z-d)*0.008, 6)*55; 
-            const hU = fbm(x*0.008, (z+d)*0.008, 6)*55;
-            const normal = new THREE.Vector3(hL-hR, 2*d, hD-hU).normalize();
-            
+            const normal = new THREE.Vector3(fbm((x-d)*0.006, z*0.006, 6)*65 - fbm((x+d)*0.006, z*0.006, 6)*65, 2*d, fbm(x*0.006, (z-d)*0.006, 6)*65 - fbm(x*0.006, (z+d)*0.006, 6)*65).normalize();
             dummy.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal); 
-            dummy.rotateY(Math.random() * Math.PI * 2);
-            dummy.scale.setScalar(Math.random() * 0.6 + 0.4); 
-            dummy.updateMatrix(); 
-            this.grassMesh.setMatrixAt(i, dummy.matrix);
+            dummy.rotateY(Math.random() * Math.PI * 2); dummy.scale.setScalar(Math.random() * 0.7 + 0.3); 
+            dummy.updateMatrix(); this.grassMesh.setMatrixAt(i, dummy.matrix);
         }
 
         for(let i=0; i<C.TREE_COUNT; i++) {
-            let x = (Math.random() - 0.5) * C.WORLD_SIZE; 
-            let z = (Math.random() - 0.5) * C.WORLD_SIZE;
-            let dist = Math.hypot(x,z); 
-            if(dist < C.HOME_RADIUS + 25) continue;
-            
-            let y = fbm(x*0.008, z*0.008, 6) * 55; 
-            let scale = Math.random() * 1.8 + 0.8;
-            dummy.position.set(x, y, z);
-            
-            dummy.rotation.set(0, Math.random() * Math.PI * 2, 0); 
-            dummy.scale.setScalar(scale); 
-            dummy.updateMatrix();
-            this.treeTrunkMesh.setMatrixAt(i, dummy.matrix); 
-            this.treeLeavesMesh.setMatrixAt(i, dummy.matrix);
-
-            if(i < C.TREE_COUNT/2) {
-                let rx = x + (Math.random()-0.5)*15; 
-                let rz = z + (Math.random()-0.5)*15;
-                let ry = fbm(rx*0.008, rz*0.008, 6) * 55; 
-                dummy.position.set(rx, ry, rz);
-                
-                const d = 0.1; 
-                const hL = fbm((rx-d)*0.008, rz*0.008, 6)*55; 
-                const hR = fbm((rx+d)*0.008, rz*0.008, 6)*55;
-                const hD = fbm(rx*0.008, (rz-d)*0.008, 6)*55; 
-                const hU = fbm(rx*0.008, (rz+d)*0.008, 6)*55;
-                const normal = new THREE.Vector3(hL-hR, 2*d, hD-hU).normalize();
-                
-                dummy.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal); 
-                dummy.rotateY(Math.random() * Math.PI * 2);
-                dummy.scale.setScalar(Math.random() * 1.0 + 0.3); 
-                dummy.updateMatrix(); 
-                this.rockMesh.setMatrixAt(i, dummy.matrix);
-            }
+            let x = (Math.random() - 0.5) * C.WORLD_SIZE, z = (Math.random() - 0.5) * C.WORLD_SIZE;
+            if(Math.hypot(x,z) < C.HOME_RADIUS + 30) continue;
+            let y = fbm(x*0.006, z*0.006, 6) * 65; 
+            dummy.position.set(x, y, z); dummy.rotation.set(0, Math.random() * Math.PI * 2, 0); 
+            dummy.scale.setScalar(Math.random() * 2.0 + 0.8); dummy.updateMatrix();
+            this.treeTrunkMesh.setMatrixAt(i, dummy.matrix); this.treeLeavesMesh.setMatrixAt(i, dummy.matrix);
         }
         
-        this.scene.add(this.grassMesh); 
-        this.scene.add(this.treeTrunkMesh); 
-        this.scene.add(this.treeLeavesMesh); 
-        this.scene.add(this.rockMesh);
+        this.scene.add(this.grassMesh); this.scene.add(this.treeTrunkMesh); this.scene.add(this.treeLeavesMesh);
     },
 
     spawnBean() {
         let x, z;
         while(true) { 
-            x = (Math.random() - 0.5) * C.WORLD_SIZE * 0.9; 
-            z = (Math.random() - 0.5) * C.WORLD_SIZE * 0.9; 
+            x = (Math.random() - 0.5) * C.WORLD_SIZE * 0.95; z = (Math.random() - 0.5) * C.WORLD_SIZE * 0.95; 
             if (Math.hypot(x, z) > C.HOME_RADIUS + 25) break; 
         }
-        let y = fbm(x*0.008, z*0.008, 6) * 55 + 2.5;
+        let y = fbm(x*0.006, z*0.006, 6) * 65 + 3.0;
         
         let rand = Math.random(); 
         let tier = 1, mat = this.matBeanNorm, val = 1, size = 1.2;
-        
-        if(rand < 0.04) { 
-            tier = 3; mat = this.matBeanLeg; val = 100; size = 3.0; 
-        } else if(rand < 0.18) { 
-            tier = 2; mat = this.matBeanEpic; val = 15; size = 2.0; 
-        }
+        if(rand < 0.02) { tier = 3; mat = this.matBeanLeg; val = 150; size = 3.5; } 
+        else if(rand < 0.12) { tier = 2; mat = this.matBeanEpic; val = 25; size = 2.2; }
         
         const geo = new THREE.IcosahedronGeometry(size, 0); 
-        const mesh = new THREE.Mesh(geo, mat);
-        mesh.position.set(x, y, z); 
-        mesh.castShadow = true;
+        const mesh = new THREE.Mesh(geo, mat); mesh.position.set(x, y, z); mesh.castShadow = true;
+        mesh.userData = { tier, val, rotSpeed: new THREE.Vector3(Math.random()*0.05, Math.random()*0.05, Math.random()*0.05), baseY: y, phase: Math.random()*Math.PI*2 };
         
-        mesh.userData = { 
-            tier, 
-            val, 
-            rotSpeed: new THREE.Vector3(Math.random()*0.06, Math.random()*0.06, Math.random()*0.06), 
-            baseY: y, 
-            phase: Math.random()*Math.PI*2 
-        };
-        
-        this.beansGroup.add(mesh); 
-        this.beans.push(mesh);
+        this.beansGroup.add(mesh); this.beans.push(mesh);
     },
 
     spawnWisp() {
-        let x = (Math.random() - 0.5) * C.WORLD_SIZE * 0.5;
-        let z = (Math.random() - 0.5) * C.WORLD_SIZE * 0.5;
-        let y = fbm(x*0.008, z*0.008, 6) * 55 + 15;
-
-        const geo = new THREE.SphereGeometry(2, 8, 8);
-        const mat = new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.8 });
-        const mesh = new THREE.Mesh(geo, mat);
-        
-        const light = new THREE.PointLight(0x00ffff, 1, 50);
-        mesh.add(light);
-        
-        mesh.position.set(x, y, z);
-        
-        mesh.userData = {
-            baseY: y,
-            angle: Math.random() * Math.PI * 2,
-            speed: Math.random() * 20 + 10,
-            radius: Math.random() * 100 + 50,
-            centerX: x,
-            centerZ: z
-        };
-
-        this.scene.add(mesh);
-        this.wisps.push(mesh);
+        let x = (Math.random() - 0.5) * C.WORLD_SIZE * 0.8; let z = (Math.random() - 0.5) * C.WORLD_SIZE * 0.8;
+        let y = fbm(x*0.006, z*0.006, 6) * 65 + 20;
+        const mesh = new THREE.Mesh(new THREE.SphereGeometry(2.5, 8, 8), new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.9 }));
+        mesh.add(new THREE.PointLight(0x00ffff, 1.5, 60)); mesh.position.set(x, y, z);
+        mesh.userData = { baseY: y, angle: Math.random() * Math.PI * 2, speed: Math.random() * 25 + 15, radius: Math.random() * 120 + 60, centerX: x, centerZ: z };
+        this.scene.add(mesh); this.wisps.push(mesh);
     },
 
     spawnParticle(pos, color, scale, speed, life) {
         if(this.particles.length > C.MAX_PARTICLES) return;
-        const geo = new THREE.BoxGeometry(scale, scale, scale); 
-        const mat = new THREE.MeshBasicMaterial({ color: color, transparent: true });
-        const mesh = new THREE.Mesh(geo, mat); 
+        const mesh = new THREE.Mesh(new THREE.BoxGeometry(scale, scale, scale), new THREE.MeshBasicMaterial({ color: color, transparent: true })); 
         mesh.position.copy(pos);
-        
         const angle = Math.random() * Math.PI * 2; 
-        const velY = Math.random() * speed; 
-        const velX = Math.cos(angle) * speed; 
-        const velZ = Math.sin(angle) * speed;
-        
-        mesh.userData = { vel: new THREE.Vector3(velX, velY, velZ), life: life, maxLife: life };
-        this.scene.add(mesh); 
-        this.particles.push(mesh);
+        mesh.userData = { vel: new THREE.Vector3(Math.cos(angle)*speed, Math.random()*speed, Math.sin(angle)*speed), life: life, maxLife: life };
+        this.scene.add(mesh); this.particles.push(mesh);
     },
 
     createExplosion(pos, colorHex, count) { 
-        for(let i=0; i<count; i++) { 
-            this.spawnParticle(pos, colorHex, Math.random()*2.5+0.5, Math.random()*25+10, Math.random()*1.5+0.5); 
-        } 
+        for(let i=0; i<count; i++) this.spawnParticle(pos, colorHex, Math.random()*3+1, Math.random()*35+15, Math.random()*1.5+0.5); 
     },
 
     onResize() { 
@@ -1888,6 +949,7 @@ const Engine = {
     loop() {
         requestAnimationFrame(() => this.loop());
         const dt = Math.min(this.clock.getDelta(), 0.1);
+        const time = this.clock.getElapsedTime();
         
         EnvSys.update(dt, this.scene);
         WeatherSys.update(dt);
@@ -1897,41 +959,35 @@ const Engine = {
             Logic.update(dt); 
         }
         
-        const time = this.clock.getElapsedTime();
+        if(this.coreCrystal) {
+            this.coreCrystal.rotation.y += dt;
+            this.coreCrystal.rotation.x += dt * 0.5;
+            this.coreCrystal.position.y = 18 + Math.sin(time * 2) * 2;
+        }
         
-        // Update Beans
         this.beans.forEach(b => {
-            b.rotation.x += b.userData.rotSpeed.x; 
-            b.rotation.y += b.userData.rotSpeed.y; 
-            b.rotation.z += b.userData.rotSpeed.z;
-            b.position.y = b.userData.baseY + Math.sin(time * 2.5 + b.userData.phase) * 2.5;
+            b.rotation.x += b.userData.rotSpeed.x; b.rotation.y += b.userData.rotSpeed.y; b.rotation.z += b.userData.rotSpeed.z;
+            b.position.y = b.userData.baseY + Math.sin(time * 3 + b.userData.phase) * 2.5;
         });
 
-        // Update Wisps
         this.wisps.forEach(w => {
             w.userData.angle += (w.userData.speed / w.userData.radius) * dt;
             w.position.x = w.userData.centerX + Math.cos(w.userData.angle) * w.userData.radius;
             w.position.z = w.userData.centerZ + Math.sin(w.userData.angle) * w.userData.radius;
-            w.position.y = w.userData.baseY + Math.sin(time * 2) * 5;
+            w.position.y = w.userData.baseY + Math.sin(time * 2) * 8;
         });
 
-        // Update Particles
         for(let i=this.particles.length-1; i>=0; i--) {
             let p = this.particles[i]; 
             p.position.addScaledVector(p.userData.vel, dt);
-            p.userData.vel.y -= 35 * dt; 
+            p.userData.vel.y -= 45 * dt; 
             p.userData.life -= dt;
             p.material.opacity = p.userData.life / p.userData.maxLife; 
             p.scale.setScalar(p.userData.life / p.userData.maxLife);
-            
-            if(p.userData.life <= 0) { 
-                this.scene.remove(p); 
-                p.geometry.dispose(); 
-                p.material.dispose(); 
-                this.particles.splice(i, 1); 
-            }
+            if(p.userData.life <= 0) { this.scene.remove(p); p.geometry.dispose(); p.material.dispose(); this.particles.splice(i, 1); }
         }
 
+        Minimap.update();
         this.renderer.render(this.scene, this.camera);
     }
 };
@@ -1940,11 +996,8 @@ const Engine = {
 // INPUT CONTROLLER
 // ==========================================
 const Input = {
-    keys: { w:false, a:false, s:false, d:false, shift:false, space:false }, 
-    lastStep: 0,
-    
+    keys: { w:false, a:false, s:false, d:false, shift:false, space:false }, lastStep: 0,
     onKeyDown(e) {
-        if(e.code === 'KeyT') WeatherSys.cycle();
         if(e.code === 'KeyW' || e.code === 'ArrowUp') Input.keys.w = true; 
         if(e.code === 'KeyA' || e.code === 'ArrowLeft') Input.keys.a = true;
         if(e.code === 'KeyS' || e.code === 'ArrowDown') Input.keys.s = true; 
@@ -1956,13 +1009,12 @@ const Input = {
             e.preventDefault(); 
             if(document.pointerLockElement === document.body) {
                 document.exitPointerLock();
-                document.getElementById('shop-panel').style.display = 'flex';
+                document.getElementById('shop-panel').classList.add('open');
             } else {
                 document.body.requestPointerLock();
             }
         }
     },
-    
     onKeyUp(e) {
         if(e.code === 'KeyW' || e.code === 'ArrowUp') Input.keys.w = false; 
         if(e.code === 'KeyA' || e.code === 'ArrowLeft') Input.keys.a = false;
@@ -1971,74 +1023,46 @@ const Input = {
         if(e.code === 'ShiftLeft' || e.code === 'ShiftRight') Input.keys.shift = false; 
         if(e.code === 'Space') Input.keys.space = false;
     },
-    
     onMouseMove(e) {
         if(document.pointerLockElement === document.body) {
-            const sensitivity = 0.0022; 
-            State.yaw -= e.movementX * sensitivity; 
-            State.pitch -= e.movementY * sensitivity;
+            const sens = 0.0022; 
+            State.yaw -= e.movementX * sens; State.pitch -= e.movementY * sens;
             State.pitch = Math.max(-Math.PI/2, Math.min(Math.PI/2, State.pitch));
         }
     },
-    
     update(dt) {
-        Engine.camera.rotation.set(0,0,0); 
-        Engine.camera.rotateY(State.yaw); 
-        Engine.camera.rotateX(State.pitch);
+        Engine.camera.rotation.set(0,0,0); Engine.camera.rotateY(State.yaw); Engine.camera.rotateX(State.pitch);
         
         const dir = new THREE.Vector3();
-        if(Input.keys.w) dir.z -= 1; 
-        if(Input.keys.s) dir.z += 1; 
-        if(Input.keys.a) dir.x -= 1; 
-        if(Input.keys.d) dir.x += 1;
-        
+        if(Input.keys.w) dir.z -= 1; if(Input.keys.s) dir.z += 1; 
+        if(Input.keys.a) dir.x -= 1; if(Input.keys.d) dir.x += 1;
         if(dir.lengthSq() > 0) dir.normalize();
         dir.applyAxisAngle(new THREE.Vector3(0,1,0), State.yaw);
 
         State.isSprinting = Input.keys.shift && State.stamina > 0 && dir.lengthSq() > 0;
         let speed = State.baseSpeed * State.multSpeed;
-        
-        if(State.isSprinting) { 
-            speed *= State.sprintMult; 
-            State.stamina -= 30 * dt; 
-        } else { 
-            State.stamina += 20 * dt; 
-        }
-        
+        if(State.isSprinting) { speed *= State.sprintMult; State.stamina -= 35 * dt; } 
+        else { State.stamina += 25 * dt; }
         State.stamina = Math.max(0, Math.min(State.maxStamina, State.stamina));
 
         const targetVel = dir.multiplyScalar(speed); 
         State.vel.lerp(targetVel, 12 * dt);
-        
-        let moveDist = State.vel.length() * dt; 
-        State.distanceTraveled += moveDist;
+        State.distanceTraveled += State.vel.length() * dt;
         State.pos.addScaledVector(State.vel, dt);
-       
         
-        const halfSize = C.WORLD_SIZE/2; 
-        State.pos.x = Math.max(-halfSize, Math.min(halfSize, State.pos.x)); 
-        State.pos.z = Math.max(-halfSize, Math.min(halfSize, State.pos.z));
+        const hSize = C.WORLD_SIZE/2; 
+        State.pos.x = Math.max(-hSize, Math.min(hSize, State.pos.x)); State.pos.z = Math.max(-hSize, Math.min(hSize, State.pos.z));
         
         let distToBase = Math.hypot(State.pos.x, State.pos.z);
-        let rawY = fbm(State.pos.x*0.008, State.pos.z*0.008, 6) * 55;
+        let rawY = fbm(State.pos.x*0.006, State.pos.z*0.006, 6) * 65;
         let terrainY = distToBase < C.HOME_RADIUS ? lerp(0, rawY, distToBase/C.HOME_RADIUS) : rawY;
-        
-        State.pos.y = terrainY + 6; 
-        
+        State.pos.y = terrainY + 7; 
         Engine.camera.position.copy(State.pos);
 
         if(State.vel.length() > 2) {
-            Engine.camera.position.y += Math.sin(Engine.clock.getElapsedTime() * (State.isSprinting ? 14 : 9)) * (State.isSprinting ? 0.8 : 0.4);
-             if(State.vel.length()>5 && Math.random()<0.2) Engine.spawnParticle(State.pos.clone().add(new THREE.Vector3(0,-6,0)), 0x228b22, 0.5, 5, 0.3);
-            
-            if(Engine.clock.getElapsedTime() - this.lastStep > (State.isSprinting ? 0.25 : 0.4)) { 
-                AudioSys.playFootstep(); 
-                this.lastStep = Engine.clock.getElapsedTime(); 
-            }
-            
-            if(Math.random() < 0.15 && State.isSprinting && !State.inSafeZone) {
-                Engine.spawnParticle(State.pos.clone().add(new THREE.Vector3(0,-5,0)), 0x444444, 1.5, 8, 0.6);
-            }
+            Engine.camera.position.y += Math.sin(Engine.clock.getElapsedTime() * (State.isSprinting ? 15 : 10)) * (State.isSprinting ? 0.9 : 0.5);
+            if(Engine.clock.getElapsedTime() - this.lastStep > (State.isSprinting ? 0.25 : 0.4)) { AudioSys.playFootstep(); this.lastStep = Engine.clock.getElapsedTime(); }
+            if(Math.random() < 0.2 && State.isSprinting && !State.inSafeZone) Engine.spawnParticle(State.pos.clone().add(new THREE.Vector3(0,-6,0)), 0x555555, 1.5, 10, 0.5);
         }
     }
 };
@@ -2047,70 +1071,38 @@ const Input = {
 // RADAR AND MINIMAP
 // ==========================================
 const Minimap = {
-    canvas: null, 
-    ctx: null, 
-    width: 250, 
-    height: 250, 
-    scale: 0.04,
-    
-    init() { 
-        this.canvas = document.getElementById('minimap-canvas'); 
-        this.ctx = this.canvas.getContext('2d'); 
-    },
-    
+    canvas: null, ctx: null, width: 280, height: 280, scale: 0.035,
+    init() { this.canvas = document.getElementById('minimap-canvas'); this.ctx = this.canvas.getContext('2d'); },
     update() {
         if(!this.ctx) return; 
         this.ctx.clearRect(0, 0, this.width, this.height);
-        
-        const cx = this.width / 2; 
-        const cy = this.height / 2;
+        const cx = this.width / 2, cy = this.height / 2;
 
-        this.ctx.strokeStyle = 'rgba(0, 255, 255, 0.15)'; 
-        this.ctx.lineWidth = 2; 
-        this.ctx.beginPath();
-        this.ctx.arc(cx, cy, 60, 0, Math.PI*2); 
-        this.ctx.arc(cx, cy, 120, 0, Math.PI*2); 
-        this.ctx.stroke();
+        this.ctx.strokeStyle = 'rgba(0, 255, 255, 0.15)'; this.ctx.lineWidth = 2; 
+        this.ctx.beginPath(); this.ctx.arc(cx, cy, 70, 0, Math.PI*2); this.ctx.arc(cx, cy, 140, 0, Math.PI*2); this.ctx.stroke();
 
-        let homeX = cx - (State.pos.x * this.scale); 
-        let homeY = cy - (State.pos.z * this.scale);
-        
-        if(Math.hypot(homeX-cx, homeY-cy) < 150) {
-            this.ctx.fillStyle = 'rgba(0, 255, 204, 0.2)'; 
-            this.ctx.beginPath(); 
-            this.ctx.arc(homeX, homeY, C.HOME_RADIUS * this.scale, 0, Math.PI*2); 
-            this.ctx.fill();
+        let hx = cx - (State.pos.x * this.scale), hy = cy - (State.pos.z * this.scale);
+        if(Math.hypot(hx-cx, hy-cy) < 160) {
+            this.ctx.fillStyle = 'rgba(0, 255, 204, 0.25)'; this.ctx.beginPath(); this.ctx.arc(hx, hy, C.HOME_RADIUS * this.scale, 0, Math.PI*2); this.ctx.fill();
         }
 
         Engine.beans.forEach(b => {
-            let bx = cx + ((b.position.x - State.pos.x) * this.scale); 
-            let by = cy + ((b.position.z - State.pos.z) * this.scale);
-            
-            if(Math.hypot(bx-cx, by-cy) < 120) {
+            let bx = cx + ((b.position.x - State.pos.x) * this.scale), by = cy + ((b.position.z - State.pos.z) * this.scale);
+            if(Math.hypot(bx-cx, by-cy) < 140) {
                 this.ctx.fillStyle = b.userData.tier === 3 ? '#ffd700' : (b.userData.tier === 2 ? '#9d00ff' : '#d2691e');
-                this.ctx.beginPath(); 
-                this.ctx.arc(bx, by, b.userData.tier === 3 ? 5 : 3, 0, Math.PI*2); 
-                this.ctx.fill();
+                this.ctx.beginPath(); this.ctx.arc(bx, by, b.userData.tier === 3 ? 5 : 3, 0, Math.PI*2); this.ctx.fill();
             }
         });
 
         Engine.wisps.forEach(w => {
-            let wx = cx + ((w.position.x - State.pos.x) * this.scale); 
-            let wy = cy + ((w.position.z - State.pos.z) * this.scale);
-            
-            if(Math.hypot(wx-cx, wy-cy) < 120) {
-                this.ctx.fillStyle = '#00ffff';
-                this.ctx.beginPath(); 
-                this.ctx.arc(wx, wy, 4, 0, Math.PI*2); 
-                this.ctx.fill();
+            let wx = cx + ((w.position.x - State.pos.x) * this.scale), wy = cy + ((w.position.z - State.pos.z) * this.scale);
+            if(Math.hypot(wx-cx, wy-cy) < 140) {
+                this.ctx.fillStyle = '#00ffff'; this.ctx.beginPath(); this.ctx.arc(wx, wy, 4, 0, Math.PI*2); this.ctx.fill();
             }
         });
 
-        this.ctx.fillStyle = 'rgba(255,255,255,0.12)'; 
-        this.ctx.beginPath(); 
-        this.ctx.moveTo(cx, cy);
-        this.ctx.arc(cx, cy, 100, -State.yaw - 0.6 - Math.PI/2, -State.yaw + 0.6 - Math.PI/2); 
-        this.ctx.fill();
+        this.ctx.fillStyle = 'rgba(255,255,255,0.15)'; this.ctx.beginPath(); this.ctx.moveTo(cx, cy);
+        this.ctx.arc(cx, cy, 120, -State.yaw - 0.6 - Math.PI/2, -State.yaw + 0.6 - Math.PI/2); this.ctx.fill();
     }
 };
 
@@ -2119,97 +1111,66 @@ const Minimap = {
 // ==========================================
 const Logic = {
     update(dt) {
-        this.checkZones(); 
-        this.processCollection(); 
-        this.processFarts(dt); 
-        this.checkAchievements();
-        
-        if(Engine.clock.getElapsedTime() % 0.2 < dt) {
-            UI.updateStats();
-        }
+        this.checkZones(); this.processCollection(); this.processFarts(dt); this.checkAchievements();
+        if(Engine.clock.getElapsedTime() % 0.2 < dt) UI.updateStats();
     },
-    
     checkZones() {
         State.inSafeZone = Math.hypot(State.pos.x, State.pos.z) < C.HOME_RADIUS;
         const prompt = document.getElementById('interact-prompt');
-        
         if(State.inSafeZone && State.beansInStomach > 0) { 
-            prompt.style.display = 'block'; 
-            document.getElementById('fx-overlay').className = 'fx-heal'; 
-            State.stamina = State.maxStamina; 
+            prompt.style.display = 'block'; document.getElementById('fx-overlay').className = 'fx-heal'; State.stamina = State.maxStamina; 
         } else { 
-            prompt.style.display = 'none'; 
-            document.getElementById('fx-overlay').className = State.isSprinting ? 'fx-speed' : ''; 
+            prompt.style.display = 'none'; document.getElementById('fx-overlay').className = State.isSprinting ? 'fx-speed' : ''; 
         }
     },
-    
     processCollection() {
         if(State.beansInStomach >= State.stomachCap) return;
-        const collectRad = 7 + (State.multRadius * 2.5);
+        const collectRad = 10 + (State.multRadius * 3.0);
         
         for(let i=Engine.beans.length-1; i>=0; i--) {
             let b = Engine.beans[i];
             if(State.pos.distanceTo(b.position) < collectRad) {
-                State.beansInStomach += b.userData.val; 
+                State.beansInStomach = Math.min(State.stomachCap, State.beansInStomach + b.userData.val); 
                 State.beansEaten += b.userData.val;
-                
-                if(State.beansInStomach > State.stomachCap) {
-                    State.beansInStomach = State.stomachCap;
-                }
-                
                 UI.spawnFloatingText(`+${b.userData.val}`, window.innerWidth/2, window.innerHeight/2, b.userData.tier===3?'#ffd700':'#d2691e');
                 AudioSys.playCollect(b.userData.tier);
-                
-                Engine.beansGroup.remove(b); 
-                Engine.beans.splice(i, 1); 
-                Engine.spawnBean();
-                
+                Engine.beansGroup.remove(b); Engine.beans.splice(i, 1); Engine.spawnBean();
                 if(State.beansInStomach >= State.stomachCap) break;
             }
         }
-
-        // Check Wisps
         for(let i=Engine.wisps.length-1; i>=0; i--) {
             let w = Engine.wisps[i];
-            if(State.pos.distanceTo(w.position) < collectRad * 2) {
-                State.farts += 5000 * State.multFart;
-                UI.spawnFloatingText(`WISP CAUGHT!`, window.innerWidth/2, window.innerHeight/2 - 50, '#00ffff');
+            if(State.pos.distanceTo(w.position) < collectRad * 2.5) {
+                let gain = 10000 * State.multFart;
+                State.farts += gain;
+                UI.spawnFloatingText(`WISP ANOMALY! +${UI.formatNum(gain)}`, window.innerWidth/2, window.innerHeight/2 - 50, '#00ffff');
                 AudioSys.playCollect(3);
-                
-                Engine.scene.remove(w);
-                Engine.wisps.splice(i, 1);
-                Engine.spawnWisp();
+                Engine.scene.remove(w); Engine.wisps.splice(i, 1); Engine.spawnWisp();
             }
         }
     },
-    
     processFarts(dt) {
-        if(State.autoFart > 0) {
-            State.farts += State.autoFart * State.multFart * dt;
-        }
+        if(State.autoFart > 0) State.farts += State.autoFart * State.multFart * dt;
         
         if(State.inSafeZone && State.beansInStomach > 0 && Input.keys.space) {
-            let amount = 30 * State.multDigest * dt; 
-            amount = Math.min(amount, State.beansInStomach);
-            
+            let amount = Math.min(40 * State.multDigest * dt, State.beansInStomach);
             if(amount > 0) {
                 State.beansInStomach -= amount; 
-                let gen = amount * State.multFart; 
-                State.farts += gen;
+                let gen = amount * State.multFart; State.farts += gen;
                 
                 if(Math.random() < 0.4) {
-                    Engine.createExplosion(State.pos.clone().add(new THREE.Vector3(0,-3,0)), 0x39ff14, 12);
-                    Engine.camera.position.y += Math.random() * 3.5; 
-                    AudioSys.playFart();
-                    UI.spawnFloatingText(`+${Math.floor(gen)} FART`, window.innerWidth/2 + (Math.random()-0.5)*100, window.innerHeight/2 + 50, '#39ff14');
+                    Engine.createExplosion(State.pos.clone().add(new THREE.Vector3(0,-3,0)), 0x39ff14, 15);
+                    Engine.camera.position.y += Math.random() * 4.0; AudioSys.playFart();
+                    UI.spawnFloatingText(`+${Math.floor(gen)}`, window.innerWidth/2 + (Math.random()-0.5)*150, window.innerHeight/2 + 50, '#39ff14');
+                    document.getElementById('crosshair').classList.add('active');
+                    setTimeout(()=>document.getElementById('crosshair').classList.remove('active'), 100);
                 }
             }
         }
     },
-    
     checkAchievements() {
         DB.achievements.forEach(a => {
-            if(a.unlocked) return; 
+            if(State.achievementsData[a.id]) return; 
             let achieved = false;
             if(a.req.type === 'farts' && State.farts >= a.req.val) achieved = true;
             if(a.req.type === 'beans' && State.beansEaten >= a.req.val) achieved = true;
@@ -2218,53 +1179,35 @@ const Logic = {
             if(a.req.type === 'cap' && State.stomachCap >= a.req.val) achieved = true;
             
             if(achieved) { 
-                a.unlocked = true; 
-                UI.spawnAchievement(a.name, a.desc); 
-                UI.renderShopList('achievements'); 
-                AudioSys.playTone(880, 'sine', 0.6, 0.4); 
+                State.achievementsData[a.id] = true; a.unlocked = true; 
+                UI.spawnLog(`TROPHY UNLOCKED: ${a.name}`, "var(--gold)", true); 
+                UI.renderShopList('achievements'); AudioSys.playTone(880, 'sine', 0.8, 0.4); 
             }
         });
     },
-    
     recalculateStats() {
-        State.stomachCap = 10; 
-        State.maxStamina = 100; 
-        State.multFart = 1; 
-        State.multSpeed = 1; 
-        State.multRadius = 1; 
-        State.multDigest = 1; 
-        State.autoFart = 0;
+        State.stomachCap = 10; State.maxStamina = 100; State.multFart = 1; State.multSpeed = 1; State.multRadius = 1; State.multDigest = 1; State.autoFart = 0;
         
         DB.prestige.forEach(p => { 
-            let c = State.inventory[p.id].count; 
-            if(c===0) return; 
+            let c = State.inventory[p.id].count; if(c===0) return; 
             let val = Math.pow(p.val, c);
-            if(p.type==='pfart') State.multFart *= val; 
-            if(p.type==='pspeed') State.multSpeed *= val; 
-            if(p.type==='pcap') State.stomachCap *= val;
-            if(p.type==='pdigest') State.multDigest *= val; 
-            if(p.type==='prad') State.multRadius *= val; 
-            if(p.type==='pstam') State.maxStamina *= val; 
-            if(p.type==='pauto') State.autoFart += (100 * val);
+            if(p.type==='pfart') State.multFart *= val; if(p.type==='pspeed') State.multSpeed *= val; 
+            if(p.type==='pcap') State.stomachCap *= val; if(p.type==='pdigest') State.multDigest *= val; 
+            if(p.type==='prad') State.multRadius *= val; if(p.type==='pstam') State.maxStamina *= val; 
+            if(p.type==='pauto') State.autoFart += (p.val * c);
         });
         
         DB.upgrades.forEach(u => { 
-            let c = State.inventory[u.id].count; 
-            if(c===0) return;
-            if(u.type==='cap') State.stomachCap += (u.val * c); 
-            if(u.type==='fart') State.multFart *= Math.pow(u.val, c); 
-            if(u.type==='stam') State.maxStamina += (u.val * c);
-            if(u.type==='speed') State.multSpeed += (u.val * c); 
-            if(u.type==='rad') State.multRadius += (u.val * c); 
-            if(u.type==='digest') State.multDigest *= Math.pow(u.val, c); 
+            let c = State.inventory[u.id].count; if(c===0) return;
+            if(u.type==='cap') State.stomachCap += (u.val * c); if(u.type==='fart') State.multFart *= Math.pow(u.val, c); 
+            if(u.type==='stam') State.maxStamina += (u.val * c); if(u.type==='speed') State.multSpeed += (u.val * c); 
+            if(u.type==='rad') State.multRadius += (u.val * c); if(u.type==='digest') State.multDigest *= Math.pow(u.val, c); 
             if(u.type==='auto') State.autoFart += (u.val * c);
         });
         
         DB.mutations.forEach(m => { 
-            let c = State.inventory[m.id].count; 
-            if(c===0) return;
-            if(m.type==='fart') State.multFart *= Math.pow(m.val, c); 
-            if(m.type==='auto') State.autoFart += (m.val * c);
+            let c = State.inventory[m.id].count; if(c===0) return;
+            if(m.type==='fart') State.multFart *= Math.pow(m.val, c); if(m.type==='auto') State.autoFart += (m.val * c);
         });
         
         UI.updateStats();
@@ -2275,69 +1218,62 @@ const Logic = {
 // USER INTERFACE
 // ==========================================
 const UI = {
-    isShopOpen: false, 
-    currentPage: { upgrades: 0, mutations: 0, prestige: 0, achievements: 0 }, 
-    itemsPerPage: 3,
-    
-    init() { 
-        this.switchTab('upgrades'); 
-    },
-    
+    isShopOpen: false, currentPage: { upgrades: 0, mutations: 0, prestige: 0, achievements: 0 }, itemsPerPage: 4, buyMode: 1,
+    init() { this.switchTab('upgrades'); },
     formatNum(n) {
-        if(n >= 1e18) return (n/1e18).toFixed(2) + 'E'; 
-        if(n >= 1e15) return (n/1e15).toFixed(2) + 'P'; 
+        if(n >= 1e21) return (n/1e21).toFixed(2) + 'Sx';
+        if(n >= 1e18) return (n/1e18).toFixed(2) + 'Qi'; 
+        if(n >= 1e15) return (n/1e15).toFixed(2) + 'Qa'; 
         if(n >= 1e12) return (n/1e12).toFixed(2) + 'T';
         if(n >= 1e9) return (n/1e9).toFixed(2) + 'B'; 
         if(n >= 1e6) return (n/1e6).toFixed(2) + 'M'; 
         if(n >= 1e3) return (n/1e3).toFixed(1) + 'k';
         return Math.floor(n).toLocaleString();
     },
-    
     updateStats() {
         document.getElementById('txt-farts').innerText = this.formatNum(State.farts); 
         document.getElementById('txt-mult').innerText = `x${this.formatNum(State.multFart)}`;
+        document.getElementById('txt-auto').innerText = this.formatNum(State.autoFart * State.multFart);
         document.getElementById('txt-beans').innerText = this.formatNum(State.beansEaten); 
         document.getElementById('txt-tokens').innerText = this.formatNum(State.prestigeTokens);
         document.getElementById('txt-dist').innerText = Math.floor(State.distanceTraveled).toLocaleString();
         
         let stomPct = Math.min(100, (State.beansInStomach / State.stomachCap) * 100);
         document.getElementById('txt-stom').innerText = `${Math.floor(State.beansInStomach).toLocaleString()} / ${this.formatNum(State.stomachCap)}`;
-        document.getElementById('stomach-fill').style.width = `${stomPct}%`; 
-        document.getElementById('stomach-pct').innerText = `${stomPct.toFixed(1)}%`;
-        
+        document.getElementById('stomach-fill').style.width = `${stomPct}%`; document.getElementById('stomach-pct').innerText = `${stomPct.toFixed(1)}%`;
         document.getElementById('stamina-fill').style.width = `${(State.stamina / State.maxStamina) * 100}%`;
     },
-    
+    setBuyMode(amt) {
+        this.buyMode = amt;
+        document.querySelectorAll('.mult-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`btn-buy-${amt}`).classList.add('active');
+        let activeTab = document.querySelector('.tab-btn.active').getAttribute('data-target');
+        if(activeTab !== 'system' && activeTab !== 'achievements') this.renderShopList(activeTab);
+    },
     switchTab(tab) {
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelector(`.tab-btn[data-target="${tab}"]`).classList.add('active');
-        
-        document.getElementById('list-upgrades').style.display = tab === 'upgrades' ? 'flex' : 'none';
-        document.getElementById('list-mutations').style.display = tab === 'mutations' ? 'flex' : 'none';
-        document.getElementById('list-prestige').style.display = tab === 'prestige' ? 'flex' : 'none';
-        document.getElementById('list-achievements').style.display = tab === 'achievements' ? 'flex' : 'none';
-        
-        this.renderShopList(tab);
+        ['upgrades', 'mutations', 'prestige', 'achievements', 'system'].forEach(t => {
+            document.getElementById(`list-${t}`).style.display = t === tab ? 'flex' : 'none';
+        });
+        if(tab !== 'system') this.renderShopList(tab);
     },
-    
-    changePage(cat, dir) { 
-        this.currentPage[cat] += dir; 
-        AudioSys.playTone(1000, 'sine', 0.05, 0.1); 
-        this.renderShopList(cat); 
-    },
+    changePage(cat, dir) { this.currentPage[cat] += dir; AudioSys.playTone(1000, 'sine', 0.05, 0.1); this.renderShopList(cat); },
     
     renderShopList(cat) {
         const container = document.getElementById(`list-${cat}`); 
-        container.innerHTML = '';
+        container.innerHTML = ''; 
         
         if(cat === 'prestige' && this.currentPage[cat] === 0) {
-            container.innerHTML += `
-                <div class="upgrade-card" style="border-color:var(--gold); flex: 0.5; min-height: 120px;" onclick="Game.showRebirthModal()">
-                    <div style="text-align:center;">
-                        <h3 style="color:var(--gold); font-family:'Orbitron',sans-serif; margin:0 0 10px 0; font-size:24px; text-shadow:0 0 15px var(--gold-glow);">PERFORM REBIRTH</h3>
-                        <p style="font-size:14px; color:#ccc; margin:0;">Sacrifice all mortal possessions to ascend to higher dimensions.</p>
-                    </div>
+            const rebirthDiv = document.createElement('div');
+            rebirthDiv.className = "upgrade-card"; rebirthDiv.style.borderColor = "var(--gold)"; rebirthDiv.style.minHeight = "120px";
+            rebirthDiv.onpointerdown = (e) => { e.preventDefault(); Game.showRebirthModal(); };
+            rebirthDiv.innerHTML = `
+                <div style="text-align:center; pointer-events:none;">
+                    <h3 style="color:var(--gold); font-family:'Orbitron',sans-serif; margin:0 0 10px 0; font-size:24px; text-shadow:0 0 15px var(--gold-glow); letter-spacing:2px;">PERFORM REBIRTH</h3>
+                    <p style="font-size:15px; color:#ccc; margin:0; font-family:'Rajdhani',sans-serif;">Sacrifice all physical matter to ascend.</p>
                 </div>`;
+            container.appendChild(rebirthDiv);
         }
 
         let page = this.currentPage[cat]; 
@@ -2345,88 +1281,83 @@ const UI = {
         let end = start + this.itemsPerPage;
         let slice = DB[cat].slice(start, end);
         
-        if(cat === 'achievements') {
-            slice.forEach(a => {
-                container.innerHTML += `
-                    <div class="upgrade-card ${a.unlocked ? 'maxed' : 'locked'}">
-                        <div class="uc-header"><span class="uc-name" style="color:${a.unlocked?'var(--gold)':'#666'}">${a.name}</span></div>
-                        <div class="uc-desc">${a.desc}</div>
-                        <div class="uc-footer"><span class="uc-cost" style="color:${a.unlocked?'var(--primary)':'#666'}">${a.unlocked ? 'UNLOCKED' : 'LOCKED'}</span></div>
-                    </div>`;
-            });
-        } else {
-            const currencyStr = cat === 'prestige' ? 'Tokens' : 'Farts'; 
-            const currAmount = cat === 'prestige' ? State.prestigeTokens : State.farts;
-            
-            slice.forEach(item => {
-                const inv = State.inventory[item.id]; 
-                const isMax = inv.count >= item.max; 
-                const canAfford = currAmount >= inv.currentCost;
-                
-                const costHtml = isMax ? `<span class="uc-cost">MAX LEVEL REACHED</span>` : `<span class="uc-cost ${cat==='prestige'?'prestige-cost':''}">${UI.formatNum(inv.currentCost)} ${currencyStr}</span>`;
-                
-                const div = document.createElement('div'); 
-                div.className = `upgrade-card ${isMax ? 'maxed' : (!canAfford ? 'locked' : '')}`;
-                
-                // CRITICAL FIX: onpointerdown bypasses Pointer Lock click suppression
-                div.onpointerdown = (e) => { 
-                    e.preventDefault();
-                    e.stopPropagation(); 
-                    Game.buyItem(item.id, cat); 
-                };
-                
-                // pointer-events:none added to inner elements so they don't absorb the pointerdown
+        slice.forEach(item => {
+            const div = document.createElement('div');
+            if(cat === 'achievements') {
+                div.className = `upgrade-card ${item.unlocked ? 'maxed' : 'locked'}`;
                 div.innerHTML = `
-                      <div class="uc-header" style="margin-bottom: 5px; pointer-events:none;">
-                          <span class="uc-name" style="font-size: 18px; color:${cat==='prestige'?'var(--gold)':(cat==='mutations'?'var(--secondary)':'#fff')}">${item.name}</span>
-                          <span class="uc-level" style="font-size: 12px; padding: 2px 8px;">Lv.${inv.count}</span>
-                      </div>
-                      <div class="uc-effect" style="font-size: 14px; margin-bottom: 10px; padding: 4px; pointer-events:none;">${item.effectDesc}</div>
-                      <div class="uc-footer" style="padding-top: 10px; pointer-events:none;">${costHtml}</div>
-                  `;
-                container.appendChild(div);
-            });
-        }
+                    <div class="uc-header"><span class="uc-name" style="color:${item.unlocked?'var(--gold)':'#555'}">${item.name}</span></div>
+                    <div class="uc-desc">${item.desc}</div>
+                    <div class="uc-footer"><span class="uc-cost" style="color:${item.unlocked?'var(--primary)':'#555'}; border-color:${item.unlocked?'var(--primary)':'#555'}">${item.unlocked ? 'UNLOCKED' : 'LOCKED'}</span></div>`;
+            } else {
+                const inv = State.inventory[item.id]; 
+                const currency = cat === 'prestige' ? State.prestigeTokens : State.farts;
+                
+                // Calculate batch cost
+                let batchCount = 0; let batchCost = 0; let simCost = inv.currentCost;
+                let target = this.buyMode === 'max' ? item.max - inv.count : Math.min(this.buyMode, item.max - inv.count);
+                
+                for(let i=0; i<target; i++) {
+                    if(currency >= batchCost + simCost) { batchCost += simCost; batchCount++; simCost = Math.floor(simCost * item.mult); } 
+                    else break;
+                }
+                
+                // Fallback for display if we can't afford even 1, or if maxed
+                let displayCost = batchCount > 0 ? batchCost : inv.currentCost;
+                let canAfford = currency >= displayCost && batchCount > 0;
+                const isMax = inv.count >= item.max; 
+                
+                div.className = `upgrade-card ${isMax ? 'maxed' : (!canAfford ? 'locked' : '')}`;
+                div.onpointerdown = (e) => { e.preventDefault(); e.stopPropagation(); if(batchCount > 0) Game.buyItem(item.id, cat, batchCount, batchCost); else AudioSys.playError(); };
+
+                div.innerHTML = `
+                    <div class="uc-header" style="pointer-events:none;">
+                        <span class="uc-name" style="color:${cat==='prestige'?'var(--gold)':(cat==='mutations'?'var(--secondary)':'#fff')}">${item.name}</span>
+                        <span class="uc-level">Lv.${inv.count}/${item.max}</span>
+                    </div>
+                    <div class="uc-effect" style="pointer-events:none;">${item.effectDesc}</div>
+                    <div class="uc-footer" style="pointer-events:none;">
+                        <span class="uc-cost ${cat==='prestige'?'prestige-cost':''}">${isMax ? 'MAXED' : this.formatNum(displayCost) + (cat==='prestige'?' TKNS':' MASS')} ${batchCount > 1 ? `(x${batchCount})` : ''}</span>
+                    </div>`;
+            }
+            container.appendChild(div);
+        });
 
         let maxPage = Math.ceil(DB[cat].length / this.itemsPerPage) - 1;
-        container.innerHTML += `
-            <div class="pagination-controls">
-                <button class="page-btn" ${page === 0 ? 'disabled' : ''} onclick="UI.changePage('${cat}', -1)">PREV</button>
-                <span class="page-info">PAGE ${page + 1} / ${maxPage + 1}</span>
-                <button class="page-btn" ${page === maxPage ? 'disabled' : ''} onclick="UI.changePage('${cat}', 1)">NEXT</button>
-            </div>`;
+        const nav = document.createElement('div'); nav.className = 'pagination-controls';
+        
+        const bPrev = document.createElement('button'); bPrev.className = 'page-btn'; bPrev.innerText = 'PREV';
+        bPrev.disabled = (page === 0); bPrev.onpointerdown = (e) => { e.preventDefault(); this.changePage(cat, -1); };
+
+        const pInfo = document.createElement('span'); pInfo.className = 'page-info'; pInfo.innerText = `PG ${page+1}/${maxPage+1}`;
+
+        const bNext = document.createElement('button'); bNext.className = 'page-btn'; bNext.innerText = 'NEXT';
+        bNext.disabled = (page === maxPage); bNext.onpointerdown = (e) => { e.preventDefault(); this.changePage(cat, 1); };
+
+        nav.appendChild(bPrev); nav.appendChild(pInfo); nav.appendChild(bNext); container.appendChild(nav);
     },
     
-    spawnToast(msg, color) {
-        const container = document.getElementById('alert-container'); 
+    spawnLog(msg, color, isAch = false) {
+        const container = document.getElementById('notification-log');
         const el = document.createElement('div');
-        el.className = 'alert-toast'; 
-        el.style.borderColor = color; 
-        el.style.boxShadow = `0 0 30px ${color}`; 
-        el.innerText = msg;
-        container.appendChild(el); 
-        setTimeout(() => el.remove(), 2000);
-    },
-    
-    spawnAchievement(title, desc) {
-        const container = document.getElementById('alert-container'); 
-        const el = document.createElement('div');
-        el.className = 'achievement-toast'; 
-        el.innerHTML = `<div class="icon">🏆</div><div class="details"><h4>ACHIEVEMENT: ${title}</h4><p>${desc}</p></div>`;
-        container.appendChild(el); 
-        setTimeout(() => el.remove(), 5000);
+        el.className = `log-entry ${isAch ? 'achievement' : ''}`;
+        el.style.borderLeftColor = color;
+        el.innerHTML = `<strong style="color:${color}">${isAch ? '🏆 ' : ''}SYS:</strong> ${msg}`;
+        
+        container.prepend(el); // Add to top of visual stack
+        if(container.children.length > 6) container.removeChild(container.lastChild); // Keep log tidy
+        
+        setTimeout(() => {
+            el.classList.add('fade-out');
+            setTimeout(() => { if(el.parentNode === container) container.removeChild(el); }, 500);
+        }, 4000);
     },
     
     spawnFloatingText(txt, x, y, color) {
-        const el = document.createElement('div'); 
-        el.className = 'floating-text';
-        el.style.left = x + 'px'; 
-        el.style.top = y + 'px'; 
-        el.style.color = color; 
-        el.innerText = txt; 
-        el.style.fontSize = (Math.random()*10 + 20) + 'px';
-        document.body.appendChild(el); 
-        setTimeout(() => el.remove(), 1500);
+        const el = document.createElement('div'); el.className = 'floating-text';
+        el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.color = color; el.innerText = txt; 
+        el.style.fontSize = (Math.random()*12 + 22) + 'px'; document.body.appendChild(el); 
+        setTimeout(() => el.remove(), 1800);
     }
 };
 
@@ -2434,44 +1365,26 @@ const UI = {
 // STORE TRANSACTIONS AND CORE LOOP
 // ==========================================
 const Game = {
-    buyItem(id, cat) {
-        if (!cat) return; // Failsafe
+    buyItem(id, cat, qty, totalCost) {
         const itemData = DB[cat].find(i => i.id === id); 
         const inv = State.inventory[id];
-        let currency = cat === 'prestige' ? State.prestigeTokens : State.farts;
         
-        if(inv.count >= itemData.max) return;
+        if(cat === 'prestige') State.prestigeTokens -= totalCost; 
+        else State.farts -= totalCost;
         
-        if(currency < inv.currentCost) { 
-            UI.spawnToast("INSUFFICIENT FUNDS", "var(--danger)"); 
-            return; 
-        }
+        inv.count += qty;
+        // Recalculate cost formula for the new count strictly
+        inv.currentCost = Math.floor(itemData.cost * Math.pow(itemData.mult, inv.count));
         
-        if(cat === 'prestige') {
-            State.prestigeTokens -= inv.currentCost; 
-        } else {
-            State.farts -= inv.currentCost;
-        }
-        
-        inv.count++; 
-        inv.currentCost = Math.floor(inv.currentCost * itemData.mult);
-        
-        AudioSys.playBuy(); 
-        Logic.recalculateStats(); 
-        UI.renderShopList(cat); 
-        UI.spawnToast(`ACQUIRED: ${itemData.name}`, "var(--primary)");
+        AudioSys.playBuy(); Logic.recalculateStats(); UI.renderShopList(cat); 
+        UI.spawnLog(`Acquired [${itemData.name}] x${qty}`, cat === 'prestige' ? 'var(--gold)' : 'var(--primary)');
     },
     
-    calcRebirthGain() { 
-        return Math.floor(Math.pow(State.farts / 1000000, 0.65)); 
-    },
+    calcRebirthGain() { return Math.floor(Math.pow(State.farts / 1000000, 0.70)); },
     
     showRebirthModal() {
         const gain = this.calcRebirthGain();
-        if(gain < 1) { 
-            UI.spawnToast("REQUIRE MIN 1,000,000 EXPULSIONS", "var(--danger)"); 
-            return; 
-        }
+        if(gain < 1) { UI.spawnLog("ASCENSION FAILED: REQUIRES 1,000,000 MASS", "var(--danger)"); AudioSys.playError(); return; }
         document.getElementById('rebirth-amt').innerText = UI.formatNum(gain); 
         document.getElementById('rebirth-overlay').style.display = 'flex'; 
         document.exitPointerLock();
@@ -2479,47 +1392,31 @@ const Game = {
     
     executeRebirth() {
         const gain = this.calcRebirthGain(); 
-        State.prestigeTokens += gain; 
-        State.rebirths++;
-        State.farts = 0; 
-        State.beansInStomach = 0;
+        State.prestigeTokens += gain; State.rebirths++;
+        State.farts = 0; State.beansInStomach = 0; State.autoFart = 0;
         
-        DB.upgrades.forEach(u => { 
-            State.inventory[u.id].count = 0; 
-            State.inventory[u.id].currentCost = u.cost; 
-        });
+        DB.upgrades.forEach(u => { State.inventory[u.id].count = 0; State.inventory[u.id].currentCost = u.cost; });
+        DB.mutations.forEach(m => { State.inventory[m.id].count = 0; State.inventory[m.id].currentCost = m.cost; });
         
-        DB.mutations.forEach(m => { 
-            State.inventory[m.id].count = 0; 
-            State.inventory[m.id].currentCost = m.cost; 
-        });
-        
-        State.pos.set(0, 6, 0); 
-        State.vel.set(0, 0, 0);
+        State.pos.set(0, 7, 0); State.vel.set(0, 0, 0);
         
         document.getElementById('rebirth-overlay').style.display = 'none'; 
         document.getElementById('row-prestige').style.display = 'flex';
         
-        Logic.recalculateStats(); 
-        UI.currentPage.upgrades = 0; 
-        UI.switchTab('upgrades');
+        Logic.recalculateStats(); SaveSys.save();
+        UI.currentPage.upgrades = 0; UI.switchTab('upgrades');
         
-        Engine.createExplosion(new THREE.Vector3(0,6,0), 0xffd700, 1000); 
+        Engine.createExplosion(new THREE.Vector3(0,7,0), 0xffd700, 2000); 
         AudioSys.playAscend();
-        document.getElementById('fx-overlay').style.boxShadow = "inset 0 0 600px rgba(255, 215, 0, 1)"; 
+        document.getElementById('fx-overlay').style.boxShadow = "inset 0 0 800px rgba(255, 215, 0, 1)"; 
+        setTimeout(()=> document.getElementById('fx-overlay').style.boxShadow = "none", 3000);
         
-        setTimeout(()=> document.getElementById('fx-overlay').style.boxShadow = "none", 2500);
-        UI.spawnToast(`ASCENSION COMPLETE. +${UI.formatNum(gain)} TOKENS`, "var(--gold)"); 
-        
+        UI.spawnLog(`ASCENSION COMPLETE. REALITY REWRITTEN.`, "var(--gold)"); 
         document.body.requestPointerLock();
     }
 };
 
-// Start the engine
 window.onload = () => Engine.init();
-
 </script>
-
-   <button class="tab-btn" id="btn-weather" onclick="WeatherSys.cycle()" style="position:absolute; bottom:20px; right:20px; z-index:100; font-size:24px;">☀️</button>
 </body>
 </html>
