@@ -973,7 +973,7 @@ const Input = {
     keys: { w:false, a:false, s:false, d:false, shift:false, space:false }, lastStep: 0,
     onKeyDown(e) {
         if(e.code === 'KeyW' || e.code === 'ArrowUp') Input.keys.w = true; 
-        if(e.code === 'KeyQ' && State.inventory['u_tele']?.count > 0) { State.pos.set(0, 5, 0); State.vel.set(0, 0, 0); AudioSys.playTone(800, 'sine', 0.5, 0.2); }
+        if(e.code === 'KeyQ' && State.inventory['u_7']?.count > 0) { State.pos.set(0, 5, 0); State.vel.set(0, 0, 0); AudioSys.playTone(800, 'sine', 0.5, 0.2); }
         if(e.code === 'KeyA' || e.code === 'ArrowLeft') Input.keys.a = true;
         if(e.code === 'KeyS' || e.code === 'ArrowDown') Input.keys.s = true; 
         if(e.code === 'KeyD' || e.code === 'ArrowRight') Input.keys.d = true;
