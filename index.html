@@ -725,7 +725,7 @@ const Engine = {
         WeatherSys.init(this.scene);
 
         for(let i=0; i<C.MAX_BEANS; i++) this.spawnBean();
-        for(let i=0; i<60; i++) this.spawnWisp();
+        //for(let i=0; i<60; i++) this.spawnWisp();
 
         window.addEventListener('resize', () => this.onResize());
         document.addEventListener('keydown', Input.onKeyDown); 
@@ -918,7 +918,6 @@ const Engine = {
     },
 
     loop() {
-        this.wisps.forEach(w => { w.visible = false; w.position.set(0,-1000,0); });
         this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, State.isSprinting ? 110 : 85, 0.1); this.camera.updateProjectionMatrix();
         const dt = Math.min(this.clock.getDelta(), 0.1);
         const time = this.clock.getElapsedTime();
@@ -944,12 +943,7 @@ const Engine = {
             b.position.y = b.userData.baseY + Math.sin(time * 3 + b.userData.phase) * 2.5;
         });
 
-        this.wisps.forEach(w => {
-            w.userData.angle += (w.userData.speed / w.userData.radius) * dt;
-            w.position.x = w.userData.centerX + Math.cos(w.userData.angle) * w.userData.radius;
-            w.position.z = w.userData.centerZ + Math.sin(w.userData.angle) * w.userData.radius;
-            w.position.y = w.userData.baseY + Math.sin(time * 2) * 8;
-        });
+        
 
         for(let i=this.particles.length-1; i>=0; i--) {
             let p = this.particles[i]; 
@@ -1077,12 +1071,7 @@ const Minimap = {
             }
         });
 
-        Engine.wisps.forEach(w => {
-            let wx = cx + ((w.position.x - State.pos.x) * this.scale), wy = cy + ((w.position.z - State.pos.z) * this.scale);
-            if(Math.hypot(wx-cx, wy-cy) < 140) {
-                this.ctx.fillStyle = '#00ffff'; this.ctx.beginPath(); this.ctx.arc(wx, wy, 4, 0, Math.PI*2); this.ctx.fill();
-            }
-        });
+        
 
         this.ctx.fillStyle = 'rgba(255,255,255,0.15)'; this.ctx.beginPath(); this.ctx.moveTo(cx, cy);
         this.ctx.arc(cx, cy, 120, -State.yaw - 0.6 - Math.PI/2, -State.yaw + 0.6 - Math.PI/2); this.ctx.fill();
@@ -1121,16 +1110,7 @@ const Logic = {
                 if(State.beansInStomach >= State.stomachCap) break;
             }
         }
-        for(let i=Engine.wisps.length-1; i>=0; i--) {
-            let w = Engine.wisps[i];
-            if(State.pos.distanceTo(w.position) < collectRad * 2.5) {
-                let gain = 10000 * State.multFart;
-                State.farts += gain;
-                UI.spawnFloatingText(`WISP ANOMALY! +${UI.formatNum(gain)}`, window.innerWidth/2, window.innerHeight/2 - 50, '#00ffff');
-                AudioSys.playCollect(3);
-                Engine.scene.remove(w); Engine.wisps.splice(i, 1); Engine.spawnWisp();
-            }
-        }
+       
     },
     processFarts(dt) {
         if(State.autoFart > 0) State.farts += State.autoFart * State.multFart * dt;
