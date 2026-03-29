@@ -810,7 +810,7 @@ const Engine = {
         this.scene.add(meshPlane);
 
         const geoDome = new THREE.SphereGeometry(C.HOME_RADIUS, 32, 16, 0, Math.PI*2, 0, Math.PI/2);
-        const matDome = new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.1, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
+        const matDome = new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.6, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
         this.scene.add(new THREE.Mesh(geoDome, matDome));
 
         const geoAltar = new THREE.CylinderGeometry(10, 15, 12, 32);
