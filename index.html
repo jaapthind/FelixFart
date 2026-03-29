@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>FelixFart 3D: Ascended Tycoon V4 (Omega Engine)</title>
+<title>FelixFart 3D </title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💨</text></svg>">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
@@ -237,7 +237,7 @@ body, html { width: 100%; height: 100%; overflow: hidden; background-color: #000
 
 
 <div id="stats-panel" class="hud-element">
-    <h1 class="glitch-text" data-text="FELIXFART V4">FELIXFART V4</h1>
+    <h1 class="glitch-text" data-text="FELIXFART">FELIXFART</h1>
     
     <div class="stat-row">
         <span class="stat-label">Total Expulsions</span>
@@ -360,7 +360,9 @@ body, html { width: 100%; height: 100%; overflow: hidden; background-color: #000
                     { id: 'u_3', name: "Bio-Magnet", type: 'rad', cost: 300, mult: 1.4, max: 20, desc: "Sucks up beans from much further away.", val: 6 },
                     { id: 'u_4', name: "Pressure Valve", type: 'fart', cost: 600, mult: 1.8, max: 50, desc: "Multiplies Mass output significantly.", val: 2.0 },
                     { id: 'u_5', name: "Nano-Digestor", type: 'digest', cost: 2000, mult: 2.0, max: 10, desc: "Purge BEANS at 3x speed per level.", val: 3.0 },
-                    { id: 'u_6', name: "Auto-Venter", type: 'auto', cost: 10000, mult: 3.0, max: 50, desc: "Passively vents gas to generate Mass.", val: 250 }
+                    { id: 'u_6', name: "Auto-Venter", type: 'auto', cost: 10000, mult: 3.0, max: 50, desc: "Passively vents gas to generate Mass.", val: 250 },
+                    { id: 'u_7', name: "Recall Module", type: 'special', cost: 20000, mult: 10, max: 1, desc: "Press [Q] to instantly warp back to the core.", val: 1 }
+                   
                 ];
                 
                 manualUpgrades.forEach(u => {
@@ -808,7 +810,7 @@ const Engine = {
         this.scene.add(meshPlane);
 
         const geoDome = new THREE.SphereGeometry(C.HOME_RADIUS, 32, 16, 0, Math.PI*2, 0, Math.PI/2);
-        const matDome = new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.1, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
+        const matDome = new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.4, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
         this.scene.add(new THREE.Mesh(geoDome, matDome));
 
         const geoAltar = new THREE.CylinderGeometry(10, 15, 12, 32);
@@ -916,8 +918,8 @@ const Engine = {
     },
 
     loop() {
+        this.wisps.forEach(w => { w.visible = false; w.position.set(0,-1000,0); });
         this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, State.isSprinting ? 110 : 85, 0.1); this.camera.updateProjectionMatrix();
-        Engine.scene.children.forEach(c => { if(c.geometry?.type === "SphereGeometry" && c.material?.opacity < 0.2) c.material.color.setHSL((Date.now() * 0.0001) % 1, 1.0, 0.2); });        requestAnimationFrame(() => this.loop());
         const dt = Math.min(this.clock.getDelta(), 0.1);
         const time = this.clock.getElapsedTime();
         
@@ -971,6 +973,7 @@ const Input = {
     keys: { w:false, a:false, s:false, d:false, shift:false, space:false }, lastStep: 0,
     onKeyDown(e) {
         if(e.code === 'KeyW' || e.code === 'ArrowUp') Input.keys.w = true; 
+        if(e.code === 'KeyQ' && State.inventory['u_tele']?.count > 0) { State.pos.set(0, 5, 0); State.vel.set(0, 0, 0); AudioSys.playTone(800, 'sine', 0.5, 0.2); }
         if(e.code === 'KeyA' || e.code === 'ArrowLeft') Input.keys.a = true;
         if(e.code === 'KeyS' || e.code === 'ArrowDown') Input.keys.s = true; 
         if(e.code === 'KeyD' || e.code === 'ArrowRight') Input.keys.d = true;
@@ -1290,15 +1293,7 @@ const UI = {
                 div.className = `upgrade-card ${isMax ? 'maxed' : (!canAfford ? 'locked' : '')}`;
                 div.onpointerdown = (e) => { e.preventDefault(); e.stopPropagation(); if(batchCount > 0) Game.buyItem(item.id, cat, batchCount, batchCost); else AudioSys.playError(); };
 
-                div.innerHTML = `
-                    <div class="uc-header" style="pointer-events:none;">
-                        <span class="uc-name" style="color:${cat==='prestige'?'var(--gold)':(cat==='mutations'?'var(--secondary)':'#fff')}">${item.name}</span>
-                        <span class="uc-level">Lv.${inv.count}/${item.max}</span>
-                    </div>
-                    <div class="uc-effect" style="pointer-events:none;">${item.effectDesc}</div>
-                    <div class="uc-footer" style="pointer-events:none;">
-                        <span class="uc-cost ${cat==='prestige'?'prestige-cost':''}">${isMax ? 'MAXED' : this.formatNum(displayCost) + (cat==='prestige'?' TKNS':' MASS')} ${batchCount > 1 ? `(x${batchCount})` : ''}</span>
-                    </div>`;
+               div.innerHTML = `<div class="uc-header" style="pointer-events:none;"><span class="uc-name" style="color:${cat==='prestige'?'var(--gold)':(cat==='mutations'?'var(--secondary)':'#fff')}">${item.name}</span><span class="uc-level">Lv.${inv.count}/${item.max}</span></div><div style="font-size:13px;color:#888;margin:4px 0;font-style:italic;pointer-events:none;">${item.desc}</div><div class="uc-effect" style="pointer-events:none;">${item.effectDesc}</div><div class="uc-footer" style="pointer-events:none;"><span class="uc-cost ${cat==='prestige'?'prestige-cost':''}">${isMax ? 'MAXED' : this.formatNum(displayCost) + (cat==='prestige'?' TKNS':' MASS')} ${batchCount > 1 ? `(x${batchCount})` : ''}</span></div>`;
             }
             container.appendChild(div);
         });
