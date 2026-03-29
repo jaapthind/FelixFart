@@ -669,8 +669,7 @@ function fbm(x, y, octaves = 6) {
     return v;
 }
 
-const C = { WORLD_SIZE: 12000, HOME_RADIUS: 180, MAX_BEANS: 3000, MAX_PARTICLES: 10000, GRASS_COUNT: 120000, TREE_COUNT: 5000 };
-
+const C = { WORLD_SIZE: 8000, HOME_RADIUS: 180, MAX_BEANS: 1500, MAX_PARTICLES: 2000, GRASS_COUNT: 30000, TREE_COUNT: 1500 };
 const Engine = {
     scene: null, camera: null, renderer: null, clock: new THREE.Clock(),
     beansGroup: null, particlesGroup: null,
