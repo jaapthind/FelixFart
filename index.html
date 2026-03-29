@@ -518,9 +518,7 @@ const AudioSys = {
         osc.start(); osc.stop(this.ctx.currentTime + duration);
     },
     playCollect(tier) {
-        if(tier === 1) this.playTone(600, 'sine', 0.1, 0.1);
-        if(tier === 2) { this.playTone(600, 'sine', 0.1, 0.1); setTimeout(()=>this.playTone(850, 'sine', 0.15, 0.1), 50); }
-        if(tier === 3) { this.playTone(800, 'square', 0.1, 0.1); setTimeout(()=>this.playTone(1300, 'square', 0.3, 0.1), 50); }
+        new Audio('fart.mp3').play().catch(e => {});
     },
     playFart() {
         if(!this.enabled) return;
@@ -810,7 +808,7 @@ const Engine = {
         this.scene.add(meshPlane);
 
         const geoDome = new THREE.SphereGeometry(C.HOME_RADIUS, 32, 16, 0, Math.PI*2, 0, Math.PI/2);
-        const matDome = new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.6, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
+        const matDome = new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.1, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
         this.scene.add(new THREE.Mesh(geoDome, matDome));
 
         const geoAltar = new THREE.CylinderGeometry(10, 15, 12, 32);
