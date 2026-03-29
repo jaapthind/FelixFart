@@ -205,7 +205,7 @@ body, html { width: 100%; height: 100%; overflow: hidden; background-color: #000
 <div id="webgl-container"></div>
 <div id="fx-overlay"></div>
 <div id="crosshair"></div>
-<div id="interact-prompt" class="interact-prompt">[SPACE] PURGE BIOMASS</div>
+<div id="interact-prompt" class="interact-prompt">[SPACE] PURGE BEANS</div>
 
 <div id="pause-overlay" class="fullscreen-overlay">
     <h1>SIMULATION PAUSED</h1>
@@ -252,7 +252,7 @@ body, html { width: 100%; height: 100%; overflow: hidden; background-color: #000
         <span class="stat-val" style="color:#aaa;"><span id="txt-auto">0</span>/s</span>
     </div>
     <div class="stat-row">
-        <span class="stat-label">Biomass Absorbed</span>
+        <span class="stat-label">FARTS Absorbed</span>
         <span id="txt-beans" class="stat-val val-bean">0</span>
     </div>
     <div class="stat-row" id="row-prestige" style="display:none; border-color:rgba(255,215,0,0.3);">
@@ -359,7 +359,7 @@ body, html { width: 100%; height: 100%; overflow: hidden; background-color: #000
                     { id: 'u_2', name: "Turbo Glutes", type: 'speed', cost: 150, mult: 1.6, max: 15, desc: "Increases movement speed by 15% per level.", val: 0.15 },
                     { id: 'u_3', name: "Bio-Magnet", type: 'rad', cost: 300, mult: 1.4, max: 20, desc: "Sucks up beans from much further away.", val: 6 },
                     { id: 'u_4', name: "Pressure Valve", type: 'fart', cost: 600, mult: 1.8, max: 50, desc: "Multiplies Mass output significantly.", val: 2.0 },
-                    { id: 'u_5', name: "Nano-Digestor", type: 'digest', cost: 2000, mult: 2.0, max: 10, desc: "Purge biomass at 3x speed per level.", val: 3.0 },
+                    { id: 'u_5', name: "Nano-Digestor", type: 'digest', cost: 2000, mult: 2.0, max: 10, desc: "Purge BEANS at 3x speed per level.", val: 3.0 },
                     { id: 'u_6', name: "Auto-Venter", type: 'auto', cost: 10000, mult: 3.0, max: 50, desc: "Passively vents gas to generate Mass.", val: 250 }
                 ];
                 
@@ -916,12 +916,15 @@ const Engine = {
     },
 
     loop() {
+        this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, State.isSprinting ? 110 : 85, 0.1); this.camera.updateProjectionMatrix();
         Engine.scene.children.forEach(c => { if(c.geometry?.type === "SphereGeometry" && c.material?.opacity < 0.2) c.material.color.setHSL((Date.now() * 0.0001) % 1, 1.0, 0.2); });        requestAnimationFrame(() => this.loop());
         const dt = Math.min(this.clock.getDelta(), 0.1);
         const time = this.clock.getElapsedTime();
         
         EnvSys.update(dt, this.scene);
         WeatherSys.update(dt);
+        const d = this.scene.children.find(c => c.geometry?.type === 'SphereGeometry'); if(d && d.material && State.beansInStomach >= State.stomachCap) d.material.color.setHex(Math.sin(time*10) > 0 ? 0xff0000 : 0x00ffcc); else if(d && d.material) d.material.color.setHex(0x00ffcc);
+        
 
         if(!UI.isShopOpen) { 
             Input.update(dt); 
